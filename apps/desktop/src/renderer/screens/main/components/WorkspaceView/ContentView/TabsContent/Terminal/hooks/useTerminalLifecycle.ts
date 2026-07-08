@@ -35,7 +35,7 @@ import type {
 	TerminalResizeMutate,
 	TerminalWriteMutate,
 } from "../types";
-import { scrollToBottom } from "../utils";
+import { buildClaudeResumeCommand, scrollToBottom } from "../utils";
 
 type RegisterCallback = (paneId: string, callback: () => void) => void;
 type UnregisterCallback = (paneId: string) => void;
@@ -327,11 +327,13 @@ export function useTerminalLifecycle({
 							// Synced-from-peer panes stage the command without pressing Enter.
 							const stagedNewline = consumeSyncedPane(paneId) ? "" : "\n";
 							setTimeout(() => {
-								trpcClient.terminal.write
-									.mutate({
-										paneId,
-										data: `claude --resume ${sessionId} --dangerously-skip-permissions${stagedNewline}`,
-									})
+								buildClaudeResumeCommand(sessionId)
+									.then((command) =>
+										trpcClient.terminal.write.mutate({
+											paneId,
+											data: `${command}${stagedNewline}`,
+										}),
+									)
 									.catch((err) => {
 										console.warn(
 											"[Terminal] Failed to auto-resume Claude session on restart:",
@@ -505,11 +507,13 @@ export function useTerminalLifecycle({
 									// Synced-from-peer panes stage the command without pressing Enter.
 									const stagedNewline = consumeSyncedPane(paneId) ? "" : "\n";
 									setTimeout(() => {
-										trpcClient.terminal.write
-											.mutate({
-												paneId,
-												data: `claude --resume ${sessionId} --dangerously-skip-permissions${stagedNewline}`,
-											})
+										buildClaudeResumeCommand(sessionId)
+											.then((command) =>
+												trpcClient.terminal.write.mutate({
+													paneId,
+													data: `${command}${stagedNewline}`,
+												}),
+											)
 											.catch((err) => {
 												console.warn(
 													"[Terminal] Failed to auto-resume Claude session on initial mount:",

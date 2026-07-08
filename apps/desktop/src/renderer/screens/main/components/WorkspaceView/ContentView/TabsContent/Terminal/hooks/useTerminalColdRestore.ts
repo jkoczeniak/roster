@@ -9,7 +9,7 @@ import type {
 	CreateOrAttachResult,
 	TerminalStreamEvent,
 } from "../types";
-import { scrollToBottom } from "../utils";
+import { buildClaudeResumeCommand, scrollToBottom } from "../utils";
 
 export interface UseTerminalColdRestoreOptions {
 	paneId: string;
@@ -241,11 +241,13 @@ export function useTerminalColdRestore({
 						// Synced-from-peer panes stage the command without pressing Enter.
 						const stagedNewline = consumeSyncedPane(paneId) ? "" : "\n";
 						setTimeout(() => {
-							trpcClient.terminal.write
-								.mutate({
-									paneId,
-									data: `claude --resume ${claudeSessionId} --dangerously-skip-permissions${stagedNewline}`,
-								})
+							buildClaudeResumeCommand(claudeSessionId)
+								.then((command) =>
+									trpcClient.terminal.write.mutate({
+										paneId,
+										data: `${command}${stagedNewline}`,
+									}),
+								)
 								.catch((err) => {
 									console.warn(
 										"[Terminal] Failed to auto-resume Claude session:",
