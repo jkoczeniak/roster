@@ -7,11 +7,11 @@ import {
 	settings,
 	TERMINAL_LINK_BEHAVIORS,
 	type TerminalPreset,
-} from "@superset/local-db";
+} from "@roster/local-db";
 import {
 	AGENT_PRESET_COMMANDS,
 	AGENT_PRESET_DESCRIPTIONS,
-} from "@superset/shared/agent-command";
+} from "@roster/shared/agent-command";
 import { TRPCError } from "@trpc/server";
 import { app } from "electron";
 import { quitWithoutConfirmation } from "main/index";

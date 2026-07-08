@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 /**
  * Patches the development Electron.app's Info.plist to register a
- * workspace-specific URL scheme (superset-{workspace}://) for deep linking.
+ * workspace-specific URL scheme (roster-{workspace}://) for deep linking.
  *
  * Each worktree gets a unique bundle ID and protocol scheme so macOS Launch
  * Services treats them as distinct apps and routes deep links correctly.
@@ -49,7 +49,7 @@ if (process.env.NODE_ENV !== "development") {
 }
 
 function deriveWorkspaceNameFromPath(): string | undefined {
-	const worktreeBase = resolve(homedir(), ".ade/worktrees");
+	const worktreeBase = resolve(homedir(), ".roster/worktrees");
 	const cwdRelative = relative(worktreeBase, process.cwd());
 
 	if (!cwdRelative || cwdRelative.startsWith("..") || isAbsolute(cwdRelative)) {
@@ -65,8 +65,8 @@ if (!workspaceName) {
 	console.log("[patch-dev-protocol] Skipping - workspace name not resolved");
 	process.exit(0);
 }
-const PROTOCOL_SCHEME = `ade-${workspaceName}`;
-const BUNDLE_ID = `studio.persimmons.ade.${workspaceName}`;
+const PROTOCOL_SCHEME = `roster-${workspaceName}`;
+const BUNDLE_ID = `com.koczeniak.roster.${workspaceName}`;
 const ELECTRON_DIST_DIR = resolve(
 	import.meta.dirname,
 	"../node_modules/electron/dist",

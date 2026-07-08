@@ -1,4 +1,4 @@
-import { cn } from "@superset/ui/utils";
+import { cn } from "@roster/ui/utils";
 
 interface WorkspaceDiffStatsProps {
 	additions: number;

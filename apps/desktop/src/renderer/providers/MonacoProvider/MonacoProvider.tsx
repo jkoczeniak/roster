@@ -30,7 +30,7 @@ self.MonacoEnvironment = {
 
 loader.config({ monaco });
 
-const SUPERSET_THEME = "superset-theme";
+const ROSTER_THEME = "roster-theme";
 
 let monacoInitialized = false;
 
@@ -83,7 +83,7 @@ export function MonacoProvider({ children }: MonacoProviderProps) {
 
 		monacoPromise.then((monacoInstance) => {
 			if (cancelled) return;
-			monacoInstance.editor.defineTheme(SUPERSET_THEME, monacoTheme);
+			monacoInstance.editor.defineTheme(ROSTER_THEME, monacoTheme);
 			setIsReady(true);
 		});
 
@@ -95,7 +95,7 @@ export function MonacoProvider({ children }: MonacoProviderProps) {
 	useEffect(() => {
 		if (!isReady || !monacoTheme) return;
 
-		monaco.editor.defineTheme(SUPERSET_THEME, monacoTheme);
+		monaco.editor.defineTheme(ROSTER_THEME, monacoTheme);
 	}, [isReady, monacoTheme]);
 
 	return (
@@ -165,4 +165,4 @@ export function registerSaveAction(
 	});
 }
 
-export { monaco, SUPERSET_THEME };
+export { monaco, ROSTER_THEME };

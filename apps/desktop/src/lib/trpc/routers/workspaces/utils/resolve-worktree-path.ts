@@ -1,10 +1,10 @@
 import { homedir } from "node:os";
 import { join } from "node:path";
-import { type SelectProject, settings } from "@superset/local-db";
+import { type SelectProject, settings } from "@roster/local-db";
 import { localDb } from "main/lib/local-db";
-import { SUPERSET_DIR_NAME, WORKTREES_DIR_NAME } from "shared/constants";
+import { ROSTER_DIR_NAME, WORKTREES_DIR_NAME } from "shared/constants";
 
-/** Resolves base dir: project override > global setting > default (~/.superset/worktrees) */
+/** Resolves base dir: project override > global setting > default (~/.roster/worktrees) */
 export function resolveWorktreePath(
 	project: Pick<SelectProject, "name" | "worktreeBaseDir">,
 	branch: string,
@@ -16,7 +16,7 @@ export function resolveWorktreePath(
 	const row = localDb.select().from(settings).get();
 	const baseDir =
 		row?.worktreeBaseDir ??
-		join(homedir(), SUPERSET_DIR_NAME, WORKTREES_DIR_NAME);
+		join(homedir(), ROSTER_DIR_NAME, WORKTREES_DIR_NAME);
 
 	return join(baseDir, project.name, branch);
 }

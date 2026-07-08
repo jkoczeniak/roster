@@ -4,9 +4,9 @@ import { join } from "node:path";
 import { JSONFilePreset } from "lowdb/node";
 import {
 	APP_STATE_PATH,
-	SUPERSET_HOME_DIR,
-	SUPERSET_SENSITIVE_FILE_MODE,
-	ensureSupersetHomeDirExists,
+	ROSTER_HOME_DIR,
+	ROSTER_SENSITIVE_FILE_MODE,
+	ensureRosterHomeDirExists,
 } from "../app-environment";
 import type { AppState } from "./schemas";
 import { defaultAppState } from "./schemas";
@@ -15,16 +15,16 @@ type AppStateDB = Awaited<ReturnType<typeof JSONFilePreset<AppState>>>;
 
 let _appState: AppStateDB | null = null;
 
-const DEVICE_ID_PATH = join(SUPERSET_HOME_DIR, "device-id");
+const DEVICE_ID_PATH = join(ROSTER_HOME_DIR, "device-id");
 let _deviceId: string | null = null;
 
 /**
  * Read (or first-time generate) this machine's stable deviceId.
- * Persisted to `~/.ade/device-id`, which MUST be in Syncthing's
+ * Persisted to `~/.roster/device-id`, which MUST be in Syncthing's
  * `.stignore` so each Mac generates its own.
  */
 function loadOrCreateDeviceId(): string {
-	ensureSupersetHomeDirExists();
+	ensureRosterHomeDirExists();
 	if (existsSync(DEVICE_ID_PATH)) {
 		try {
 			const value = readFileSync(DEVICE_ID_PATH, "utf8").trim();
@@ -37,7 +37,7 @@ function loadOrCreateDeviceId(): string {
 	try {
 		writeFileSync(DEVICE_ID_PATH, id, {
 			encoding: "utf8",
-			mode: SUPERSET_SENSITIVE_FILE_MODE,
+			mode: ROSTER_SENSITIVE_FILE_MODE,
 		});
 	} catch (err) {
 		console.error("[app-state] Failed to persist device-id:", err);

@@ -1,5 +1,5 @@
-import { Button } from "@superset/ui/button";
-import { Label } from "@superset/ui/label";
+import { Button } from "@roster/ui/button";
+import { Label } from "@roster/ui/label";
 import { electronTrpc } from "renderer/lib/electron-trpc";
 
 interface WorktreeLocationPickerProps {
@@ -14,7 +14,7 @@ interface WorktreeLocationPickerProps {
 
 export function useDefaultWorktreePath() {
 	const { data: homeDir } = electronTrpc.window.getHomeDir.useQuery();
-	return homeDir ? `${homeDir}/.ade/worktrees` : "~/.ade/worktrees";
+	return homeDir ? `${homeDir}/.roster/worktrees` : "~/.roster/worktrees";
 }
 
 export function WorktreeLocationPicker({

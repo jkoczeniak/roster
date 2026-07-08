@@ -7,10 +7,10 @@ import {
 	ContextMenuSubContent,
 	ContextMenuSubTrigger,
 	ContextMenuTrigger,
-} from "@superset/ui/context-menu";
-import { toast } from "@superset/ui/sonner";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@superset/ui/tooltip";
-import { cn } from "@superset/ui/utils";
+} from "@roster/ui/context-menu";
+import { toast } from "@roster/ui/sonner";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@roster/ui/tooltip";
+import { cn } from "@roster/ui/utils";
 import { useNavigate, useParams } from "@tanstack/react-router";
 import { useState } from "react";
 import { HiChevronRight, HiMiniPlus } from "react-icons/hi2";

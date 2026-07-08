@@ -1,7 +1,7 @@
-import { Button } from "@superset/ui/button";
-import { Checkbox } from "@superset/ui/checkbox";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@superset/ui/tooltip";
-import { cn } from "@superset/ui/utils";
+import { Button } from "@roster/ui/button";
+import { Checkbox } from "@roster/ui/checkbox";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@roster/ui/tooltip";
+import { cn } from "@roster/ui/utils";
 import { HiMiniMinus, HiMiniPlus } from "react-icons/hi2";
 import {
 	LuCheck,

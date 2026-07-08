@@ -3,7 +3,7 @@ import { createHmac } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { homedir, hostname, platform } from "node:os";
 
-const APP_DEVICE_SALT = "superset-desktop-device-id-v1";
+const APP_DEVICE_SALT = "roster-desktop-device-id-v1";
 
 function getRawMachineId(): string {
 	try {
@@ -41,7 +41,7 @@ function getRawMachineId(): string {
 		// Fallback if platform-specific method fails
 	}
 
-	return `${hostname()}-${homedir()}-superset-fallback`;
+	return `${hostname()}-${homedir()}-roster-fallback`;
 }
 
 let cachedMachineId: string | null = null;

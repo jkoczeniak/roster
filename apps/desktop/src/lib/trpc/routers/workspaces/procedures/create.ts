@@ -1,4 +1,4 @@
-import { projects, settings, workspaces, worktrees } from "@superset/local-db";
+import { projects, settings, workspaces, worktrees } from "@roster/local-db";
 import { and, eq, isNull, not } from "drizzle-orm";
 import { track } from "main/lib/analytics";
 import { localDb } from "main/lib/local-db";
@@ -36,7 +36,7 @@ import {
 	worktreeExists,
 } from "../utils/git";
 import { resolveWorktreePath } from "../utils/resolve-worktree-path";
-import { copySupersetConfigToWorktree, loadSetupConfig } from "../utils/setup";
+import { copyRosterConfigToWorktree, loadSetupConfig } from "../utils/setup";
 import { initializeWorkspaceWorktree } from "../utils/workspace-init";
 
 interface CreateWorkspaceFromWorktreeParams {
@@ -793,7 +793,7 @@ export const createCreateProcedures = () => {
 					setLastActiveWorkspace(workspace.id);
 					activateProject(project);
 
-					copySupersetConfigToWorktree(
+					copyRosterConfigToWorktree(
 						project.mainRepoPath,
 						existingWorktree.path,
 					);
@@ -861,7 +861,7 @@ export const createCreateProcedures = () => {
 				setLastActiveWorkspace(workspace.id);
 				activateProject(project);
 
-				copySupersetConfigToWorktree(project.mainRepoPath, input.worktreePath);
+				copyRosterConfigToWorktree(project.mainRepoPath, input.worktreePath);
 				const setupConfig = loadSetupConfig({
 					mainRepoPath: project.mainRepoPath,
 					worktreePath: input.worktreePath,
@@ -1064,7 +1064,7 @@ export const createCreateProcedures = () => {
 						isExplicit: false,
 					});
 
-					copySupersetConfigToWorktree(project.mainRepoPath, ext.path);
+					copyRosterConfigToWorktree(project.mainRepoPath, ext.path);
 					imported++;
 				}
 

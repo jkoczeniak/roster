@@ -3,18 +3,18 @@ import { existsSync, readFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { rmSync } from "node:fs";
-import { workspaces, worktrees } from "@superset/local-db";
+import { workspaces, worktrees } from "@roster/local-db";
 
 /**
  * End-to-end memory-scaffold verification (docs/memory.md).
  *
  * Exercises setupAgentRepo + scaffoldAgentMemory + regenerateCodexAgentsMd
- * against a throwaway ADE_HOME_DIR so the user's live ~/.ade-default is never
+ * against a throwaway ADE_HOME_DIR so the user's live ~/.roster-default is never
  * touched. The env var is set BEFORE importing any module that reads
- * SUPERSET_HOME_DIR at load, so all path helpers resolve under TEST_HOME.
+ * ROSTER_HOME_DIR at load, so all path helpers resolve under TEST_HOME.
  */
 
-const TEST_HOME = join(tmpdir(), `ade-scaffold-test-${process.pid}-${Date.now()}`);
+const TEST_HOME = join(tmpdir(), `roster-scaffold-test-${process.pid}-${Date.now()}`);
 process.env.ADE_HOME_DIR = TEST_HOME;
 
 // Deferred (dynamic) imports so the env override above wins over module load.

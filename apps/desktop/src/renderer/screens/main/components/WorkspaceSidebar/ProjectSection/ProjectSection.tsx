@@ -1,5 +1,5 @@
-import { toast } from "@superset/ui/sonner";
-import { cn } from "@superset/ui/utils";
+import { toast } from "@roster/ui/sonner";
+import { cn } from "@roster/ui/utils";
 import { AnimatePresence, motion } from "framer-motion";
 import { useDrag, useDrop } from "react-dnd";
 import { electronTrpc } from "renderer/lib/electron-trpc";

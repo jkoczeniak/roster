@@ -1,5 +1,5 @@
-import { Button } from "@superset/ui/button";
-import { Input } from "@superset/ui/input";
+import { Button } from "@roster/ui/button";
+import { Input } from "@roster/ui/input";
 import { useState } from "react";
 import { electronTrpc } from "renderer/lib/electron-trpc";
 import { useProjectCreationHandler } from "../../hooks/useProjectCreationHandler";

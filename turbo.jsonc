@@ -1,30 +1,9 @@
 {
 	"$schema": "https://turbo.build/schema.json",
 	"ui": "tui",
-	"globalEnv": [
-		"DATABASE_URL",
-		"DATABASE_URL_UNPOOLED",
-		"BLOB_READ_WRITE_TOKEN",
-		"NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY",
-		"NEXT_PUBLIC_CLERK_SIGN_IN_URL",
-		"NEXT_PUBLIC_CLERK_SIGN_UP_URL",
-		"NEXT_PUBLIC_API_URL",
-		"NEXT_PUBLIC_WEB_URL",
-		"NEXT_PUBLIC_MARKETING_URL",
-		"NEXT_PUBLIC_DOCS_URL",
-		"NEXT_PUBLIC_ADMIN_URL",
-		"NEXT_PUBLIC_ELECTRIC_URL",
-		"POSTHOG_API_KEY",
-		"POSTHOG_PROJECT_ID",
-		"KV_REST_API_URL",
-		"KV_REST_API_TOKEN"
-	],
 	"globalPassThroughEnv": [
 		"NODE_ENV",
 		"CI",
-		"VERCEL",
-		"VERCEL_ENV",
-		"VERCEL_URL",
 		"npm_lifecycle_event"
 	],
 	"tasks": {
@@ -32,8 +11,6 @@
 			"inputs": ["$TURBO_DEFAULT$", ".env*"],
 			"dependsOn": ["^build"],
 			"outputs": [
-				".next/**",
-				"!.next/cache/**",
 				"dist/**",
 				"dist-electron/**",
 				"release/**",
@@ -41,10 +18,6 @@
 			]
 		},
 		"dev": {
-			"cache": false,
-			"persistent": true
-		},
-		"//#dev:caddy": {
 			"cache": false,
 			"persistent": true
 		},
@@ -62,35 +35,11 @@
 		"clean": {
 			"cache": false
 		},
-		"push": {
-			"cache": false,
-			"interactive": true
-		},
-		"studio": {
-			"cache": false,
-			"persistent": true
-		},
 		"ui-add": {
 			"cache": false,
 			"interactive": true
 		},
 		"db:gen": {
-			"cache": false,
-			"outputs": []
-		},
-		"db:push": {
-			"cache": false,
-			"outputs": []
-		},
-		"db:migrate": {
-			"cache": false,
-			"outputs": []
-		},
-		"db:seed": {
-			"cache": false,
-			"outputs": []
-		},
-		"db:reset": {
 			"cache": false,
 			"outputs": []
 		}

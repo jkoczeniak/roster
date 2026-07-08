@@ -1,4 +1,4 @@
-import type { BranchPrefixMode } from "@superset/local-db";
+import type { BranchPrefixMode } from "@roster/local-db";
 
 export const BRANCH_PREFIX_MODE_LABELS: Record<BranchPrefixMode, string> = {
 	none: "No prefix",

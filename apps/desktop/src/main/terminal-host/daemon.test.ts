@@ -23,11 +23,11 @@ import {
 } from "../lib/terminal-host/types";
 
 // Test uses a dedicated workspace name for isolation
-const SUPERSET_DIR_NAME = ".superset-test";
-const SUPERSET_HOME_DIR = join(homedir(), SUPERSET_DIR_NAME);
-const SOCKET_PATH = join(SUPERSET_HOME_DIR, "terminal-host.sock");
-const TOKEN_PATH = join(SUPERSET_HOME_DIR, "terminal-host.token");
-const PID_PATH = join(SUPERSET_HOME_DIR, "terminal-host.pid");
+const ROSTER_DIR_NAME = ".roster-test";
+const ROSTER_HOME_DIR = join(homedir(), ROSTER_DIR_NAME);
+const SOCKET_PATH = join(ROSTER_HOME_DIR, "terminal-host.sock");
+const TOKEN_PATH = join(ROSTER_HOME_DIR, "terminal-host.token");
+const PID_PATH = join(ROSTER_HOME_DIR, "terminal-host.pid");
 
 // Path to the daemon source file
 const DAEMON_PATH = resolve(__dirname, "index.ts");
@@ -91,8 +91,8 @@ describe("Terminal Host Daemon", () => {
 	async function startDaemon(): Promise<void> {
 		return new Promise((resolve, reject) => {
 			// Ensure home directory exists
-			if (!existsSync(SUPERSET_HOME_DIR)) {
-				mkdirSync(SUPERSET_HOME_DIR, { recursive: true, mode: 0o700 });
+			if (!existsSync(ROSTER_HOME_DIR)) {
+				mkdirSync(ROSTER_HOME_DIR, { recursive: true, mode: 0o700 });
 			}
 
 			// Start daemon with --preload to polyfill window for @xterm/headless in Bun
@@ -103,7 +103,7 @@ describe("Terminal Host Daemon", () => {
 					env: {
 						...process.env,
 						NODE_ENV: "development",
-						SUPERSET_WORKSPACE_NAME: "test",
+						ROSTER_WORKSPACE_NAME: "test",
 					},
 					stdio: ["ignore", "pipe", "pipe"],
 					detached: true,

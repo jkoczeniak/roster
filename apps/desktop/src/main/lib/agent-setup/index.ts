@@ -11,8 +11,6 @@ import {
 	createGeminiHookScript,
 	createGeminiSettingsJson,
 	createGeminiWrapper,
-	createMastraHooksJson,
-	createMastraWrapper,
 	createOpenCodePlugin,
 	createOpenCodeWrapper,
 } from "./agent-wrappers";
@@ -54,8 +52,6 @@ export function setupAgentHooks(): void {
 	createGeminiHookScript();
 	createGeminiWrapper();
 	createGeminiSettingsJson();
-	createMastraWrapper();
-	createMastraHooksJson();
 	createCopilotHookScript();
 	createCopilotWrapper();
 
@@ -65,7 +61,7 @@ export function setupAgentHooks(): void {
 	console.log("[agent-setup] Agent hooks initialized");
 }
 
-export function getSupersetBinDir(): string {
+export function getRosterBinDir(): string {
 	return BIN_DIR;
 }
 

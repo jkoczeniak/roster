@@ -1,16 +1,16 @@
-import type { BranchPrefixMode } from "@superset/local-db";
-import { Input } from "@superset/ui/input";
-import { Label } from "@superset/ui/label";
+import type { BranchPrefixMode } from "@roster/local-db";
+import { Input } from "@roster/ui/input";
+import { Label } from "@roster/ui/label";
 import {
 	Select,
 	SelectContent,
 	SelectItem,
 	SelectTrigger,
 	SelectValue,
-} from "@superset/ui/select";
-import { toast } from "@superset/ui/sonner";
-import { Switch } from "@superset/ui/switch";
-import { cn } from "@superset/ui/utils";
+} from "@roster/ui/select";
+import { toast } from "@roster/ui/sonner";
+import { Switch } from "@roster/ui/switch";
+import { cn } from "@roster/ui/utils";
 import type { ReactNode } from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {

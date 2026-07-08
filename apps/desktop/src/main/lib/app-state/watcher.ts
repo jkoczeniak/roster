@@ -1,5 +1,5 @@
 /**
- * Watches `~/.ade/app-state.json` for peer-originated changes
+ * Watches `~/.roster/app-state.json` for peer-originated changes
  * (i.e. writes that Syncthing pulled in from another Mac) and
  * emits parsed snapshots so the tRPC `sync` subscription router
  * can push them to the renderer.

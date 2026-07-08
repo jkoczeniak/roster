@@ -1,7 +1,7 @@
 import type {
 	CheckedBinary,
 	RuntimeAvailability,
-} from "@superset/shared/agent-binaries";
+} from "@roster/shared/agent-binaries";
 import { electronTrpc } from "renderer/lib/electron-trpc";
 
 export interface RuntimeAvailabilityHandle {

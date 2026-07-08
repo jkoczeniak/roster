@@ -6,7 +6,7 @@ import { promisify } from "node:util";
 
 import friendlyWords = require("friendly-words");
 
-import type { BranchPrefixMode } from "@superset/local-db";
+import type { BranchPrefixMode } from "@roster/local-db";
 import simpleGit, { type StatusResult } from "simple-git";
 import { runWithPostCheckoutHookTolerance } from "../../utils/git-hook-tolerance";
 import { execWithShellEnv, getProcessEnvWithShellPath } from "./shell-env";
@@ -659,7 +659,7 @@ export async function removeWorktree(
 		// then `git worktree prune` to clean metadata, then delete in background.
 		const tempPath = join(
 			dirname(worktreePath),
-			`.ade-delete-${randomUUID()}`,
+			`.roster-delete-${randomUUID()}`,
 		);
 		await rename(worktreePath, tempPath);
 

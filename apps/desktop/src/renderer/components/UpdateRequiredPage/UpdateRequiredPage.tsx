@@ -1,5 +1,5 @@
-import { COMPANY } from "@superset/shared/constants";
-import { Button } from "@superset/ui/button";
+import { COMPANY } from "@roster/shared/constants";
+import { Button } from "@roster/ui/button";
 import { useState } from "react";
 import { HiArrowPath, HiExclamationTriangle } from "react-icons/hi2";
 import { electronTrpc } from "renderer/lib/electron-trpc";

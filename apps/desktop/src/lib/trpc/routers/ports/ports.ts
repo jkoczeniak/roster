@@ -1,4 +1,4 @@
-import { workspaces } from "@superset/local-db";
+import { workspaces } from "@roster/local-db";
 import { observable } from "@trpc/server/observable";
 import { eq } from "drizzle-orm";
 import { localDb } from "main/lib/local-db";

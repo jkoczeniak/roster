@@ -1,4 +1,4 @@
-import { cn } from "@superset/ui/utils";
+import { cn } from "@roster/ui/utils";
 import { useState } from "react";
 import { electronTrpc } from "renderer/lib/electron-trpc";
 import { PROJECT_COLOR_DEFAULT } from "shared/constants/project-colors";
@@ -67,7 +67,7 @@ export function ProjectThumbnail({
 		? { borderColor: hexToRgba(projectColor, 0.6) }
 		: undefined;
 
-	// Priority 1: Show project icon if available (works for both superset-icon:// and https://)
+	// Priority 1: Show project icon if available (works for both roster-icon:// and https://)
 	if (iconUrl && !iconError) {
 		return (
 			<div

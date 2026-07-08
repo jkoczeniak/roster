@@ -24,7 +24,7 @@ export interface AppStateUpdatePayload {
 export const createSyncRouter = () => {
 	return router({
 		/**
-		 * Subscribe to peer-originated changes to `~/.ade/app-state.json`.
+		 * Subscribe to peer-originated changes to `~/.roster/app-state.json`.
 		 * Emits the parsed `tabsState` + `sync` envelope each time the
 		 * file is rewritten by another Mac (detected via `sync.deviceId`
 		 * differing from the local deviceId).

@@ -1,4 +1,4 @@
-import { toast } from "@superset/ui/sonner";
+import { toast } from "@roster/ui/sonner";
 import { useCallback } from "react";
 import { electronTrpc } from "renderer/lib/electron-trpc";
 import { electronTrpcClient as trpcClient } from "renderer/lib/trpc-client";

@@ -1,4 +1,4 @@
-import { browserHistory } from "@superset/local-db";
+import { browserHistory } from "@roster/local-db";
 import { like, or, sql } from "drizzle-orm";
 import { localDb } from "main/lib/local-db";
 import { z } from "zod";

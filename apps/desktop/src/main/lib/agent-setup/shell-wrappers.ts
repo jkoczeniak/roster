@@ -52,7 +52,6 @@ const SHIMMED_BINARIES = [
 	"opencode",
 	"gemini",
 	"copilot",
-	"mastracode",
 ];
 
 /**
@@ -68,13 +67,13 @@ function buildShimFunctions(binDir: string): string {
 }
 
 function buildPathPrependFunction(binDir: string): string {
-	return `_superset_prepend_bin() {
+	return `_roster_prepend_bin() {
   case ":$PATH:" in
     *:"${binDir}":*) ;;
     *) export PATH="${binDir}:$PATH" ;;
   esac
 }
-_superset_prepend_bin`;
+_roster_prepend_bin`;
 }
 
 function escapeFishDoubleQuoted(value: string): string {
@@ -91,10 +90,10 @@ export function createZshWrapper(
 	// Temporarily restore the user's ZDOTDIR while sourcing user config, then
 	// switch back so zsh continues through our wrapper chain.
 	const zshenvPath = path.join(paths.ZSH_DIR, ".zshenv");
-	const zshenvScript = `# Superset zsh env wrapper
-_superset_home="\${SUPERSET_ORIG_ZDOTDIR:-$HOME}"
-export ZDOTDIR="$_superset_home"
-[[ -f "$_superset_home/.zshenv" ]] && source "$_superset_home/.zshenv"
+	const zshenvScript = `# Roster zsh env wrapper
+_roster_home="\${ROSTER_ORIG_ZDOTDIR:-$HOME}"
+export ZDOTDIR="$_roster_home"
+[[ -f "$_roster_home/.zshenv" ]] && source "$_roster_home/.zshenv"
 export ZDOTDIR="${paths.ZSH_DIR}"
 `;
 	const wroteZshenv = writeFileIfChanged(zshenvPath, zshenvScript, 0o644);
@@ -102,20 +101,20 @@ export ZDOTDIR="${paths.ZSH_DIR}"
 	// Source user .zprofile with their ZDOTDIR, then restore wrapper ZDOTDIR
 	// so startup continues into our .zshrc wrapper.
 	const zprofilePath = path.join(paths.ZSH_DIR, ".zprofile");
-	const zprofileScript = `# Superset zsh profile wrapper
-_superset_home="\${SUPERSET_ORIG_ZDOTDIR:-$HOME}"
-export ZDOTDIR="$_superset_home"
-[[ -f "$_superset_home/.zprofile" ]] && source "$_superset_home/.zprofile"
+	const zprofileScript = `# Roster zsh profile wrapper
+_roster_home="\${ROSTER_ORIG_ZDOTDIR:-$HOME}"
+export ZDOTDIR="$_roster_home"
+[[ -f "$_roster_home/.zprofile" ]] && source "$_roster_home/.zprofile"
 export ZDOTDIR="${paths.ZSH_DIR}"
 `;
 	const wroteZprofile = writeFileIfChanged(zprofilePath, zprofileScript, 0o644);
 
 	// Reset ZDOTDIR before sourcing so Oh My Zsh works correctly
 	const zshrcPath = path.join(paths.ZSH_DIR, ".zshrc");
-	const zshrcScript = `# Superset zsh rc wrapper
-_superset_home="\${SUPERSET_ORIG_ZDOTDIR:-$HOME}"
-export ZDOTDIR="$_superset_home"
-[[ -f "$_superset_home/.zshrc" ]] && source "$_superset_home/.zshrc"
+	const zshrcScript = `# Roster zsh rc wrapper
+_roster_home="\${ROSTER_ORIG_ZDOTDIR:-$HOME}"
+export ZDOTDIR="$_roster_home"
+[[ -f "$_roster_home/.zshrc" ]] && source "$_roster_home/.zshrc"
 ${buildPathPrependFunction(paths.BIN_DIR)}
 ${buildShimFunctions(paths.BIN_DIR)}
 rehash 2>/dev/null || true
@@ -130,15 +129,15 @@ export ZDOTDIR="${paths.ZSH_DIR}"
 	// and prepend BIN_DIR so tools like mise, nvm, or PATH exports in .zlogin
 	// can't shadow our wrappers.
 	const zloginPath = path.join(paths.ZSH_DIR, ".zlogin");
-	const zloginScript = `# Superset zsh login wrapper
-_superset_home="\${SUPERSET_ORIG_ZDOTDIR:-$HOME}"
+	const zloginScript = `# Roster zsh login wrapper
+_roster_home="\${ROSTER_ORIG_ZDOTDIR:-$HOME}"
 if [[ -o interactive ]]; then
-  [[ -f "$_superset_home/.zlogin" ]] && source "$_superset_home/.zlogin"
+  [[ -f "$_roster_home/.zlogin" ]] && source "$_roster_home/.zlogin"
 fi
 ${buildPathPrependFunction(paths.BIN_DIR)}
 ${buildShimFunctions(paths.BIN_DIR)}
 rehash 2>/dev/null || true
-export ZDOTDIR="$_superset_home"
+export ZDOTDIR="$_roster_home"
 `;
 	const wroteZlogin = writeFileIfChanged(zloginPath, zloginScript, 0o644);
 	const changed = wroteZshenv || wroteZprofile || wroteZshrc || wroteZlogin;
@@ -151,7 +150,7 @@ export function createBashWrapper(
 	paths: ShellWrapperPaths = DEFAULT_PATHS,
 ): void {
 	const rcfilePath = path.join(paths.BASH_DIR, "rcfile");
-	const script = `# Superset bash rcfile wrapper
+	const script = `# Roster bash rcfile wrapper
 
 # Source system profile
 [[ -f /etc/profile ]] && source /etc/profile
@@ -168,7 +167,7 @@ fi
 # Source bashrc if separate
 [[ -f "$HOME/.bashrc" ]] && source "$HOME/.bashrc"
 
-# Keep superset bin first without duplicating entries
+# Keep roster bin first without duplicating entries
 ${buildPathPrependFunction(paths.BIN_DIR)}
 ${buildShimFunctions(paths.BIN_DIR)}
 hash -r 2>/dev/null || true
@@ -186,7 +185,7 @@ export function getShellEnv(
 	const shellName = getShellName(shell);
 	if (shellName === "zsh") {
 		return {
-			SUPERSET_ORIG_ZDOTDIR: process.env.ZDOTDIR || os.homedir(),
+			ROSTER_ORIG_ZDOTDIR: process.env.ZDOTDIR || os.homedir(),
 			ZDOTDIR: paths.ZSH_DIR,
 		};
 	}
@@ -208,7 +207,7 @@ export function getShellArgs(
 		return [
 			"-l",
 			"--init-command",
-			`set -l _superset_bin "${escapedBinDir}"; contains -- "$_superset_bin" $PATH; or set -gx PATH "$_superset_bin" $PATH`,
+			`set -l _roster_bin "${escapedBinDir}"; contains -- "$_roster_bin" $PATH; or set -gx PATH "$_roster_bin" $PATH`,
 		];
 	}
 	if (["zsh", "sh", "ksh"].includes(shellName)) {

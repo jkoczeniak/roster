@@ -1,4 +1,4 @@
-import { Kbd, KbdGroup } from "@superset/ui/kbd";
+import { Kbd, KbdGroup } from "@roster/ui/kbd";
 import { HiMiniCommandLine } from "react-icons/hi2";
 import { useHotkeyDisplay } from "renderer/stores/hotkeys";
 

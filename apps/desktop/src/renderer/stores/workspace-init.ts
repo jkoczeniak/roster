@@ -1,4 +1,4 @@
-import type { TerminalPreset } from "@superset/local-db";
+import type { TerminalPreset } from "@roster/local-db";
 import type { WorkspaceInitProgress } from "shared/types/workspace-init";
 import { create } from "zustand";
 import { devtools } from "zustand/middleware";

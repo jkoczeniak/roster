@@ -3,29 +3,29 @@ import { homedir } from "node:os";
 import { join } from "node:path";
 import {
 	CONFIG_FILE_NAME,
-	PROJECT_SUPERSET_DIR_NAME,
+	PROJECT_ROSTER_DIR_NAME,
 	PROJECTS_DIR_NAME,
-	SUPERSET_DIR_NAME,
+	ROSTER_DIR_NAME,
 } from "shared/constants";
 import type { SetupConfig } from "shared/types";
 
 /**
- * Worktrees don't include gitignored files, so copy .superset from main repo
- * if it's missing — ensures setup scripts like "./.superset/setup.sh" work.
+ * Worktrees don't include gitignored files, so copy .roster from main repo
+ * if it's missing — ensures setup scripts like "./.roster/setup.sh" work.
  */
-export function copySupersetConfigToWorktree(
+export function copyRosterConfigToWorktree(
 	mainRepoPath: string,
 	worktreePath: string,
 ): void {
-	const mainSupersetDir = join(mainRepoPath, PROJECT_SUPERSET_DIR_NAME);
-	const worktreeSupersetDir = join(worktreePath, PROJECT_SUPERSET_DIR_NAME);
+	const mainRosterDir = join(mainRepoPath, PROJECT_ROSTER_DIR_NAME);
+	const worktreeRosterDir = join(worktreePath, PROJECT_ROSTER_DIR_NAME);
 
-	if (existsSync(mainSupersetDir) && !existsSync(worktreeSupersetDir)) {
+	if (existsSync(mainRosterDir) && !existsSync(worktreeRosterDir)) {
 		try {
-			cpSync(mainSupersetDir, worktreeSupersetDir, { recursive: true });
+			cpSync(mainRosterDir, worktreeRosterDir, { recursive: true });
 		} catch (error) {
 			console.error(
-				`Failed to copy ${PROJECT_SUPERSET_DIR_NAME} to worktree: ${error instanceof Error ? error.message : String(error)}`,
+				`Failed to copy ${PROJECT_ROSTER_DIR_NAME} to worktree: ${error instanceof Error ? error.message : String(error)}`,
 			);
 		}
 	}
@@ -59,15 +59,15 @@ function readConfigFile(configPath: string): SetupConfig | null {
 
 function readConfigFromPath(basePath: string): SetupConfig | null {
 	return readConfigFile(
-		join(basePath, PROJECT_SUPERSET_DIR_NAME, CONFIG_FILE_NAME),
+		join(basePath, PROJECT_ROSTER_DIR_NAME, CONFIG_FILE_NAME),
 	);
 }
 
 /**
  * Resolves setup/teardown config with a three-tier priority:
- *   1. User override:  ~/.superset/projects/<projectId>/config.json
- *   2. Worktree:       <worktreePath>/.superset/config.json
- *   3. Main repo:      <mainRepoPath>/.superset/config.json
+ *   1. User override:  ~/.roster/projects/<projectId>/config.json
+ *   2. Worktree:       <worktreePath>/.roster/config.json
+ *   3. Main repo:      <mainRepoPath>/.roster/config.json
  *
  * First config found wins entirely (no merging between levels).
  */
@@ -83,7 +83,7 @@ export function loadSetupConfig({
 	if (projectId && !projectId.includes("/") && !projectId.includes("\\")) {
 		const userConfigPath = join(
 			homedir(),
-			SUPERSET_DIR_NAME,
+			ROSTER_DIR_NAME,
 			PROJECTS_DIR_NAME,
 			projectId,
 			CONFIG_FILE_NAME,
@@ -99,7 +99,7 @@ export function loadSetupConfig({
 		const config = readConfigFromPath(worktreePath);
 		if (config) {
 			console.log(
-				`[setup] Using worktree config from ${join(worktreePath, PROJECT_SUPERSET_DIR_NAME, CONFIG_FILE_NAME)}`,
+				`[setup] Using worktree config from ${join(worktreePath, PROJECT_ROSTER_DIR_NAME, CONFIG_FILE_NAME)}`,
 			);
 			return config;
 		}
@@ -108,7 +108,7 @@ export function loadSetupConfig({
 	const config = readConfigFromPath(mainRepoPath);
 	if (config) {
 		console.log(
-			`[setup] Using main repo config from ${join(mainRepoPath, PROJECT_SUPERSET_DIR_NAME, CONFIG_FILE_NAME)}`,
+			`[setup] Using main repo config from ${join(mainRepoPath, PROJECT_ROSTER_DIR_NAME, CONFIG_FILE_NAME)}`,
 		);
 	}
 	return config;

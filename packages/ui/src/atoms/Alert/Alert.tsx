@@ -1,6 +1,6 @@
 "use client";
 
-import { Button } from "@superset/ui/button";
+import { Button } from "@roster/ui/button";
 import {
 	Dialog,
 	DialogContent,
@@ -8,7 +8,7 @@ import {
 	DialogFooter,
 	DialogHeader,
 	DialogTitle,
-} from "@superset/ui/dialog";
+} from "@roster/ui/dialog";
 import { useState } from "react";
 
 type AlertOptions = {

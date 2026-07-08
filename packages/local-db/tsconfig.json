@@ -1,5 +1,5 @@
 {
-	"extends": "@superset/typescript/internal-package.json",
+	"extends": "@roster/typescript/internal-package.json",
 	"compilerOptions": {
 		"baseUrl": ".",
 		"paths": {

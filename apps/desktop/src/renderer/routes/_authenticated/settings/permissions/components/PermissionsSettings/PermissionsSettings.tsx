@@ -1,5 +1,5 @@
-import { Button } from "@superset/ui/button";
-import { Label } from "@superset/ui/label";
+import { Button } from "@roster/ui/button";
+import { Label } from "@roster/ui/label";
 import { LuExternalLink } from "react-icons/lu";
 import { electronTrpc } from "renderer/lib/electron-trpc";
 import {
@@ -70,7 +70,7 @@ export function PermissionsSettings({
 				<p className="text-sm text-muted-foreground mt-1">
 					Grant these permissions once to avoid repeated prompts. For persistent
 					directory access, enable Full Disk Access in System Settings for
-					Superset.
+					Roster.
 				</p>
 			</div>
 

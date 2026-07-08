@@ -1,6 +1,6 @@
-import type { ExternalApp } from "@superset/local-db";
-import { Button } from "@superset/ui/button";
-import { ButtonGroup } from "@superset/ui/button-group";
+import type { ExternalApp } from "@roster/local-db";
+import { Button } from "@roster/ui/button";
+import { ButtonGroup } from "@roster/ui/button-group";
 import {
 	DropdownMenu,
 	DropdownMenuContent,
@@ -10,8 +10,8 @@ import {
 	DropdownMenuSubContent,
 	DropdownMenuSubTrigger,
 	DropdownMenuTrigger,
-} from "@superset/ui/dropdown-menu";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@superset/ui/tooltip";
+} from "@roster/ui/dropdown-menu";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@roster/ui/tooltip";
 import { useState } from "react";
 import { HiChevronDown } from "react-icons/hi2";
 import { LuCopy } from "react-icons/lu";

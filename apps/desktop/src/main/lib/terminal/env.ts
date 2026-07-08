@@ -2,7 +2,7 @@ import { exec } from "node:child_process";
 import fs from "node:fs";
 import os from "node:os";
 import { join } from "node:path";
-import type { AgentRuntime } from "@superset/local-db";
+import type { AgentRuntime } from "@roster/local-db";
 import defaultShell from "default-shell";
 import { env } from "shared/env.shared";
 import { getAgentCodexHome } from "../agent-home";
@@ -291,7 +291,7 @@ const ALLOWED_ENV_VARS = new Set([
  * These are checked after exact matches fail.
  */
 const ALLOWED_PREFIXES = [
-	"SUPERSET_", // Our own metadata vars
+	"ROSTER_", // Our own metadata vars
 	"LC_", // Locale settings
 ];
 
@@ -321,7 +321,7 @@ function hasAllowedPrefix(key: string, isWindows: boolean): boolean {
 
 /**
  * Build a safe environment by only including allowlisted variables.
- * This prevents Superset app secrets and build-time config from leaking to terminals.
+ * This prevents Roster app secrets and build-time config from leaking to terminals.
  *
  * Threat model: Prevent app secrets (DATABASE_URL, API keys from .env) from leaking.
  * User shell config vars (proxy, tool paths) are intentionally allowed so terminals
@@ -451,22 +451,22 @@ export function buildTerminalEnv(params: {
 	const terminalEnv: Record<string, string> = {
 		...baseEnv,
 		...shellEnv,
-		TERM_PROGRAM: "Superset",
+		TERM_PROGRAM: "Roster",
 		TERM_PROGRAM_VERSION: process.env.npm_package_version || "1.0.0",
 		COLORTERM: "truecolor",
 		COLORFGBG: colorFgBg,
 		LANG: locale,
-		SUPERSET_PANE_ID: paneId,
-		SUPERSET_TAB_ID: tabId,
-		SUPERSET_WORKSPACE_ID: workspaceId,
-		SUPERSET_WORKSPACE_NAME: workspaceName || "",
-		SUPERSET_WORKSPACE_PATH: workspacePath || "",
-		SUPERSET_ROOT_PATH: rootPath || "",
-		SUPERSET_PORT: String(env.DESKTOP_NOTIFICATIONS_PORT),
+		ROSTER_PANE_ID: paneId,
+		ROSTER_TAB_ID: tabId,
+		ROSTER_WORKSPACE_ID: workspaceId,
+		ROSTER_WORKSPACE_NAME: workspaceName || "",
+		ROSTER_WORKSPACE_PATH: workspacePath || "",
+		ROSTER_ROOT_PATH: rootPath || "",
+		ROSTER_PORT: String(env.DESKTOP_NOTIFICATIONS_PORT),
 		// Environment identifier for dev/prod separation
-		SUPERSET_ENV: env.NODE_ENV === "development" ? "development" : "production",
+		ROSTER_ENV: env.NODE_ENV === "development" ? "development" : "production",
 		// Hook protocol version for forward compatibility
-		SUPERSET_HOOK_VERSION: HOOK_PROTOCOL_VERSION,
+		ROSTER_HOOK_VERSION: HOOK_PROTOCOL_VERSION,
 	};
 
 	delete terminalEnv.GOOGLE_API_KEY;

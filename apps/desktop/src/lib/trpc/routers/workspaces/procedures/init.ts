@@ -1,4 +1,4 @@
-import { workspaces, worktrees } from "@superset/local-db";
+import { workspaces, worktrees } from "@roster/local-db";
 import { observable } from "@trpc/server/observable";
 import { eq } from "drizzle-orm";
 import { retryAgentInit } from "main/lib/agent-init";

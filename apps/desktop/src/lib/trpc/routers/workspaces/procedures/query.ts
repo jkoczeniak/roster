@@ -1,7 +1,7 @@
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-import type { AgentRuntime } from "@superset/local-db";
-import { projects, workspaces, worktrees } from "@superset/local-db";
+import type { AgentRuntime } from "@roster/local-db";
+import { projects, workspaces, worktrees } from "@roster/local-db";
 import { TRPCError } from "@trpc/server";
 import { eq, isNotNull, isNull } from "drizzle-orm";
 import {

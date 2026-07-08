@@ -8,7 +8,7 @@
  * The OpenRouter-proxied runtimes (kimi, minimax, glm) require a bring-your-own
  * OpenRouter key before they can launch.
  */
-import type { AgentRuntime } from "@superset/local-db";
+import type { AgentRuntime } from "@roster/local-db";
 
 export interface ModelDescriptor {
 	/** Agent runtime slug — drives the launch command. */

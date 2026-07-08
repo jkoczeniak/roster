@@ -1,29 +1,29 @@
-import { AGENT_RUNTIMES } from "@superset/local-db";
+import { AGENT_RUNTIMES } from "@roster/local-db";
 import {
 	type AgentBinary,
 	type CheckedBinary,
 	RUNTIME_BINARY,
-} from "@superset/shared/agent-binaries";
-import { AGENT_LABELS } from "@superset/shared/agent-command";
-import { Button } from "@superset/ui/button";
+} from "@roster/shared/agent-binaries";
+import { AGENT_LABELS } from "@roster/shared/agent-command";
+import { Button } from "@roster/ui/button";
 import {
 	Dialog,
 	DialogContent,
 	DialogHeader,
 	DialogTitle,
-} from "@superset/ui/dialog";
-import { Input } from "@superset/ui/input";
-import { Label } from "@superset/ui/label";
-import { RadioGroup, RadioGroupItem } from "@superset/ui/radio-group";
+} from "@roster/ui/dialog";
+import { Input } from "@roster/ui/input";
+import { Label } from "@roster/ui/label";
+import { RadioGroup, RadioGroupItem } from "@roster/ui/radio-group";
 import {
 	Select,
 	SelectContent,
 	SelectItem,
 	SelectTrigger,
 	SelectValue,
-} from "@superset/ui/select";
-import { toast } from "@superset/ui/sonner";
-import { Textarea } from "@superset/ui/textarea";
+} from "@roster/ui/select";
+import { toast } from "@roster/ui/sonner";
+import { Textarea } from "@roster/ui/textarea";
 import { useNavigate } from "@tanstack/react-router";
 import type { ChangeEvent } from "react";
 import { useEffect, useRef, useState } from "react";

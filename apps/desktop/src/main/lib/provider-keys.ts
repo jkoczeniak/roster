@@ -1,4 +1,4 @@
-import { settings } from "@superset/local-db";
+import { settings } from "@roster/local-db";
 import { safeStorage } from "electron";
 import { localDb } from "./local-db";
 

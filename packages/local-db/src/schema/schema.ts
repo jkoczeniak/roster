@@ -129,12 +129,12 @@ export const workspaces = sqliteTable(
 		// Each workspace gets a range of 10 ports starting from this base.
 		portBase: integer("port_base"),
 		// Optional custom icon for the workspace's rail item (e.g. an agent bust).
-		// superset-icon://workspaces/<id> or https URL. Falls back to the default
+		// roster-icon://workspaces/<id> or https URL. Falls back to the default
 		// laptop/folder glyph when null. Used by the agent-fleet "Space" model
 		// where each workspace is an agent.
 		iconUrl: text("icon_url"),
 		// ADE: which CLI drives this agent (claude/codex/opencode/...). Maps to
-		// AGENT_PRESET_COMMANDS in @superset/shared. Defaults to "claude" at the
+		// AGENT_PRESET_COMMANDS in @roster/shared. Defaults to "claude" at the
 		// insert site; null on pre-ADE rows.
 		runtime: text("runtime").$type<AgentRuntime>(),
 	},

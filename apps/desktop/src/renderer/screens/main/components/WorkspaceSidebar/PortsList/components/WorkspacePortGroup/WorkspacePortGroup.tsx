@@ -1,4 +1,4 @@
-import { Tooltip, TooltipContent, TooltipTrigger } from "@superset/ui/tooltip";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@roster/ui/tooltip";
 import { useNavigate } from "@tanstack/react-router";
 import { LuX } from "react-icons/lu";
 import { navigateToWorkspace } from "renderer/routes/_authenticated/_dashboard/utils/workspace-navigation";

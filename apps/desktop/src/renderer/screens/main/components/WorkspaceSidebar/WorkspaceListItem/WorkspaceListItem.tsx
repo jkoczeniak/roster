@@ -4,16 +4,16 @@ import {
 	ContextMenuItem,
 	ContextMenuSeparator,
 	ContextMenuTrigger,
-} from "@superset/ui/context-menu";
+} from "@roster/ui/context-menu";
 import {
 	HoverCard,
 	HoverCardContent,
 	HoverCardTrigger,
-} from "@superset/ui/hover-card";
-import { Input } from "@superset/ui/input";
-import { toast } from "@superset/ui/sonner";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@superset/ui/tooltip";
-import { cn } from "@superset/ui/utils";
+} from "@roster/ui/hover-card";
+import { Input } from "@roster/ui/input";
+import { toast } from "@roster/ui/sonner";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@roster/ui/tooltip";
+import { cn } from "@roster/ui/utils";
 import { useMatchRoute, useNavigate } from "@tanstack/react-router";
 import type { ChangeEvent } from "react";
 import { useEffect, useMemo, useRef, useState } from "react";

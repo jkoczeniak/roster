@@ -5,7 +5,7 @@ import {
 	ContextMenuSeparator,
 	ContextMenuShortcut,
 	ContextMenuTrigger,
-} from "@superset/ui/context-menu";
+} from "@roster/ui/context-menu";
 import type {
 	MouseEvent as ReactMouseEvent,
 	ReactNode,

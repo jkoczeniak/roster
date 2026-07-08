@@ -1,5 +1,5 @@
 import { EventEmitter } from "node:events";
-import { agentMessages } from "@superset/local-db";
+import { agentMessages } from "@roster/local-db";
 import { BrowserWindow } from "electron";
 import express from "express";
 import { NOTIFICATION_EVENTS } from "shared/constants";
@@ -27,7 +27,7 @@ export type {
  */
 const SERVER_ENV =
 	env.NODE_ENV === "development" ? "development" : "production";
-const debugHooksOverride = process.env.SUPERSET_DEBUG_HOOKS?.trim();
+const debugHooksOverride = process.env.ROSTER_DEBUG_HOOKS?.trim();
 const DEBUG_HOOKS_ENABLED =
 	debugHooksOverride === undefined
 		? SERVER_ENV === "development"

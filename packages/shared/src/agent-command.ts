@@ -89,7 +89,7 @@ You are running fully autonomously. Do not ask questions or wait for user feedba
    - How to validate the changes work correctly
 3. Implement the plan
 4. Verify your changes work correctly (run relevant tests, typecheck, lint)
-5. When done, use the Superset MCP \`update_task\` tool to update task "${task.id}" with a summary of what was done`;
+5. When done, use the Roster MCP \`update_task\` tool to update task "${task.id}" with a summary of what was done`;
 }
 
 function buildHeredoc(
@@ -144,7 +144,7 @@ export function buildAgentPromptCommand({
 	randomId: string;
 	agent?: AgentType;
 }): string {
-	let delimiter = `SUPERSET_PROMPT_${randomId.replaceAll("-", "")}`;
+	let delimiter = `ROSTER_PROMPT_${randomId.replaceAll("-", "")}`;
 	while (prompt.includes(delimiter)) {
 		delimiter = `${delimiter}_X`;
 	}

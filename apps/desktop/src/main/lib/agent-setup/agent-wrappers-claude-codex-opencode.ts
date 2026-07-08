@@ -10,9 +10,9 @@ import { getNotifyScriptPath } from "./notify-hook";
 import { HOOKS_DIR, OPENCODE_CONFIG_DIR, OPENCODE_PLUGIN_DIR } from "./paths";
 
 export const CLAUDE_SETTINGS_FILE = "claude-settings.json";
-export const OPENCODE_PLUGIN_FILE = "superset-notify.js";
+export const OPENCODE_PLUGIN_FILE = "roster-notify.js";
 
-const OPENCODE_PLUGIN_SIGNATURE = "// Superset opencode plugin";
+const OPENCODE_PLUGIN_SIGNATURE = "// Roster opencode plugin";
 const OPENCODE_PLUGIN_VERSION = "v8";
 export const OPENCODE_PLUGIN_MARKER = `${OPENCODE_PLUGIN_SIGNATURE} ${OPENCODE_PLUGIN_VERSION}`;
 

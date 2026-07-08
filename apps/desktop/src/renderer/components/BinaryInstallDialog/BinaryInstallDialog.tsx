@@ -1,8 +1,8 @@
 import {
 	type AgentBinary,
 	BINARY_INSTALL,
-} from "@superset/shared/agent-binaries";
-import { Button } from "@superset/ui/button";
+} from "@roster/shared/agent-binaries";
+import { Button } from "@roster/ui/button";
 import {
 	Dialog,
 	DialogContent,
@@ -10,8 +10,8 @@ import {
 	DialogFooter,
 	DialogHeader,
 	DialogTitle,
-} from "@superset/ui/dialog";
-import { toast } from "@superset/ui/sonner";
+} from "@roster/ui/dialog";
+import { toast } from "@roster/ui/sonner";
 import { useState } from "react";
 import {
 	HiArrowPath,

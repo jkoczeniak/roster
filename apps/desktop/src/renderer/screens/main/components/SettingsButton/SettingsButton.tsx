@@ -1,5 +1,5 @@
-import { Button } from "@superset/ui/button";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@superset/ui/tooltip";
+import { Button } from "@roster/ui/button";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@roster/ui/tooltip";
 import { useNavigate } from "@tanstack/react-router";
 import { CiSettings } from "react-icons/ci";
 import { HotkeyTooltipContent } from "renderer/components/HotkeyTooltipContent";
@@ -13,7 +13,7 @@ export function SettingsButton() {
 				<Button
 					variant="ghost"
 					size="icon"
-					onClick={() => navigate({ to: "/settings/account" })}
+					onClick={() => navigate({ to: "/settings/appearance" })}
 					aria-label="Open settings"
 					className="no-drag"
 				>

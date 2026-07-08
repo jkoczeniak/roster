@@ -3,9 +3,9 @@ import {
 	ContextMenuContent,
 	ContextMenuItem,
 	ContextMenuTrigger,
-} from "@superset/ui/context-menu";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@superset/ui/tooltip";
-import { cn } from "@superset/ui/utils";
+} from "@roster/ui/context-menu";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@roster/ui/tooltip";
+import { cn } from "@roster/ui/utils";
 import { useState } from "react";
 import {
 	LuArrowRight,

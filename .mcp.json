@@ -1,8 +1,8 @@
 {
 	"mcpServers": {
-		"superset": {
+		"roster": {
 			"type": "http",
-			"url": "https://api.superset.sh/api/agent/mcp"
+			"url": "https://api.roster.local/api/agent/mcp"
 		},
 		"expo-mcp": {
 			"type": "http",

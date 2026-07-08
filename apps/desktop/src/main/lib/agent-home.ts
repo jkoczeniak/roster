@@ -1,5 +1,5 @@
 import { join } from "node:path";
-import { getSupersetHomeDir } from "./app-environment";
+import { getRosterHomeDir } from "./app-environment";
 
 /**
  * Per-agent home directory layout (ADE).
@@ -12,16 +12,16 @@ import { getSupersetHomeDir } from "./app-environment";
  *   └── .codex/          Codex config + generated AGENTS.md (codex runtime only)
  *
  * Paths are DERIVED from the agent (workspace) id, not stored in the DB. See
- * docs/memory.md. `<APP_DATA>` is SUPERSET_HOME_DIR (~/.ade[-<ws>]).
+ * docs/memory.md. `<APP_DATA>` is ROSTER_HOME_DIR (~/.roster[-<ws>]).
  */
 
 /**
  * Root of the agents directory. Resolved lazily (per call) rather than captured
  * in a module-level const so a late ADE_HOME_DIR override still routes paths
- * correctly — see getSupersetHomeDir in app-environment.ts.
+ * correctly — see getRosterHomeDir in app-environment.ts.
  */
 function agentsDir(): string {
-	return join(getSupersetHomeDir(), "agents");
+	return join(getRosterHomeDir(), "agents");
 }
 
 /** Root of an agent's home directory. */

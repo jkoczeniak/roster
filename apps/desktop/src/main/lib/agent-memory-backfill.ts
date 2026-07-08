@@ -1,6 +1,6 @@
 import { existsSync, readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
-import { workspaces } from "@superset/local-db";
+import { workspaces } from "@roster/local-db";
 import { isNotNull } from "drizzle-orm";
 import { getAgentMemoryDir } from "./agent-home";
 import { scaffoldAgentMemory } from "./agent-scaffold";

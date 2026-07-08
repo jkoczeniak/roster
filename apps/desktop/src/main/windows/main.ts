@@ -1,5 +1,5 @@
 import { join } from "node:path";
-import { workspaces, worktrees } from "@superset/local-db";
+import { workspaces, worktrees } from "@roster/local-db";
 import { eq } from "drizzle-orm";
 import type { BrowserWindow } from "electron";
 import { app, Notification, nativeTheme } from "electron";
@@ -128,7 +128,7 @@ export async function MainWindow() {
 			webviewTag: true,
 			// Isolate Electron session from system browser cookies
 			// This ensures desktop uses bearer token auth, not web cookies
-			partition: "persist:superset",
+			partition: "persist:roster",
 		},
 	});
 

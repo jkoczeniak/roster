@@ -1,5 +1,5 @@
 {
-	"extends": "@superset/typescript/electron.json",
+	"extends": "@roster/typescript/electron.json",
 	"compilerOptions": {
 		"types": ["bun"],
 		"baseUrl": ".",

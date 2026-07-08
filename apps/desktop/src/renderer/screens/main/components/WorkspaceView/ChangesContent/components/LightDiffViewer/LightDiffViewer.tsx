@@ -3,7 +3,7 @@ import { MultiFileDiff } from "@pierre/diffs/react";
 import { useThemeStore } from "renderer/stores/theme";
 import type { DiffViewMode, FileContents } from "shared/changes-types";
 
-// Superset theme ID → closest Shiki bundled equivalent
+// Roster theme ID → closest Shiki bundled equivalent
 const SHIKI_THEME_MAP: Record<
 	string,
 	{ light: DiffsThemeNames; dark: DiffsThemeNames }

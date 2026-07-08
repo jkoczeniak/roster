@@ -1,5 +1,5 @@
 /**
- * Theme type definitions for the Superset desktop app
+ * Theme type definitions for the Roster desktop app
  *
  * Themes control both UI colors (via CSS variables) and terminal colors (via xterm.js)
  */

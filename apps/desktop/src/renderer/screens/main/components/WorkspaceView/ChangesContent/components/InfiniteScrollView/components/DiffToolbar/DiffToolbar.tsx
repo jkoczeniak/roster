@@ -3,9 +3,9 @@ import {
 	DropdownMenuContent,
 	DropdownMenuItem,
 	DropdownMenuTrigger,
-} from "@superset/ui/dropdown-menu";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@superset/ui/tooltip";
-import { cn } from "@superset/ui/utils";
+} from "@roster/ui/dropdown-menu";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@roster/ui/tooltip";
+import { cn } from "@roster/ui/utils";
 import {
 	LuArrowDown,
 	LuArrowUp,

@@ -5,8 +5,8 @@ import {
 	AlertDialogFooter,
 	AlertDialogHeader,
 	AlertDialogTitle,
-} from "@superset/ui/alert-dialog";
-import { Button } from "@superset/ui/button";
+} from "@roster/ui/alert-dialog";
+import { Button } from "@roster/ui/button";
 
 interface CloseProjectDialogProps {
 	projectName: string;

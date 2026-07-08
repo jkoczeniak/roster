@@ -1,4 +1,4 @@
-import { Spinner } from "@superset/ui/spinner";
+import { Spinner } from "@roster/ui/spinner";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { electronTrpc } from "renderer/lib/electron-trpc";

@@ -1,4 +1,4 @@
-import { workspaces, worktrees } from "@superset/local-db";
+import { workspaces, worktrees } from "@roster/local-db";
 import { beginAgentInit } from "main/lib/agent-init";
 import { getAgentWorktreePath } from "main/lib/agent-home";
 import { localDb } from "main/lib/local-db";

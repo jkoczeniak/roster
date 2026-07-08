@@ -1,5 +1,5 @@
-import { Button } from "@superset/ui/button";
-import { cn } from "@superset/ui/utils";
+import { Button } from "@roster/ui/button";
+import { cn } from "@roster/ui/utils";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { HiArrowLeft } from "react-icons/hi2";
@@ -57,7 +57,7 @@ function NewProjectPage() {
 
 	useEffect(() => {
 		if (parentDir || !homeDir) return;
-		setParentDir(`${homeDir}/.ade/projects`);
+		setParentDir(`${homeDir}/.roster/projects`);
 	}, [homeDir, parentDir]);
 
 	return (

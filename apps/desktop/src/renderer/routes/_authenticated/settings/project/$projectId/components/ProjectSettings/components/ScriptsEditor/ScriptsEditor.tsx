@@ -1,5 +1,5 @@
-import { Button } from "@superset/ui/button";
-import { cn } from "@superset/ui/utils";
+import { Button } from "@roster/ui/button";
+import { cn } from "@roster/ui/utils";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { HiArrowTopRightOnSquare, HiDocumentArrowUp } from "react-icons/hi2";
 import { electronTrpc } from "renderer/lib/electron-trpc";

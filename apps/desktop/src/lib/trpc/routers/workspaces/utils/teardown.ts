@@ -55,8 +55,8 @@ export async function runTeardown({
 				env: {
 					...baseEnv,
 					...wrapperEnv,
-					SUPERSET_WORKSPACE_NAME: workspaceName,
-					SUPERSET_ROOT_PATH: mainRepoPath,
+					ROSTER_WORKSPACE_NAME: workspaceName,
+					ROSTER_ROOT_PATH: mainRepoPath,
 				},
 			});
 

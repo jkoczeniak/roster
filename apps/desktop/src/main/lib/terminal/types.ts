@@ -1,4 +1,4 @@
-import type { AgentRuntime } from "@superset/local-db";
+import type { AgentRuntime } from "@roster/local-db";
 import type { SerializeAddon } from "@xterm/addon-serialize";
 import type { Terminal as HeadlessTerminal } from "@xterm/headless";
 import type * as pty from "node-pty";

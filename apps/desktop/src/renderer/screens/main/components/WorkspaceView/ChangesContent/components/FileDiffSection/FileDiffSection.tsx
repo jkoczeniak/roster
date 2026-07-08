@@ -1,5 +1,5 @@
-import { Button } from "@superset/ui/button";
-import { Collapsible, CollapsibleContent } from "@superset/ui/collapsible";
+import { Button } from "@roster/ui/button";
+import { Collapsible, CollapsibleContent } from "@roster/ui/collapsible";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { LuFileCode, LuLoader } from "react-icons/lu";
 import { electronTrpc } from "renderer/lib/electron-trpc";

@@ -1,4 +1,4 @@
-import { projects, worktrees } from "@superset/local-db";
+import { projects, worktrees } from "@roster/local-db";
 import { eq } from "drizzle-orm";
 import { track } from "main/lib/analytics";
 import { localDb } from "main/lib/local-db";
@@ -17,7 +17,7 @@ import {
 	removeWorktree,
 	sanitizeGitError,
 } from "./git";
-import { copySupersetConfigToWorktree } from "./setup";
+import { copyRosterConfigToWorktree } from "./setup";
 
 export interface WorkspaceInitParams {
 	workspaceId: string;
@@ -112,7 +112,7 @@ export async function initializeWorkspaceWorktree({
 				"copying_config",
 				"Copying configuration...",
 			);
-			copySupersetConfigToWorktree(mainRepoPath, worktreePath);
+			copyRosterConfigToWorktree(mainRepoPath, worktreePath);
 
 			if (manager.isCancellationRequested(workspaceId)) {
 				try {
@@ -414,7 +414,7 @@ export async function initializeWorkspaceWorktree({
 			"copying_config",
 			"Copying configuration...",
 		);
-		copySupersetConfigToWorktree(mainRepoPath, worktreePath);
+		copyRosterConfigToWorktree(mainRepoPath, worktreePath);
 
 		if (manager.isCancellationRequested(workspaceId)) {
 			try {

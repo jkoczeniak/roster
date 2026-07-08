@@ -3,7 +3,7 @@ import path from "node:path";
 import {
 	type AgentBinary,
 	BINARY_INSTALL,
-} from "@superset/shared/agent-binaries";
+} from "@roster/shared/agent-binaries";
 import { BIN_DIR } from "./paths";
 
 export const WRAPPER_MARKER = "# ADE agent-wrapper v2";
@@ -16,11 +16,11 @@ export const WRAPPER_MARKER = "# ADE agent-wrapper v2";
  */
 const WRAPPER_HEADER_NEEDLE = "agent-wrapper";
 
-// Matches ADE-managed hook paths under the app home dir (~/.ade or
-// ~/.ade-<workspace>). MUST be ADE's own dir, not ~/.damon — otherwise ADE would
-// treat the user's real Damon install's hooks as its own and clobber them, and
-// fail to recognize (so would duplicate) its own hooks in shared agent settings.
-const SUPERSET_MANAGED_HOOK_PATH_PATTERN = /\/\.ade(?:-[^/'"\s\\]+)?\//;
+// Matches Roster-managed hook paths under the app home dir (~/.roster or
+// ~/.roster-<workspace>). MUST be Roster's own dir — otherwise Roster would
+// treat another tool's hooks as its own and clobber them, and fail to
+// recognize (so would duplicate) its own hooks in shared agent settings.
+const ROSTER_MANAGED_HOOK_PATH_PATTERN = /\/\.roster(?:-[^/'"\s\\]+)?\//;
 
 export function writeFileIfChanged(
 	filePath: string,
@@ -43,14 +43,14 @@ export function writeFileIfChanged(
 	return true;
 }
 
-export function isSupersetManagedHookCommand(
+export function isRosterManagedHookCommand(
 	command: string | undefined,
 	scriptName: string,
 ): boolean {
 	if (!command) return false;
 	const normalized = command.replaceAll("\\", "/");
 	if (!normalized.includes(`/hooks/${scriptName}`)) return false;
-	return SUPERSET_MANAGED_HOOK_PATH_PATTERN.test(normalized);
+	return ROSTER_MANAGED_HOOK_PATH_PATTERN.test(normalized);
 }
 
 function buildRealBinaryResolver(): string {
@@ -61,7 +61,7 @@ function buildRealBinaryResolver(): string {
     [ -z "$dir" ] && continue
     dir="\${dir%/}"
     case "$dir" in
-      "${BIN_DIR}"|"$HOME"/.ade/bin|"$HOME"/.ade-*/bin) continue ;;
+      "${BIN_DIR}"|"$HOME"/.roster/bin|"$HOME"/.roster-*/bin) continue ;;
     esac
     local candidate="$dir/$name"
     if [ -x "$candidate" ] && [ ! -d "$candidate" ]; then

@@ -1,6 +1,6 @@
-import { ToggleGroup, ToggleGroupItem } from "@superset/ui/toggle-group";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@superset/ui/tooltip";
-import { cn } from "@superset/ui/utils";
+import { ToggleGroup, ToggleGroupItem } from "@roster/ui/toggle-group";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@roster/ui/tooltip";
+import { cn } from "@roster/ui/utils";
 import { useState } from "react";
 import {
 	TbFold,

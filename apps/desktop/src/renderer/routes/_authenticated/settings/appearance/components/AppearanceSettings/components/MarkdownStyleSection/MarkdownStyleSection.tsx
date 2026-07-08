@@ -4,7 +4,7 @@ import {
 	SelectItem,
 	SelectTrigger,
 	SelectValue,
-} from "@superset/ui/select";
+} from "@roster/ui/select";
 import {
 	type MarkdownStyle,
 	useMarkdownStyle,

@@ -21,7 +21,7 @@ export interface ThemeState {
  * canonical hashes here are the bridge. See sync/workspace-identity.ts.
  */
 export interface AppStateSyncEnvelope {
-	/** Per-machine UUID, persisted at `~/.ade/device-id`. */
+	/** Per-machine UUID, persisted at `~/.roster/device-id`. */
 	deviceId: string;
 	/** Wall-clock ms of the most recent write by ANY workspace. */
 	lastWrittenAt: number;

@@ -6,7 +6,7 @@ import {
 	writeFileSync,
 } from "node:fs";
 import { join } from "node:path";
-import type { AgentRuntime } from "@superset/local-db";
+import type { AgentRuntime } from "@roster/local-db";
 import {
 	getAgentCodexHome,
 	getAgentHome,

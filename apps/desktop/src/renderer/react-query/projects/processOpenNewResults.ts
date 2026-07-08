@@ -1,4 +1,4 @@
-import { toast } from "@superset/ui/sonner";
+import { toast } from "@roster/ui/sonner";
 import type { ElectronRouterOutputs } from "renderer/lib/electron-trpc";
 
 type OpenNewResult = ElectronRouterOutputs["projects"]["openNew"];

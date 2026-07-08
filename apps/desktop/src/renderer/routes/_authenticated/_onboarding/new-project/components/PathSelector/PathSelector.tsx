@@ -1,5 +1,5 @@
-import { Button } from "@superset/ui/button";
-import { Input } from "@superset/ui/input";
+import { Button } from "@roster/ui/button";
+import { Input } from "@roster/ui/input";
 import { LuFolderOpen } from "react-icons/lu";
 import { electronTrpc } from "renderer/lib/electron-trpc";
 

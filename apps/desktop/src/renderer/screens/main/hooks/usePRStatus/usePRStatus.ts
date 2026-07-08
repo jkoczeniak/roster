@@ -1,4 +1,4 @@
-import type { GitHubStatus } from "@superset/local-db";
+import type { GitHubStatus } from "@roster/local-db";
 import { electronTrpc } from "renderer/lib/electron-trpc";
 
 interface UsePRStatusOptions {

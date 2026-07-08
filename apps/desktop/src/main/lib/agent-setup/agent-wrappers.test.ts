@@ -12,12 +12,12 @@ import path from "node:path";
 
 const TEST_ROOT = path.join(
 	realOs.tmpdir(),
-	`superset-agent-wrappers-${process.pid}-${Date.now()}`,
+	`roster-agent-wrappers-${process.pid}-${Date.now()}`,
 );
-const TEST_BIN_DIR = path.join(TEST_ROOT, "superset", "bin");
-const TEST_HOOKS_DIR = path.join(TEST_ROOT, "superset", "hooks");
-const TEST_ZSH_DIR = path.join(TEST_ROOT, "superset", "zsh");
-const TEST_BASH_DIR = path.join(TEST_ROOT, "superset", "bash");
+const TEST_BIN_DIR = path.join(TEST_ROOT, "roster", "bin");
+const TEST_HOOKS_DIR = path.join(TEST_ROOT, "roster", "hooks");
+const TEST_ZSH_DIR = path.join(TEST_ROOT, "roster", "zsh");
+const TEST_BASH_DIR = path.join(TEST_ROOT, "roster", "bash");
 const TEST_OPENCODE_CONFIG_DIR = path.join(TEST_HOOKS_DIR, "opencode");
 const TEST_OPENCODE_PLUGIN_DIR = path.join(TEST_OPENCODE_CONFIG_DIR, "plugin");
 let mockedHomeDir = path.join(TEST_ROOT, "home");
@@ -31,7 +31,7 @@ mock.module("shared/env.shared", () => ({
 
 mock.module("./notify-hook", () => ({
 	NOTIFY_SCRIPT_NAME: "notify.sh",
-	NOTIFY_SCRIPT_MARKER: "# Superset agent notification hook",
+	NOTIFY_SCRIPT_MARKER: "# Roster agent notification hook",
 	getNotifyScriptPath: () => path.join(TEST_HOOKS_DIR, "notify.sh"),
 	getNotifyScriptContent: () => "#!/bin/bash\nexit 0\n",
 	createNotifyScript: () => {},
@@ -60,11 +60,9 @@ const {
 	buildCopilotWrapperExecLine,
 	buildWrapperScript,
 	createCodexWrapper,
-	createMastraWrapper,
 	getCursorHooksJsonContent,
 	getCopilotHookScriptPath,
 	getGeminiSettingsJsonContent,
-	getMastraHooksJsonContent,
 } = await import("./agent-wrappers");
 
 describe("agent-wrappers copilot", () => {
@@ -78,10 +76,10 @@ describe("agent-wrappers copilot", () => {
 		rmSync(TEST_ROOT, { recursive: true, force: true });
 	});
 
-	it("rewrites stale superset-notify.json with current hook path", () => {
+	it("rewrites stale roster-notify.json with current hook path", () => {
 		const projectDir = path.join(TEST_ROOT, "project");
 		const hooksDir = path.join(projectDir, ".github", "hooks");
-		const hookFile = path.join(hooksDir, "superset-notify.json");
+		const hookFile = path.join(hooksDir, "roster-notify.json");
 		const gitInfoDir = path.join(projectDir, ".git", "info");
 		const realBinDir = path.join(TEST_ROOT, "real-bin");
 		const realCopilot = path.join(realBinDir, "copilot");
@@ -93,7 +91,7 @@ describe("agent-wrappers copilot", () => {
 		mkdirSync(realBinDir, { recursive: true });
 
 		writeFileSync(hookScriptPath, "#!/bin/bash\nexit 0\n", { mode: 0o755 });
-		writeFileSync(hookFile, '{"superset":"old","bash":"/tmp/old-hook.sh"}');
+		writeFileSync(hookFile, '{"roster":"old","bash":"/tmp/old-hook.sh"}');
 
 		writeFileSync(realCopilot, "#!/bin/bash\necho real-copilot\n", {
 			mode: 0o755,
@@ -112,7 +110,7 @@ describe("agent-wrappers copilot", () => {
 			env: {
 				...process.env,
 				PATH: `${TEST_BIN_DIR}:${realBinDir}:${process.env.PATH || ""}`,
-				SUPERSET_TAB_ID: "tab-1",
+				ROSTER_TAB_ID: "tab-1",
 			},
 			encoding: "utf-8",
 		});
@@ -130,15 +128,15 @@ describe("agent-wrappers copilot", () => {
 
 		expect(wrapper).toContain("export CODEX_TUI_RECORD_SESSION=1");
 		expect(wrapper).toContain('"type":"task_started"');
-		expect(wrapper).toContain('_superset_last_turn_id=""');
-		expect(wrapper).toContain("_superset_turn_id=$(printf");
+		expect(wrapper).toContain('_roster_last_turn_id=""');
+		expect(wrapper).toContain("_roster_turn_id=$(printf");
 		expect(wrapper).toContain('awk -F\'"turn_id":"\'');
 		expect(wrapper).toContain('{"hook_event_name":"Start"}');
 		expect(wrapper).toContain(
 			`"$REAL_BIN" -c 'notify=["bash","${path.join(TEST_HOOKS_DIR, "notify.sh")}"]' "$@"`,
 		);
-		expect(wrapper).toContain("SUPERSET_CODEX_START_WATCHER_PID");
-		expect(wrapper).toContain('kill "$SUPERSET_CODEX_START_WATCHER_PID"');
+		expect(wrapper).toContain("ROSTER_CODEX_START_WATCHER_PID");
+		expect(wrapper).toContain('kill "$ROSTER_CODEX_START_WATCHER_PID"');
 
 		const execLine = buildCodexWrapperExecLine(
 			path.join(TEST_HOOKS_DIR, "notify.sh"),
@@ -147,21 +145,10 @@ describe("agent-wrappers copilot", () => {
 		expect(wrapper).toContain(execLine);
 	});
 
-	it("creates mastracode wrapper passthrough", () => {
-		createMastraWrapper();
-
-		const wrapperPath = path.join(TEST_BIN_DIR, "mastracode");
-		const wrapper = readFileSync(wrapperPath, "utf-8");
-
-		expect(wrapper).toContain("# Superset wrapper for mastracode");
-		expect(wrapper).toContain('REAL_BIN="$(find_real_binary "mastracode")"');
-		expect(wrapper).toContain('exec "$REAL_BIN" "$@"');
-	});
-
-	it("replaces stale Cursor hook commands from old superset paths", () => {
+	it("replaces stale Cursor hook commands from old roster paths", () => {
 		const cursorHooksPath = path.join(mockedHomeDir, ".cursor", "hooks.json");
-		const staleHookPath = "/tmp/.superset-old/hooks/cursor-hook.sh";
-		const currentHookPath = "/tmp/.superset-new/hooks/cursor-hook.sh";
+		const staleHookPath = "/tmp/.roster-old/hooks/cursor-hook.sh";
+		const currentHookPath = "/tmp/.roster-new/hooks/cursor-hook.sh";
 
 		mkdirSync(path.dirname(cursorHooksPath), { recursive: true });
 		writeFileSync(
@@ -209,14 +196,14 @@ describe("agent-wrappers copilot", () => {
 		expect(JSON.parse(content2)).toEqual(JSON.parse(content));
 	});
 
-	it("replaces stale Gemini hook commands from old superset paths", () => {
+	it("replaces stale Gemini hook commands from old roster paths", () => {
 		const geminiSettingsPath = path.join(
 			mockedHomeDir,
 			".gemini",
 			"settings.json",
 		);
-		const staleHookPath = "/tmp/.superset-old/hooks/gemini-hook.sh";
-		const currentHookPath = "/tmp/.superset-new/hooks/gemini-hook.sh";
+		const staleHookPath = "/tmp/.roster-old/hooks/gemini-hook.sh";
+		const currentHookPath = "/tmp/.roster-new/hooks/gemini-hook.sh";
 
 		mkdirSync(path.dirname(geminiSettingsPath), { recursive: true });
 		writeFileSync(
@@ -311,67 +298,6 @@ describe("agent-wrappers copilot", () => {
 		expect(
 			parsed2.hooks.BeforeAgent.some((def) =>
 				def.hooks.some((hook) => hook.command === "/opt/custom-hook.sh"),
-			),
-		).toBe(true);
-		expect(JSON.parse(content2)).toEqual(JSON.parse(content));
-	});
-
-	it("replaces stale Mastra hook commands from old superset paths", () => {
-		const mastraHooksPath = path.join(
-			mockedHomeDir,
-			".mastracode",
-			"hooks.json",
-		);
-		const staleHookPath = "/tmp/.superset-old/hooks/notify.sh";
-		const currentHookPath = "/tmp/.superset-new/hooks/notify.sh";
-
-		mkdirSync(path.dirname(mastraHooksPath), { recursive: true });
-		writeFileSync(
-			mastraHooksPath,
-			JSON.stringify(
-				{
-					UserPromptSubmit: [
-						{ type: "command", command: `bash '${staleHookPath}'` },
-						{ type: "command", command: "/usr/local/bin/custom-hook" },
-					],
-					Stop: [{ type: "command", command: `bash '${staleHookPath}'` }],
-					PostToolUse: [
-						{ type: "command", command: `bash '${staleHookPath}'` },
-					],
-				},
-				null,
-				2,
-			),
-		);
-
-		const content = getMastraHooksJsonContent(currentHookPath);
-		writeFileSync(mastraHooksPath, content);
-		const content2 = getMastraHooksJsonContent(currentHookPath);
-
-		const parsed = JSON.parse(content) as Record<
-			string,
-			Array<{ type: string; command: string }>
-		>;
-		const managedEvents = ["UserPromptSubmit", "Stop", "PostToolUse"] as const;
-
-		for (const eventName of managedEvents) {
-			const hooks = parsed[eventName];
-			expect(Array.isArray(hooks)).toBe(true);
-			expect(
-				hooks.some(
-					(entry) =>
-						entry.type === "command" &&
-						entry.command === `bash '${currentHookPath}'`,
-				),
-			).toBe(true);
-			expect(hooks.some((entry) => entry.command.includes(staleHookPath))).toBe(
-				false,
-			);
-		}
-
-		expect(
-			parsed.UserPromptSubmit.some(
-				(entry) => entry.command === "/usr/local/bin/custom-hook",
 			),
 		).toBe(true);
 		expect(JSON.parse(content2)).toEqual(JSON.parse(content));

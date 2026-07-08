@@ -16,9 +16,9 @@
  */
 
 import { createHash } from "node:crypto";
-import { projects, workspaces, type SelectWorkspace } from "@superset/local-db";
+import { projects, workspaces, type SelectWorkspace } from "@roster/local-db";
 import { eq } from "drizzle-orm";
-import type { WorkspaceType } from "@superset/local-db";
+import type { WorkspaceType } from "@roster/local-db";
 import { localDb } from "main/lib/local-db";
 
 export interface WorkspaceIdentityInput {

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "bun:test";
-import { normalizeExecutionMode } from "@superset/local-db/schema/zod";
+import { normalizeExecutionMode } from "@roster/local-db/schema/zod";
 import { getPresetLaunchPlan } from "./preset-launch";
 
 describe("normalizeExecutionMode", () => {

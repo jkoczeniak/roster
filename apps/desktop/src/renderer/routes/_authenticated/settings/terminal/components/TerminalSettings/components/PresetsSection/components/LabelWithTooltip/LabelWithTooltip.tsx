@@ -1,5 +1,5 @@
-import { Label } from "@superset/ui/label";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@superset/ui/tooltip";
+import { Label } from "@roster/ui/label";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@roster/ui/tooltip";
 import { HiOutlineQuestionMarkCircle } from "react-icons/hi2";
 
 interface LabelWithTooltipProps {

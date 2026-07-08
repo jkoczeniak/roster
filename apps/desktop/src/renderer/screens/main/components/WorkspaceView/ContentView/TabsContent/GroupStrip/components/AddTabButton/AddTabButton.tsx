@@ -1,4 +1,4 @@
-import { Button } from "@superset/ui/button";
+import { Button } from "@roster/ui/button";
 import {
 	DropdownMenu,
 	DropdownMenuCheckboxItem,
@@ -6,7 +6,7 @@ import {
 	DropdownMenuItem,
 	DropdownMenuSeparator,
 	DropdownMenuTrigger,
-} from "@superset/ui/dropdown-menu";
+} from "@roster/ui/dropdown-menu";
 import { BsTerminalPlus } from "react-icons/bs";
 import { HiMiniChevronDown } from "react-icons/hi2";
 import { LuFileText, LuPlus } from "react-icons/lu";

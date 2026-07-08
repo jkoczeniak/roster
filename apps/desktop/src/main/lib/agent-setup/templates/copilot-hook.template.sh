@@ -1,6 +1,6 @@
 #!/bin/bash
 {{MARKER}}
-# Called by GitHub Copilot CLI hooks to notify Superset of agent lifecycle events
+# Called by GitHub Copilot CLI hooks to notify Roster of agent lifecycle events
 # Events: sessionStart → Start, sessionEnd → Stop, userPromptSubmitted → Start,
 #         postToolUse → Start, preToolUse → PermissionRequest
 # Copilot CLI hooks receive JSON via stdin and MUST output valid JSON to stdout
@@ -27,16 +27,16 @@ esac
 # Must output valid JSON to avoid blocking the agent
 printf '{}\n'
 
-[ -z "$SUPERSET_TAB_ID" ] && exit 0
+[ -z "$ROSTER_TAB_ID" ] && exit 0
 
-curl -sG "http://127.0.0.1:${SUPERSET_PORT:-{{DEFAULT_PORT}}}/hook/complete" \
+curl -sG "http://127.0.0.1:${ROSTER_PORT:-{{DEFAULT_PORT}}}/hook/complete" \
   --connect-timeout 1 --max-time 2 \
-  --data-urlencode "paneId=$SUPERSET_PANE_ID" \
-  --data-urlencode "tabId=$SUPERSET_TAB_ID" \
-  --data-urlencode "workspaceId=$SUPERSET_WORKSPACE_ID" \
+  --data-urlencode "paneId=$ROSTER_PANE_ID" \
+  --data-urlencode "tabId=$ROSTER_TAB_ID" \
+  --data-urlencode "workspaceId=$ROSTER_WORKSPACE_ID" \
   --data-urlencode "eventType=$EVENT_TYPE" \
-  --data-urlencode "env=$SUPERSET_ENV" \
-  --data-urlencode "version=$SUPERSET_HOOK_VERSION" \
+  --data-urlencode "env=$ROSTER_ENV" \
+  --data-urlencode "version=$ROSTER_HOOK_VERSION" \
   > /dev/null 2>&1
 
 exit 0

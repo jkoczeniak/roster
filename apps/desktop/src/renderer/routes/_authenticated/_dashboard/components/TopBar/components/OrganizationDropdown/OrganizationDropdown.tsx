@@ -1,5 +1,5 @@
-import { COMPANY } from "@superset/shared/constants";
-import { Avatar } from "@superset/ui/atoms/Avatar";
+import { COMPANY } from "@roster/shared/constants";
+import { Avatar } from "@roster/ui/atoms/Avatar";
 import {
 	DropdownMenu,
 	DropdownMenuContent,
@@ -10,7 +10,7 @@ import {
 	DropdownMenuSubContent,
 	DropdownMenuSubTrigger,
 	DropdownMenuTrigger,
-} from "@superset/ui/dropdown-menu";
+} from "@roster/ui/dropdown-menu";
 import { useNavigate } from "@tanstack/react-router";
 import { FaDiscord, FaGithub, FaXTwitter } from "react-icons/fa6";
 import {
@@ -67,7 +67,7 @@ export function OrganizationDropdown() {
 			</DropdownMenuTrigger>
 			<DropdownMenuContent align="end" className="w-56">
 				<DropdownMenuItem
-					onSelect={() => navigate({ to: "/settings/account" })}
+					onSelect={() => navigate({ to: "/settings/appearance" })}
 				>
 					<HiOutlineCog6Tooth className="h-4 w-4" />
 					<span>Settings</span>

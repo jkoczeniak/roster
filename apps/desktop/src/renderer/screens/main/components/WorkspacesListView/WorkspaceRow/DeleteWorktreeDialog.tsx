@@ -5,9 +5,9 @@ import {
 	AlertDialogFooter,
 	AlertDialogHeader,
 	AlertDialogTitle,
-} from "@superset/ui/alert-dialog";
-import { Button } from "@superset/ui/button";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@superset/ui/tooltip";
+} from "@roster/ui/alert-dialog";
+import { Button } from "@roster/ui/button";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@roster/ui/tooltip";
 import { electronTrpc } from "renderer/lib/electron-trpc";
 import { useDeleteWorktree } from "renderer/react-query/workspaces/useDeleteWorktree";
 import { deleteWithToast } from "renderer/routes/_authenticated/components/TeardownLogsDialog";

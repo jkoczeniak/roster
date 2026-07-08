@@ -96,9 +96,9 @@ export type WorkspaceType = z.infer<typeof workspaceTypeSchema>;
 
 /**
  * Agent runtime — which CLI drives an agent (ADE "Agent" = workspace).
- * Mirrors AGENT_TYPES in @superset/shared/src/agent-command.ts, which keys
+ * Mirrors AGENT_TYPES in @roster/shared/src/agent-command.ts, which keys
  * AGENT_PRESET_COMMANDS (the runtime -> launch-command map). Kept in sync
- * manually because local-db does not depend on @superset/shared.
+ * manually because local-db does not depend on @roster/shared.
  */
 export const AGENT_RUNTIMES = [
 	"claude",

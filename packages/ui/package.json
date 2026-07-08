@@ -1,5 +1,5 @@
 {
-	"name": "@superset/ui",
+	"name": "@roster/ui",
 	"private": true,
 	"version": "0.1.0",
 	"type": "module",
@@ -50,7 +50,7 @@
 		"@radix-ui/react-tooltip": "^1.2.8",
 		"@radix-ui/react-use-controllable-state": "^1.2.2",
 		"@streamdown/mermaid": "^1.0.2",
-		"@superset/shared": "workspace:*",
+		"@roster/shared": "workspace:*",
 		"@xyflow/react": "^12.10.0",
 		"ai": "^6.0.0",
 		"class-variance-authority": "^0.7.1",
@@ -81,7 +81,7 @@
 	},
 	"devDependencies": {
 		"@lobehub/icons-static-svg": "^1.91.0",
-		"@superset/typescript": "workspace:*",
+		"@roster/typescript": "workspace:*",
 		"@tailwindcss/postcss": "^4.0.9",
 		"@types/react": "~19.2.2",
 		"react": "19.2.0",

@@ -1,6 +1,6 @@
-import type { ExecutionMode, TerminalPreset } from "@superset/local-db";
-import { Button } from "@superset/ui/button";
-import { Label } from "@superset/ui/label";
+import type { ExecutionMode, TerminalPreset } from "@roster/local-db";
+import { Button } from "@roster/ui/button";
+import { Label } from "@roster/ui/label";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { HiOutlinePlus } from "react-icons/hi2";
 import { useIsDarkTheme } from "renderer/assets/app-icons/preset-icons";

@@ -1,4 +1,4 @@
-import { Tooltip, TooltipContent, TooltipTrigger } from "@superset/ui/tooltip";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@roster/ui/tooltip";
 import { useMemo } from "react";
 import { LuPlus } from "react-icons/lu";
 import { useWorkspaceShortcuts } from "renderer/hooks/useWorkspaceShortcuts";

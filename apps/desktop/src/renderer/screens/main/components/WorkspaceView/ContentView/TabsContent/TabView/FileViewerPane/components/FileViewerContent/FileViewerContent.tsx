@@ -11,7 +11,7 @@ import { LuLoader } from "react-icons/lu";
 import { MarkdownRenderer } from "renderer/components/MarkdownRenderer";
 import {
 	registerSaveAction,
-	SUPERSET_THEME,
+	ROSTER_THEME,
 	useMonacoEditorOptions,
 	useMonacoReady,
 } from "renderer/providers/MonacoProvider";
@@ -375,7 +375,7 @@ export function FileViewerContent({
 					height="100%"
 					language={detectLanguage(filePath)}
 					value={draftContentRef.current ?? rawFileData.content}
-					theme={SUPERSET_THEME}
+					theme={ROSTER_THEME}
 					onMount={handleEditorMount}
 					onChange={onEditorChange}
 					loading={

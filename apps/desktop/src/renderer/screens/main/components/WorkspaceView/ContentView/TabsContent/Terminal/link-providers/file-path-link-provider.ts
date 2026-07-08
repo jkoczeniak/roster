@@ -6,7 +6,7 @@ import {
 	type IFallbackLink,
 	type IParsedLink,
 	removeLinkSuffix,
-} from "@superset/shared/terminal-link-parsing";
+} from "@roster/shared/terminal-link-parsing";
 import type { ILink, ILinkProvider, Terminal } from "@xterm/xterm";
 
 /**

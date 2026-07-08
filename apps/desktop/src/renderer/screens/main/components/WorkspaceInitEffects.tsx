@@ -1,4 +1,4 @@
-import { toast } from "@superset/ui/sonner";
+import { toast } from "@roster/ui/sonner";
 import { useCallback, useEffect, useRef } from "react";
 import { useCreateOrAttachWithTheme } from "renderer/hooks/useCreateOrAttachWithTheme";
 import { electronTrpc } from "renderer/lib/electron-trpc";

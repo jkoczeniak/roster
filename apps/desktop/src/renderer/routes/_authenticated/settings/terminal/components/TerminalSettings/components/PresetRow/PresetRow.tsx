@@ -1,4 +1,4 @@
-import { Badge } from "@superset/ui/badge";
+import { Badge } from "@roster/ui/badge";
 import { useEffect, useRef } from "react";
 import { useDrag, useDrop } from "react-dnd";
 import { LuGripVertical } from "react-icons/lu";

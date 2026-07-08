@@ -16,8 +16,8 @@ const productName = pkg.productName;
 // are published. TODO(release): confirm GitHub owner/org and set the public repo
 // name before publishing. Must stay in sync with RELEASE_REPO_* in
 // src/main/lib/auto-updater.ts.
-const RELEASE_REPO_OWNER = "per-simmons"; // TODO(release): confirm GitHub owner/org
-const RELEASE_REPO_NAME = "damon-ade"; // TODO(release): set public repo name
+const RELEASE_REPO_OWNER = "jkoczeniak";
+const RELEASE_REPO_NAME = "roster";
 
 // Notarize only when Apple credentials are present in the environment
 // (CI signing job, or a local signed build). electron-builder reads the
@@ -30,7 +30,7 @@ const linuxIconPath = join(pkg.resources, "build/icons");
 const winIconPath = join(pkg.resources, "build/icons/icon.ico");
 
 const config: Configuration = {
-	appId: "studio.persimmons.ade",
+	appId: "com.koczeniak.roster",
 	productName,
 	copyright: `Copyright © ${currentYear} — ${author}`,
 	electronVersion: pkg.devDependencies.electron.replace(/^\^/, ""),
@@ -196,7 +196,7 @@ const config: Configuration = {
 	// Deep linking protocol
 	protocols: {
 		name: productName,
-		schemes: ["ade"],
+		schemes: ["roster"],
 	},
 
 	// Linux
@@ -205,7 +205,7 @@ const config: Configuration = {
 		category: "Utility",
 		synopsis: pkg.description,
 		target: ["AppImage"],
-		artifactName: `ade-\${version}-\${arch}.\${ext}`,
+		artifactName: `roster-\${version}-\${arch}.\${ext}`,
 	},
 
 	// Windows

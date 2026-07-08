@@ -8,9 +8,9 @@ import {
 	AlertDialogHeader,
 	AlertDialogTitle,
 	AlertDialogTrigger,
-} from "@superset/ui/alert-dialog";
-import { Button } from "@superset/ui/button";
-import { toast } from "@superset/ui/sonner";
+} from "@roster/ui/alert-dialog";
+import { Button } from "@roster/ui/button";
+import { toast } from "@roster/ui/sonner";
 import { motion } from "framer-motion";
 import { GoGitBranch } from "react-icons/go";
 import { electronTrpc } from "renderer/lib/electron-trpc";

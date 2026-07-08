@@ -1,5 +1,5 @@
 import { existsSync } from "node:fs";
-import { workspaces, worktrees } from "@superset/local-db";
+import { workspaces, worktrees } from "@roster/local-db";
 import { and, eq, isNull } from "drizzle-orm";
 import { localDb } from "main/lib/local-db";
 import { z } from "zod";

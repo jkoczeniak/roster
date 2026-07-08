@@ -1,5 +1,5 @@
 import { existsSync } from "node:fs";
-import type { SelectWorktree } from "@superset/local-db";
+import type { SelectWorktree } from "@roster/local-db";
 import { track } from "main/lib/analytics";
 import { workspaceInitManager } from "main/lib/workspace-init-manager";
 import { getWorkspaceRuntimeRegistry } from "main/lib/workspace-runtime";

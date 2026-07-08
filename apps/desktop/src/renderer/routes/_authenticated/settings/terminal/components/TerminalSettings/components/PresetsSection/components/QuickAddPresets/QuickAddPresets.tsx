@@ -1,5 +1,5 @@
-import { Button } from "@superset/ui/button";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@superset/ui/tooltip";
+import { Button } from "@roster/ui/button";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@roster/ui/tooltip";
 import { HiOutlineCheck } from "react-icons/hi2";
 import { getPresetIcon } from "renderer/assets/app-icons/preset-icons";
 import type { PresetTemplate } from "../../constants";

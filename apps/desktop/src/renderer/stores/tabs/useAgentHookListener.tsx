@@ -1,4 +1,4 @@
-import { toast } from "@superset/ui/sonner";
+import { toast } from "@roster/ui/sonner";
 import { useNavigate } from "@tanstack/react-router";
 import { useRef } from "react";
 import { AgentReviewToast } from "renderer/components/AgentReviewToast/AgentReviewToast";

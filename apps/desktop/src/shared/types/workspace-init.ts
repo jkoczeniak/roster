@@ -13,7 +13,7 @@ export type WorkspaceInitStep =
 	| "verifying" // Verifying base branch exists
 	| "fetching" // Fetching latest changes
 	| "creating_worktree" // Creating git worktree
-	| "copying_config" // Copying .superset configuration
+	| "copying_config" // Copying .roster configuration
 	| "finalizing" // Final DB operations
 	| "ready"
 	| "failed";

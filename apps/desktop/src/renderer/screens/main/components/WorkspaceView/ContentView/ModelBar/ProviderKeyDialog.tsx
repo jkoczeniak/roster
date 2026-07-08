@@ -1,4 +1,4 @@
-import { Button } from "@superset/ui/button";
+import { Button } from "@roster/ui/button";
 import {
 	Dialog,
 	DialogContent,
@@ -6,10 +6,10 @@ import {
 	DialogFooter,
 	DialogHeader,
 	DialogTitle,
-} from "@superset/ui/dialog";
-import { Input } from "@superset/ui/input";
-import { Label } from "@superset/ui/label";
-import { toast } from "@superset/ui/sonner";
+} from "@roster/ui/dialog";
+import { Input } from "@roster/ui/input";
+import { Label } from "@roster/ui/label";
+import { toast } from "@roster/ui/sonner";
 import { useEffect, useState } from "react";
 import { electronTrpc } from "renderer/lib/electron-trpc";
 import { useProviderKeys } from "renderer/stores/model-bar/useProviderKeys";

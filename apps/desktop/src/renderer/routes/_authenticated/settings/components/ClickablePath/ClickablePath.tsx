@@ -1,4 +1,4 @@
-import type { ExternalApp } from "@superset/local-db";
+import type { ExternalApp } from "@roster/local-db";
 import {
 	DropdownMenu,
 	DropdownMenuContent,
@@ -8,9 +8,9 @@ import {
 	DropdownMenuSubContent,
 	DropdownMenuSubTrigger,
 	DropdownMenuTrigger,
-} from "@superset/ui/dropdown-menu";
-import { toast } from "@superset/ui/sonner";
-import { cn } from "@superset/ui/utils";
+} from "@roster/ui/dropdown-menu";
+import { toast } from "@roster/ui/sonner";
+import { cn } from "@roster/ui/utils";
 import { useState } from "react";
 import { LuCopy, LuExternalLink } from "react-icons/lu";
 import jetbrainsIcon from "renderer/assets/app-icons/jetbrains.svg";

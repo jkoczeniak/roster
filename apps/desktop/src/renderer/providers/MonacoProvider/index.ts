@@ -3,7 +3,7 @@ export {
 	MonacoProvider,
 	monaco,
 	registerSaveAction,
-	SUPERSET_THEME,
+	ROSTER_THEME,
 	useMonacoEditorOptions,
 	useMonacoReady,
 } from "./MonacoProvider";

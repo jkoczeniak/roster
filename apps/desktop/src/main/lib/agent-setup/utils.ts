@@ -10,7 +10,7 @@ function findBinaryPathsUnix(name: string): string[] {
 	const shell = getDefaultShell();
 	const result = execFileSync(
 		shell,
-		["-l", "-c", 'which -a -- "$1"', "superset-find-binary", name],
+		["-l", "-c", 'which -a -- "$1"', "roster-find-binary", name],
 		{
 			encoding: "utf-8",
 			stdio: ["pipe", "pipe", "ignore"],
@@ -32,7 +32,7 @@ function findBinaryPathsWindows(name: string): string[] {
 
 /**
  * Finds the real path of a binary, skipping our wrapper scripts.
- * Filters out all superset bin directories (prod, dev, and workspace-specific)
+ * Filters out all roster bin directories (prod, dev, and workspace-specific)
  * to avoid wrapper scripts calling each other.
  */
 export function findRealBinary(name: string): string | null {
@@ -44,15 +44,15 @@ export function findRealBinary(name: string): string | null {
 
 		const homedir = os.homedir();
 		// Filter out wrapper scripts from all ADE directories:
-		// - ~/.ade/bin
-		// - ~/.ade-*/bin (workspace-specific instances)
-		const supersetBinDir = path.join(homedir, ".ade", "bin");
-		const supersetPrefix = path.join(homedir, ".ade-");
+		// - ~/.roster/bin
+		// - ~/.roster-*/bin (workspace-specific instances)
+		const rosterBinDir = path.join(homedir, ".roster", "bin");
+		const rosterPrefix = path.join(homedir, ".roster-");
 		const paths = allPaths.filter(
 			(p) =>
 				p &&
-				!p.startsWith(supersetBinDir) &&
-				!(p.startsWith(supersetPrefix) && p.includes("/bin/")),
+				!p.startsWith(rosterBinDir) &&
+				!(p.startsWith(rosterPrefix) && p.includes("/bin/")),
 		);
 		return paths[0] || null;
 	} catch {

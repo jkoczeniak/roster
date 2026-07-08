@@ -2,8 +2,8 @@ import {
 	type AgentBinary,
 	type CheckedBinary,
 	RUNTIME_BINARY,
-} from "@superset/shared/agent-binaries";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@superset/ui/tooltip";
+} from "@roster/shared/agent-binaries";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@roster/ui/tooltip";
 import { useParams } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { HiOutlinePlus } from "react-icons/hi2";

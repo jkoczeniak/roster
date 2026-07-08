@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { LuLoader } from "react-icons/lu";
 import {
 	registerSaveAction,
-	SUPERSET_THEME,
+	ROSTER_THEME,
 	useMonacoEditorOptions,
 	useMonacoReady,
 } from "renderer/providers/MonacoProvider";
@@ -264,7 +264,7 @@ export function DiffViewer({
 			original={contents.original}
 			modified={contents.modified}
 			language={contents.language}
-			theme={SUPERSET_THEME}
+			theme={ROSTER_THEME}
 			onMount={handleMount}
 			loading={
 				<div className="flex items-center justify-center h-full text-muted-foreground">

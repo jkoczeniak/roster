@@ -1,4 +1,4 @@
-import { Popover, PopoverContent, PopoverTrigger } from "@superset/ui/popover";
+import { Popover, PopoverContent, PopoverTrigger } from "@roster/ui/popover";
 import { useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import {

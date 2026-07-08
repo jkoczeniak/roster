@@ -1,5 +1,5 @@
 import { describe, expect, it } from "bun:test";
-import { BINARY_INSTALL } from "@superset/shared/agent-binaries";
+import { BINARY_INSTALL } from "@roster/shared/agent-binaries";
 import { buildWrapperScript } from "./agent-wrappers-common";
 
 /**

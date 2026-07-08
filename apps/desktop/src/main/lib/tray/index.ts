@@ -1,6 +1,6 @@
 import { existsSync } from "node:fs";
 import { join } from "node:path";
-import { workspaces } from "@superset/local-db";
+import { workspaces } from "@roster/local-db";
 import { eq } from "drizzle-orm";
 import {
 	app,
@@ -111,7 +111,7 @@ function openTerminalSettings(): void {
 	menuEmitter.emit("open-settings", "terminal");
 }
 
-function openSessionInSuperset(workspaceId: string): void {
+function openSessionInRoster(workspaceId: string): void {
 	showWindow();
 	menuEmitter.emit("open-workspace", workspaceId);
 }
@@ -186,7 +186,7 @@ function buildSessionsSubmenu(
 					submenu: [
 						{
 							label: "Open in ADE",
-							click: () => openSessionInSuperset(session.workspaceId),
+							click: () => openSessionInRoster(session.workspaceId),
 						},
 						{
 							label: "Kill",

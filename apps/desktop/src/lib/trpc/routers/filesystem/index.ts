@@ -788,7 +788,7 @@ export const createFilesystemRouter = () => {
 				}),
 			)
 			.mutation(async ({ input }) => {
-				const notesDir = path.join(input.rootPath, ".ade", "notes");
+				const notesDir = path.join(input.rootPath, ".roster", "notes");
 				await fs.mkdir(notesDir, { recursive: true });
 
 				const now = new Date();
@@ -832,7 +832,7 @@ export const createFilesystemRouter = () => {
 				}),
 			)
 			.mutation(async ({ input }) => {
-				const notesDir = path.join(input.rootPath, ".ade", "notes");
+				const notesDir = path.join(input.rootPath, ".roster", "notes");
 				await fs.mkdir(notesDir, { recursive: true });
 				const logPath = path.join(notesDir, "sessions.md");
 

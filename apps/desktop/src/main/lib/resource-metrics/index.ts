@@ -1,4 +1,4 @@
-import { workspaces } from "@superset/local-db";
+import { workspaces } from "@roster/local-db";
 import { eq } from "drizzle-orm";
 import { app } from "electron";
 import { localDb } from "main/lib/local-db";

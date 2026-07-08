@@ -1,4 +1,4 @@
-import type { ExternalApp } from "@superset/local-db";
+import type { ExternalApp } from "@roster/local-db";
 import {
 	DropdownMenu,
 	DropdownMenuContent,
@@ -9,10 +9,10 @@ import {
 	DropdownMenuSubContent,
 	DropdownMenuSubTrigger,
 	DropdownMenuTrigger,
-} from "@superset/ui/dropdown-menu";
-import { toast } from "@superset/ui/sonner";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@superset/ui/tooltip";
-import { cn } from "@superset/ui/utils";
+} from "@roster/ui/dropdown-menu";
+import { toast } from "@roster/ui/sonner";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@roster/ui/tooltip";
+import { cn } from "@roster/ui/utils";
 import { memo, useCallback, useMemo } from "react";
 import { HiChevronDown } from "react-icons/hi2";
 import { LuCopy, LuExternalLink } from "react-icons/lu";

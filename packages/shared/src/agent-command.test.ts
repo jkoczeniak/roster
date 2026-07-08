@@ -10,7 +10,7 @@ describe("buildAgentPromptCommand", () => {
 		});
 
 		expect(command).toContain(
-			"--sandbox danger-full-access -- \"$(cat <<'SUPERSET_PROMPT_12345678'",
+			"--sandbox danger-full-access -- \"$(cat <<'ROSTER_PROMPT_12345678'",
 		);
 		expect(command).toContain("- Only modified file: runtime.ts");
 	});
@@ -23,7 +23,7 @@ describe("buildAgentPromptCommand", () => {
 		});
 
 		expect(command).toStartWith(
-			"claude --dangerously-skip-permissions \"$(cat <<'SUPERSET_PROMPT_abcdefgh'",
+			"claude --dangerously-skip-permissions \"$(cat <<'ROSTER_PROMPT_abcdefgh'",
 		);
 	});
 });

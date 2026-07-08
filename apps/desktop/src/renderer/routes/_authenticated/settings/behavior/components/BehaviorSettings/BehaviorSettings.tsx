@@ -1,14 +1,14 @@
-import type { BranchPrefixMode, FileOpenMode } from "@superset/local-db";
-import { Input } from "@superset/ui/input";
-import { Label } from "@superset/ui/label";
+import type { BranchPrefixMode, FileOpenMode } from "@roster/local-db";
+import { Input } from "@roster/ui/input";
+import { Label } from "@roster/ui/label";
 import {
 	Select,
 	SelectContent,
 	SelectItem,
 	SelectTrigger,
 	SelectValue,
-} from "@superset/ui/select";
-import { Switch } from "@superset/ui/switch";
+} from "@roster/ui/select";
+import { Switch } from "@roster/ui/switch";
 import { useEffect, useState } from "react";
 import { electronTrpc } from "renderer/lib/electron-trpc";
 import { resolveBranchPrefix, sanitizeSegment } from "shared/utils/branch";

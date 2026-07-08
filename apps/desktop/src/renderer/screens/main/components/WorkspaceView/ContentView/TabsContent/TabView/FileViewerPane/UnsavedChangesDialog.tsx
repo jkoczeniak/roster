@@ -7,8 +7,8 @@ import {
 	AlertDialogFooter,
 	AlertDialogHeader,
 	AlertDialogTitle,
-} from "@superset/ui/alert-dialog";
-import { Button } from "@superset/ui/button";
+} from "@roster/ui/alert-dialog";
+import { Button } from "@roster/ui/button";
 import { LuLoader } from "react-icons/lu";
 
 interface UnsavedChangesDialogProps {

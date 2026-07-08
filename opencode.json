@@ -4,9 +4,9 @@
 		"external_directory": "allow"
 	},
 	"mcp": {
-		"superset": {
+		"roster": {
 			"type": "remote",
-			"url": "https://api.superset.sh/api/agent/mcp",
+			"url": "https://api.roster.local/api/agent/mcp",
 			"oauth": {}
 		},
 		"expo-mcp": {

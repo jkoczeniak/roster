@@ -1,4 +1,4 @@
-import { projects, workspaces, worktrees } from "@superset/local-db";
+import { projects, workspaces, worktrees } from "@roster/local-db";
 import { TRPCError } from "@trpc/server";
 import { observable } from "@trpc/server/observable";
 import { eq } from "drizzle-orm";
@@ -22,7 +22,7 @@ import { getWorkspacePath } from "../workspaces/utils/worktree";
 import { resolveTerminalThemeType } from "./theme-type";
 import { resolveCwd } from "./utils";
 
-const DEBUG_TERMINAL = process.env.SUPERSET_TERMINAL_DEBUG === "1";
+const DEBUG_TERMINAL = process.env.ROSTER_TERMINAL_DEBUG === "1";
 const logger = console;
 let createOrAttachCallCounter = 0;
 
@@ -40,14 +40,14 @@ const SAFE_ID = z
  * Sessions are keyed by paneId and linked to workspaces for cwd resolution
  *
  * Environment variables set for terminal sessions:
- * - PATH: Prepends ~/.superset/bin so wrapper scripts intercept agent commands
- * - SUPERSET_PANE_ID: The pane ID (used by notification hooks, session key)
- * - SUPERSET_TAB_ID: The tab ID (parent of pane, used by notification hooks)
- * - SUPERSET_WORKSPACE_ID: The workspace ID (used by notification hooks)
- * - SUPERSET_WORKSPACE_NAME: The workspace name (used by setup/teardown scripts)
- * - SUPERSET_WORKSPACE_PATH: The worktree path (used by setup/teardown scripts)
- * - SUPERSET_ROOT_PATH: The main repo path (used by setup/teardown scripts)
- * - SUPERSET_PORT: The hooks server port for agent completion notifications
+ * - PATH: Prepends ~/.roster/bin so wrapper scripts intercept agent commands
+ * - ROSTER_PANE_ID: The pane ID (used by notification hooks, session key)
+ * - ROSTER_TAB_ID: The tab ID (parent of pane, used by notification hooks)
+ * - ROSTER_WORKSPACE_ID: The workspace ID (used by notification hooks)
+ * - ROSTER_WORKSPACE_NAME: The workspace name (used by setup/teardown scripts)
+ * - ROSTER_WORKSPACE_PATH: The worktree path (used by setup/teardown scripts)
+ * - ROSTER_ROOT_PATH: The main repo path (used by setup/teardown scripts)
+ * - ROSTER_PORT: The hooks server port for agent completion notifications
  */
 export const createTerminalRouter = () => {
 	const registry = getWorkspaceRuntimeRegistry();

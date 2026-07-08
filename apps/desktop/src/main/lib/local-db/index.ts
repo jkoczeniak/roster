@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { chmodSync, existsSync } from "node:fs";
 import { join } from "node:path";
-import * as schema from "@superset/local-db";
+import * as schema from "@roster/local-db";
 
 import Database from "better-sqlite3";
 import { drizzle } from "drizzle-orm/better-sqlite3";
@@ -10,14 +10,14 @@ import { app, dialog } from "electron";
 import { validate as uuidValidate, version as uuidVersion } from "uuid";
 import { env } from "../../env.main";
 import {
-	ensureSupersetHomeDirExists,
-	SUPERSET_HOME_DIR,
-	SUPERSET_SENSITIVE_FILE_MODE,
+	ensureRosterHomeDirExists,
+	ROSTER_HOME_DIR,
+	ROSTER_SENSITIVE_FILE_MODE,
 } from "../app-environment";
 
-const DB_PATH = join(SUPERSET_HOME_DIR, "local.db");
+const DB_PATH = join(ROSTER_HOME_DIR, "local.db");
 
-ensureSupersetHomeDirExists();
+ensureRosterHomeDirExists();
 
 /**
  * Gets the migrations directory path.
@@ -77,7 +77,7 @@ const migrationsFolder = getMigrationsDirectory();
 
 const sqlite = new Database(DB_PATH);
 try {
-	chmodSync(DB_PATH, SUPERSET_SENSITIVE_FILE_MODE);
+	chmodSync(DB_PATH, ROSTER_SENSITIVE_FILE_MODE);
 } catch {
 	// Best-effort; directory permissions should still protect the DB.
 }

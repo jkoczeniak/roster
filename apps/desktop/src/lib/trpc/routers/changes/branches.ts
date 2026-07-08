@@ -1,4 +1,4 @@
-import { worktrees } from "@superset/local-db";
+import { worktrees } from "@roster/local-db";
 import { eq } from "drizzle-orm";
 import { localDb } from "main/lib/local-db";
 import simpleGit from "simple-git";

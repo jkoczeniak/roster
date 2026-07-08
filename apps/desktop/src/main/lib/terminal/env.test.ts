@@ -219,14 +219,14 @@ describe("env", () => {
 		describe("includes agent runtime env vars", () => {
 			it("should preserve CODEX_HOME so it reaches the codex spawn env", () => {
 				const env = {
-					CODEX_HOME: "/Users/test/.ade-default/agents/abc/.codex",
+					CODEX_HOME: "/Users/test/.roster-default/agents/abc/.codex",
 					COLORFGBG: "15;0",
 					PATH: "/usr/bin",
 					SOME_SECRET: "nope",
 				};
 				const result = buildSafeEnv(env);
 				expect(result.CODEX_HOME).toBe(
-					"/Users/test/.ade-default/agents/abc/.codex",
+					"/Users/test/.roster-default/agents/abc/.codex",
 				);
 				expect(result.COLORFGBG).toBe("15;0");
 				expect(result.SOME_SECRET).toBeUndefined();
@@ -441,18 +441,18 @@ describe("env", () => {
 			});
 		});
 
-		describe("includes SUPERSET_* prefix vars", () => {
-			it("should include SUPERSET_* vars (our metadata)", () => {
+		describe("includes ROSTER_* prefix vars", () => {
+			it("should include ROSTER_* vars (our metadata)", () => {
 				const env = {
-					SUPERSET_PANE_ID: "pane-1",
-					SUPERSET_TAB_ID: "tab-1",
-					SUPERSET_WORKSPACE_ID: "ws-1",
+					ROSTER_PANE_ID: "pane-1",
+					ROSTER_TAB_ID: "tab-1",
+					ROSTER_WORKSPACE_ID: "ws-1",
 					PATH: "/usr/bin",
 				};
 				const result = buildSafeEnv(env);
-				expect(result.SUPERSET_PANE_ID).toBe("pane-1");
-				expect(result.SUPERSET_TAB_ID).toBe("tab-1");
-				expect(result.SUPERSET_WORKSPACE_ID).toBe("ws-1");
+				expect(result.ROSTER_PANE_ID).toBe("pane-1");
+				expect(result.ROSTER_TAB_ID).toBe("tab-1");
+				expect(result.ROSTER_WORKSPACE_ID).toBe("ws-1");
 			});
 		});
 
@@ -513,15 +513,15 @@ describe("env", () => {
 				expect(result.PATHEXT).toBe(".COM;.EXE;.BAT;.CMD");
 			});
 
-			it("should include Superset_* prefix vars case-insensitively on Windows", () => {
+			it("should include Roster_* prefix vars case-insensitively on Windows", () => {
 				const env = {
-					Superset_Pane_Id: "pane-1",
-					SUPERSET_TAB_ID: "tab-1",
+					Roster_Pane_Id: "pane-1",
+					ROSTER_TAB_ID: "tab-1",
 					PATH: "/usr/bin",
 				};
 				const result = buildSafeEnv(env, { platform: "win32" });
-				expect(result.Superset_Pane_Id).toBe("pane-1");
-				expect(result.SUPERSET_TAB_ID).toBe("tab-1");
+				expect(result.Roster_Pane_Id).toBe("pane-1");
+				expect(result.ROSTER_TAB_ID).toBe("tab-1");
 			});
 
 			it("should preserve original key casing in output", () => {
@@ -634,9 +634,9 @@ describe("env", () => {
 		});
 
 		describe("terminal metadata", () => {
-			it("should set TERM_PROGRAM to Superset", () => {
+			it("should set TERM_PROGRAM to Roster", () => {
 				const result = buildTerminalEnv(baseParams);
-				expect(result.TERM_PROGRAM).toBe("Superset");
+				expect(result.TERM_PROGRAM).toBe("Roster");
 			});
 
 			it("should set COLORTERM to truecolor", () => {
@@ -644,12 +644,12 @@ describe("env", () => {
 				expect(result.COLORTERM).toBe("truecolor");
 			});
 
-			it("should set Superset-specific env vars", () => {
+			it("should set Roster-specific env vars", () => {
 				const result = buildTerminalEnv(baseParams);
 
-				expect(result.SUPERSET_PANE_ID).toBe("pane-1");
-				expect(result.SUPERSET_TAB_ID).toBe("tab-1");
-				expect(result.SUPERSET_WORKSPACE_ID).toBe("ws-1");
+				expect(result.ROSTER_PANE_ID).toBe("pane-1");
+				expect(result.ROSTER_TAB_ID).toBe("tab-1");
+				expect(result.ROSTER_WORKSPACE_ID).toBe("ws-1");
 			});
 
 			it("should handle optional workspace params", () => {
@@ -660,17 +660,17 @@ describe("env", () => {
 					rootPath: "/root/path",
 				});
 
-				expect(result.SUPERSET_WORKSPACE_NAME).toBe("my-workspace");
-				expect(result.SUPERSET_WORKSPACE_PATH).toBe("/path/to/workspace");
-				expect(result.SUPERSET_ROOT_PATH).toBe("/root/path");
+				expect(result.ROSTER_WORKSPACE_NAME).toBe("my-workspace");
+				expect(result.ROSTER_WORKSPACE_PATH).toBe("/path/to/workspace");
+				expect(result.ROSTER_ROOT_PATH).toBe("/root/path");
 			});
 
 			it("should default optional params to empty string", () => {
 				const result = buildTerminalEnv(baseParams);
 
-				expect(result.SUPERSET_WORKSPACE_NAME).toBe("");
-				expect(result.SUPERSET_WORKSPACE_PATH).toBe("");
-				expect(result.SUPERSET_ROOT_PATH).toBe("");
+				expect(result.ROSTER_WORKSPACE_NAME).toBe("");
+				expect(result.ROSTER_WORKSPACE_PATH).toBe("");
+				expect(result.ROSTER_ROOT_PATH).toBe("");
 			});
 
 			it("should set LANG to a UTF-8 locale", () => {
@@ -678,23 +678,23 @@ describe("env", () => {
 				expect(result.LANG).toContain("UTF-8");
 			});
 
-			it("should include SUPERSET_PORT", () => {
+			it("should include ROSTER_PORT", () => {
 				const result = buildTerminalEnv(baseParams);
-				expect(result.SUPERSET_PORT).toBeDefined();
-				expect(typeof result.SUPERSET_PORT).toBe("string");
+				expect(result.ROSTER_PORT).toBeDefined();
+				expect(typeof result.ROSTER_PORT).toBe("string");
 			});
 		});
 
-		it("should include SUPERSET_ENV for dev/prod separation", () => {
+		it("should include ROSTER_ENV for dev/prod separation", () => {
 			const result = buildTerminalEnv(baseParams);
-			expect(result.SUPERSET_ENV).toBeDefined();
-			expect(["development", "production"]).toContain(result.SUPERSET_ENV);
+			expect(result.ROSTER_ENV).toBeDefined();
+			expect(["development", "production"]).toContain(result.ROSTER_ENV);
 		});
 
-		it("should include SUPERSET_HOOK_VERSION for protocol versioning", () => {
+		it("should include ROSTER_HOOK_VERSION for protocol versioning", () => {
 			const result = buildTerminalEnv(baseParams);
-			expect(result.SUPERSET_HOOK_VERSION).toBeDefined();
-			expect(result.SUPERSET_HOOK_VERSION).toBe("2");
+			expect(result.ROSTER_HOOK_VERSION).toBeDefined();
+			expect(result.ROSTER_HOOK_VERSION).toBe("2");
 		});
 
 		describe("SSL_CERT_FILE fallback on macOS", () => {
@@ -781,7 +781,7 @@ describe("env", () => {
 				});
 				const result = buildTerminalEnv(baseParams);
 				expect(result.OPENROUTER_API_KEY).toBeUndefined();
-				expect(result.SUPERSET_PANE_ID).toBe(baseParams.paneId);
+				expect(result.ROSTER_PANE_ID).toBe(baseParams.paneId);
 			});
 		});
 	});

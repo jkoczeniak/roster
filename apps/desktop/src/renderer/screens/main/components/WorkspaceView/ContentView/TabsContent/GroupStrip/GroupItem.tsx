@@ -1,4 +1,4 @@
-import { Button } from "@superset/ui/button";
+import { Button } from "@roster/ui/button";
 import {
 	ContextMenu,
 	ContextMenuContent,
@@ -7,9 +7,9 @@ import {
 	ContextMenuSubContent,
 	ContextMenuSubTrigger,
 	ContextMenuTrigger,
-} from "@superset/ui/context-menu";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@superset/ui/tooltip";
-import { cn } from "@superset/ui/utils";
+} from "@roster/ui/context-menu";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@roster/ui/tooltip";
+import { cn } from "@roster/ui/utils";
 import { useEffect, useRef, useState } from "react";
 import { useDrag, useDrop } from "react-dnd";
 import { getEmptyImage } from "react-dnd-html5-backend";

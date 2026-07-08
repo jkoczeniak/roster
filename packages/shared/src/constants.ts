@@ -4,33 +4,33 @@ export type AuthProvider = (typeof AUTH_PROVIDERS)[number];
 
 // Deep link protocol schemes (used for desktop OAuth callbacks)
 export const PROTOCOL_SCHEMES = {
-	DEV: "ade-dev",
-	PROD: "ade",
+	DEV: "roster-dev",
+	PROD: "roster",
 } as const;
 
 // Company
 export const COMPANY = {
 	NAME: "ADE",
-	DOMAIN: "superset.sh",
-	EMAIL_DOMAIN: "@superset.sh",
-	GITHUB_URL: "https://github.com/per-simmons/damon-ade",
-	DOCS_URL: process.env.NEXT_PUBLIC_DOCS_URL || "https://docs.superset.sh",
-	MARKETING_URL: process.env.NEXT_PUBLIC_MARKETING_URL || "https://superset.sh",
-	TERMS_URL: `${process.env.NEXT_PUBLIC_MARKETING_URL || "https://superset.sh"}/terms`,
+	DOMAIN: "roster.local",
+	EMAIL_DOMAIN: "@roster.local",
+	GITHUB_URL: "https://github.com/jkoczeniak/roster",
+	DOCS_URL: process.env.NEXT_PUBLIC_DOCS_URL || "https://docs.roster.local",
+	MARKETING_URL: process.env.NEXT_PUBLIC_MARKETING_URL || "https://roster.local",
+	TERMS_URL: `${process.env.NEXT_PUBLIC_MARKETING_URL || "https://roster.local"}/terms`,
 	PRIVACY_URL:
-		(process.env.NEXT_PUBLIC_MARKETING_URL || "https://superset.sh") +
+		(process.env.NEXT_PUBLIC_MARKETING_URL || "https://roster.local") +
 		"/privacy",
 	CHANGELOG_URL:
-		(process.env.NEXT_PUBLIC_MARKETING_URL || "https://superset.sh") +
+		(process.env.NEXT_PUBLIC_MARKETING_URL || "https://roster.local") +
 		"/changelog",
-	X_URL: "https://x.com/superset_sh",
-	MAIL_TO: "mailto:hello@superset.sh",
-	REPORT_ISSUE_URL: "https://github.com/per-simmons/damon-ade/issues/new",
+	X_URL: "https://x.com/roster_sh",
+	MAIL_TO: "mailto:hello@roster.local",
+	REPORT_ISSUE_URL: "https://github.com/jkoczeniak/roster/issues/new",
 	DISCORD_URL: "https://discord.gg/cZeD9WYcV7",
 } as const;
 
 // Theme
-export const THEME_STORAGE_KEY = "ade-theme";
+export const THEME_STORAGE_KEY = "roster-theme";
 
 // Download URLs
 export const DOWNLOAD_URL_MAC_ARM64 = `${COMPANY.GITHUB_URL}/releases/latest/download/ADE-arm64.dmg`;
@@ -46,14 +46,14 @@ export const TOKEN_CONFIG = {
 } as const;
 
 // PostHog
-export const POSTHOG_COOKIE_NAME = "ade";
+export const POSTHOG_COOKIE_NAME = "roster";
 
 export const FEATURE_FLAGS = {
 	/** Gates access to experimental Electric SQL tasks feature. */
 	ELECTRIC_TASKS_ACCESS: "electric-tasks-access",
 	/** Gates access to GitHub integration (currently buggy, internal only). */
 	GITHUB_INTEGRATION_ACCESS: "github-integration-access",
-	/** Gates access to AI chat (@superset.sh internal only). */
+	/** Gates access to AI chat (@roster.local internal only). */
 	AI_CHAT: "ai-chat",
 	/** Gates access to Slack integration (internal only). */
 	SLACK_INTEGRATION_ACCESS: "slack-integration-access",

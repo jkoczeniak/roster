@@ -1,4 +1,4 @@
-import { cn } from "@superset/ui/utils";
+import { cn } from "@roster/ui/utils";
 import { HiCheck } from "react-icons/hi2";
 import { darkTheme, lightTheme } from "shared/themes";
 

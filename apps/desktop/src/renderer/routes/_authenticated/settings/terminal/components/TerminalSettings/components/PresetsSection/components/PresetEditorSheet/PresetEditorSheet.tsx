@@ -1,16 +1,16 @@
-import type { ExecutionMode, TerminalPreset } from "@superset/local-db";
-import { Button } from "@superset/ui/button";
-import { Checkbox } from "@superset/ui/checkbox";
-import { Input } from "@superset/ui/input";
-import { Label } from "@superset/ui/label";
-import { RadioGroup, RadioGroupItem } from "@superset/ui/radio-group";
+import type { ExecutionMode, TerminalPreset } from "@roster/local-db";
+import { Button } from "@roster/ui/button";
+import { Checkbox } from "@roster/ui/checkbox";
+import { Input } from "@roster/ui/input";
+import { Label } from "@roster/ui/label";
+import { RadioGroup, RadioGroupItem } from "@roster/ui/radio-group";
 import {
 	Select,
 	SelectContent,
 	SelectItem,
 	SelectTrigger,
 	SelectValue,
-} from "@superset/ui/select";
+} from "@roster/ui/select";
 import {
 	Sheet,
 	SheetContent,
@@ -18,7 +18,7 @@ import {
 	SheetFooter,
 	SheetHeader,
 	SheetTitle,
-} from "@superset/ui/sheet";
+} from "@roster/ui/sheet";
 import type { PresetColumnKey } from "renderer/routes/_authenticated/settings/presets/types";
 import { CommandsEditor } from "../../../PresetRow/components/CommandsEditor";
 import type { AutoApplyField } from "../../constants";

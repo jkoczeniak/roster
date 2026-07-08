@@ -32,7 +32,7 @@ const tsconfigPaths = tsconfigPathsPlugin({
 // Sentry plugin for uploading sourcemaps (only in CI with auth token)
 const sentryPlugin = process.env.SENTRY_AUTH_TOKEN
 	? sentryVitePlugin({
-			org: "superset-sh",
+			org: "jkoczeniak",
 			project: "desktop",
 			authToken: process.env.SENTRY_AUTH_TOKEN,
 			release: { name: version },
@@ -51,19 +51,19 @@ export default defineConfig({
 			),
 			"process.env.NEXT_PUBLIC_API_URL": defineEnv(
 				process.env.NEXT_PUBLIC_API_URL,
-				"https://api.superset.sh",
+				"https://api.roster.local",
 			),
 			"process.env.NEXT_PUBLIC_STREAMS_URL": defineEnv(
 				process.env.NEXT_PUBLIC_STREAMS_URL,
-				"https://streams.superset.sh",
+				"https://streams.roster.local",
 			),
 			"process.env.NEXT_PUBLIC_WEB_URL": defineEnv(
 				process.env.NEXT_PUBLIC_WEB_URL,
-				"https://app.superset.sh",
+				"https://app.roster.local",
 			),
 			"process.env.NEXT_PUBLIC_DOCS_URL": defineEnv(
 				process.env.NEXT_PUBLIC_DOCS_URL,
-				"https://docs.superset.sh",
+				"https://docs.roster.local",
 			),
 			"process.env.SENTRY_DSN_DESKTOP": defineEnv(
 				process.env.SENTRY_DSN_DESKTOP,
@@ -77,15 +77,15 @@ export default defineConfig({
 			),
 			"process.env.STREAMS_URL": defineEnv(
 				process.env.STREAMS_URL,
-				"https://superset-stream.fly.dev",
+				"https://roster-stream.fly.dev",
 			),
 			"process.env.DESKTOP_VITE_PORT": defineEnv(process.env.DESKTOP_VITE_PORT),
 			"process.env.DESKTOP_NOTIFICATIONS_PORT": defineEnv(
 				process.env.DESKTOP_NOTIFICATIONS_PORT,
 			),
 			"process.env.ELECTRIC_PORT": defineEnv(process.env.ELECTRIC_PORT),
-			"process.env.SUPERSET_WORKSPACE_NAME": defineEnv(
-				process.env.SUPERSET_WORKSPACE_NAME,
+			"process.env.ROSTER_WORKSPACE_NAME": defineEnv(
+				process.env.ROSTER_WORKSPACE_NAME,
 			),
 		},
 
@@ -159,19 +159,19 @@ export default defineConfig({
 			"process.platform": defineEnv(process.platform),
 			"process.env.NEXT_PUBLIC_API_URL": defineEnv(
 				process.env.NEXT_PUBLIC_API_URL,
-				"https://api.superset.sh",
+				"https://api.roster.local",
 			),
 			"process.env.NEXT_PUBLIC_WEB_URL": defineEnv(
 				process.env.NEXT_PUBLIC_WEB_URL,
-				"https://app.superset.sh",
+				"https://app.roster.local",
 			),
 			"process.env.NEXT_PUBLIC_ELECTRIC_URL": defineEnv(
 				process.env.NEXT_PUBLIC_ELECTRIC_URL,
-				"https://api.superset.sh/api/electric",
+				"https://api.roster.local/api/electric",
 			),
 			"process.env.NEXT_PUBLIC_DOCS_URL": defineEnv(
 				process.env.NEXT_PUBLIC_DOCS_URL,
-				"https://docs.superset.sh",
+				"https://docs.roster.local",
 			),
 			"import.meta.env.DEV_SERVER_PORT": defineEnv(String(DEV_SERVER_PORT)),
 			"import.meta.env.NEXT_PUBLIC_POSTHOG_KEY": defineEnv(
@@ -185,15 +185,15 @@ export default defineConfig({
 			),
 			"process.env.STREAMS_URL": defineEnv(
 				process.env.STREAMS_URL,
-				"https://superset-stream.fly.dev",
+				"https://roster-stream.fly.dev",
 			),
 			"process.env.DESKTOP_VITE_PORT": defineEnv(process.env.DESKTOP_VITE_PORT),
 			"process.env.DESKTOP_NOTIFICATIONS_PORT": defineEnv(
 				process.env.DESKTOP_NOTIFICATIONS_PORT,
 			),
 			"process.env.ELECTRIC_PORT": defineEnv(process.env.ELECTRIC_PORT),
-			"process.env.SUPERSET_WORKSPACE_NAME": defineEnv(
-				process.env.SUPERSET_WORKSPACE_NAME,
+			"process.env.ROSTER_WORKSPACE_NAME": defineEnv(
+				process.env.ROSTER_WORKSPACE_NAME,
 			),
 		},
 

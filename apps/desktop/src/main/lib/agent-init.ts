@@ -1,5 +1,5 @@
-import { workspaces, worktrees } from "@superset/local-db";
-import type { AgentRuntime } from "@superset/local-db";
+import { workspaces, worktrees } from "@roster/local-db";
+import type { AgentRuntime } from "@roster/local-db";
 import { eq } from "drizzle-orm";
 import { localDb } from "main/lib/local-db";
 import { workspaceInitManager } from "main/lib/workspace-init-manager";

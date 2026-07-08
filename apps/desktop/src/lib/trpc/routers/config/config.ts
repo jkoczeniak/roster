@@ -1,11 +1,11 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { access } from "node:fs/promises";
 import { join } from "node:path";
-import { projects, type SelectProject } from "@superset/local-db";
+import { projects, type SelectProject } from "@roster/local-db";
 import {
 	CHECKED_BINARIES,
 	type RuntimeAvailability,
-} from "@superset/shared/agent-binaries";
+} from "@roster/shared/agent-binaries";
 import { eq } from "drizzle-orm";
 import { MEMORY_SCAFFOLD_ENABLED } from "main/lib/feature-flags";
 import { findRealBinary } from "main/lib/agent-setup/utils";
@@ -365,17 +365,17 @@ async function detectSetupDefaults(
 }
 
 function getConfigPath(mainRepoPath: string): string {
-	return join(mainRepoPath, ".superset", "config.json");
+	return join(mainRepoPath, ".roster", "config.json");
 }
 
 function ensureConfigExists(mainRepoPath: string): string {
 	const configPath = getConfigPath(mainRepoPath);
-	const supersetDir = join(mainRepoPath, ".superset");
+	const rosterDir = join(mainRepoPath, ".roster");
 
 	if (!existsSync(configPath)) {
-		// Create .superset directory if it doesn't exist
-		if (!existsSync(supersetDir)) {
-			mkdirSync(supersetDir, { recursive: true });
+		// Create .roster directory if it doesn't exist
+		if (!existsSync(rosterDir)) {
+			mkdirSync(rosterDir, { recursive: true });
 		}
 		// Create config.json with template
 		writeFileSync(configPath, CONFIG_TEMPLATE, "utf-8");

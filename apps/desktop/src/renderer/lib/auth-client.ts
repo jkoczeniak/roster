@@ -59,7 +59,7 @@ export const authClient = {
 			data: {
 				id: MOCK_ORG_ID,
 				name: "ADE",
-				slug: "ade",
+				slug: "roster",
 				members: [
 					{
 						id: MOCK_USER_ID,

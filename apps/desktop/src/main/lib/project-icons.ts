@@ -1,18 +1,18 @@
 import { existsSync, mkdirSync, readdirSync, unlinkSync } from "node:fs";
 import { copyFile, writeFile } from "node:fs/promises";
 import { extname, join } from "node:path";
-import { SUPERSET_HOME_DIR } from "./app-environment";
+import { ROSTER_HOME_DIR } from "./app-environment";
 
 /**
- * Icon namespaces. The `superset-icon://<namespace>/<id>` protocol encodes the
+ * Icon namespaces. The `roster-icon://<namespace>/<id>` protocol encodes the
  * namespace as the URL host, and each namespace has its own on-disk directory.
  * ADE uses `projects` for Category photos and `workspaces` for Agent avatars.
  */
 export type IconNamespace = "projects" | "workspaces";
 
 const ICON_DIRS: Record<IconNamespace, string> = {
-	projects: join(SUPERSET_HOME_DIR, "project-icons"),
-	workspaces: join(SUPERSET_HOME_DIR, "workspace-icons"),
+	projects: join(ROSTER_HOME_DIR, "project-icons"),
+	workspaces: join(ROSTER_HOME_DIR, "workspace-icons"),
 };
 
 export const PROJECT_ICONS_DIR = ICON_DIRS.projects;
@@ -60,7 +60,7 @@ function removeExistingIcon(namespace: IconNamespace, id: string): void {
 }
 
 function getIconProtocolUrl(namespace: IconNamespace, id: string): string {
-	return `superset-icon://${namespace}/${id}`;
+	return `roster-icon://${namespace}/${id}`;
 }
 
 async function saveIconFromDataUrl(

@@ -1,14 +1,11 @@
-import { cn } from "@superset/ui/utils";
+import { cn } from "@roster/ui/utils";
 import { Link, useMatchRoute } from "@tanstack/react-router";
 import {
 	HiOutlineBell,
 	HiOutlineCommandLine,
-	HiOutlineKey,
 	HiOutlinePaintBrush,
-	HiOutlinePuzzlePiece,
 	HiOutlineShieldCheck,
 	HiOutlineSparkles,
-	HiOutlineUser,
 } from "react-icons/hi2";
 import { LuKeyboard } from "react-icons/lu";
 import { electronTrpc } from "renderer/lib/electron-trpc";
@@ -19,14 +16,11 @@ interface GeneralSettingsProps {
 }
 
 type SettingsRoute =
-	| "/settings/account"
 	| "/settings/appearance"
 	| "/settings/ringtones"
 	| "/settings/keyboard"
 	| "/settings/behavior"
 	| "/settings/terminal"
-	| "/settings/integrations"
-	| "/settings/api-keys"
 	| "/settings/permissions";
 
 const GENERAL_SECTIONS: {
@@ -36,12 +30,6 @@ const GENERAL_SECTIONS: {
 	icon: React.ReactNode;
 	macOnly?: boolean;
 }[] = [
-	{
-		id: "/settings/account",
-		section: "account",
-		label: "Account",
-		icon: <HiOutlineUser className="h-4 w-4" />,
-	},
 	{
 		id: "/settings/appearance",
 		section: "appearance",
@@ -71,18 +59,6 @@ const GENERAL_SECTIONS: {
 		section: "terminal",
 		label: "Terminal",
 		icon: <HiOutlineCommandLine className="h-4 w-4" />,
-	},
-	{
-		id: "/settings/integrations",
-		section: "integrations",
-		label: "Integrations",
-		icon: <HiOutlinePuzzlePiece className="h-4 w-4" />,
-	},
-	{
-		id: "/settings/api-keys",
-		section: "apikeys",
-		label: "API Keys",
-		icon: <HiOutlineKey className="h-4 w-4" />,
 	},
 	{
 		id: "/settings/permissions",

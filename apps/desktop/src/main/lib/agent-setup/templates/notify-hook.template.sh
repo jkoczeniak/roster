@@ -12,8 +12,8 @@ fi
 # Extract Mastra session ID when available (mastracode hooks)
 SESSION_ID=$(echo "$INPUT" | grep -oE '"session_id"[[:space:]]*:[[:space:]]*"[^"]*"' | grep -oE '"[^"]*"$' | tr -d '"')
 
-# Skip if this isn't a Superset terminal hook and no Mastra session context exists
-[ -z "$SUPERSET_TAB_ID" ] && [ -z "$SESSION_ID" ] && exit 0
+# Skip if this isn't a Roster terminal hook and no Mastra session context exists
+[ -z "$ROSTER_TAB_ID" ] && [ -z "$SESSION_ID" ] && exit 0
 
 # Extract event type - Claude uses "hook_event_name", Codex uses "type"
 # Use flexible pattern to handle optional whitespace: "key": "value" or "key":"value"
@@ -39,8 +39,8 @@ fi
 [ -z "$EVENT_TYPE" ] && exit 0
 
 DEBUG_HOOKS_ENABLED="0"
-if [ -n "$SUPERSET_DEBUG_HOOKS" ]; then
-  case "$SUPERSET_DEBUG_HOOKS" in
+if [ -n "$ROSTER_DEBUG_HOOKS" ]; then
+  case "$ROSTER_DEBUG_HOOKS" in
     1|true|TRUE|True|yes|YES|on|ON)
       DEBUG_HOOKS_ENABLED="1"
       ;;
@@ -48,37 +48,37 @@ if [ -n "$SUPERSET_DEBUG_HOOKS" ]; then
       DEBUG_HOOKS_ENABLED="0"
       ;;
   esac
-elif [ "$SUPERSET_ENV" = "development" ] || [ "$NODE_ENV" = "development" ]; then
+elif [ "$ROSTER_ENV" = "development" ] || [ "$NODE_ENV" = "development" ]; then
   DEBUG_HOOKS_ENABLED="1"
 fi
 
 if [ "$DEBUG_HOOKS_ENABLED" = "1" ]; then
-  echo "[notify-hook] event=$EVENT_TYPE sessionId=$SESSION_ID paneId=$SUPERSET_PANE_ID tabId=$SUPERSET_TAB_ID workspaceId=$SUPERSET_WORKSPACE_ID" >&2
+  echo "[notify-hook] event=$EVENT_TYPE sessionId=$SESSION_ID paneId=$ROSTER_PANE_ID tabId=$ROSTER_TAB_ID workspaceId=$ROSTER_WORKSPACE_ID" >&2
 fi
 
 # Timeouts prevent blocking agent completion if notification server is unresponsive
 if [ "$DEBUG_HOOKS_ENABLED" = "1" ]; then
-  STATUS_CODE=$(curl -sG "http://127.0.0.1:${SUPERSET_PORT:-{{DEFAULT_PORT}}}/hook/complete" \
+  STATUS_CODE=$(curl -sG "http://127.0.0.1:${ROSTER_PORT:-{{DEFAULT_PORT}}}/hook/complete" \
     --connect-timeout 1 --max-time 2 \
-    --data-urlencode "paneId=$SUPERSET_PANE_ID" \
-    --data-urlencode "tabId=$SUPERSET_TAB_ID" \
-    --data-urlencode "workspaceId=$SUPERSET_WORKSPACE_ID" \
+    --data-urlencode "paneId=$ROSTER_PANE_ID" \
+    --data-urlencode "tabId=$ROSTER_TAB_ID" \
+    --data-urlencode "workspaceId=$ROSTER_WORKSPACE_ID" \
     --data-urlencode "sessionId=$SESSION_ID" \
     --data-urlencode "eventType=$EVENT_TYPE" \
-    --data-urlencode "env=$SUPERSET_ENV" \
-    --data-urlencode "version=$SUPERSET_HOOK_VERSION" \
+    --data-urlencode "env=$ROSTER_ENV" \
+    --data-urlencode "version=$ROSTER_HOOK_VERSION" \
     -o /dev/null -w "%{http_code}" 2>/dev/null)
   echo "[notify-hook] dispatched status=$STATUS_CODE" >&2
 else
-  curl -sG "http://127.0.0.1:${SUPERSET_PORT:-{{DEFAULT_PORT}}}/hook/complete" \
+  curl -sG "http://127.0.0.1:${ROSTER_PORT:-{{DEFAULT_PORT}}}/hook/complete" \
     --connect-timeout 1 --max-time 2 \
-    --data-urlencode "paneId=$SUPERSET_PANE_ID" \
-    --data-urlencode "tabId=$SUPERSET_TAB_ID" \
-    --data-urlencode "workspaceId=$SUPERSET_WORKSPACE_ID" \
+    --data-urlencode "paneId=$ROSTER_PANE_ID" \
+    --data-urlencode "tabId=$ROSTER_TAB_ID" \
+    --data-urlencode "workspaceId=$ROSTER_WORKSPACE_ID" \
     --data-urlencode "sessionId=$SESSION_ID" \
     --data-urlencode "eventType=$EVENT_TYPE" \
-    --data-urlencode "env=$SUPERSET_ENV" \
-    --data-urlencode "version=$SUPERSET_HOOK_VERSION" \
+    --data-urlencode "env=$ROSTER_ENV" \
+    --data-urlencode "version=$ROSTER_HOOK_VERSION" \
     > /dev/null 2>&1
 fi
 

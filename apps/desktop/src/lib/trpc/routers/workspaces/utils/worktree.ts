@@ -1,4 +1,4 @@
-import { projects, type SelectWorkspace, worktrees } from "@superset/local-db";
+import { projects, type SelectWorkspace, worktrees } from "@roster/local-db";
 import { eq } from "drizzle-orm";
 import { localDb } from "main/lib/local-db";
 

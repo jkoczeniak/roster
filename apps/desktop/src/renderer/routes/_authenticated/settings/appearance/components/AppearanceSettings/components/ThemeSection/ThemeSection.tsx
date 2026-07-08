@@ -1,6 +1,6 @@
-import { COMPANY } from "@superset/shared/constants";
-import { Button } from "@superset/ui/button";
-import { toast } from "@superset/ui/sonner";
+import { COMPANY } from "@roster/shared/constants";
+import { Button } from "@roster/ui/button";
+import { toast } from "@roster/ui/sonner";
 import { type ChangeEvent, useRef, useState } from "react";
 import {
 	HiOutlineArrowDownTray,
@@ -117,7 +117,7 @@ export function ThemeSection() {
 		const url = URL.createObjectURL(blob);
 		const link = document.createElement("a");
 		link.href = url;
-		link.download = "superset-theme-base.json";
+		link.download = "roster-theme-base.json";
 		link.click();
 		URL.revokeObjectURL(url);
 	};

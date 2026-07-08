@@ -1,4 +1,4 @@
-import { AGENT_RUNTIMES } from "@superset/local-db/schema/zod";
+import { AGENT_RUNTIMES } from "@roster/local-db/schema/zod";
 import { z } from "zod";
 
 /**

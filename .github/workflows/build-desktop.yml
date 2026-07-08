@@ -94,7 +94,7 @@ jobs:
           NEXT_PUBLIC_STREAMS_URL: ${{ secrets.NEXT_PUBLIC_STREAMS_URL }}
           SENTRY_DSN_DESKTOP: ${{ secrets.SENTRY_DSN_DESKTOP }}
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
-          SUPERSET_WORKSPACE_NAME: superset
+          ROSTER_WORKSPACE_NAME: roster
         run: bun run compile:app
 
       - name: Build Electron app
@@ -199,7 +199,7 @@ jobs:
           NEXT_PUBLIC_ELECTRIC_URL: ${{ secrets.NEXT_PUBLIC_ELECTRIC_URL }}
           SENTRY_DSN_DESKTOP: ${{ secrets.SENTRY_DSN_DESKTOP }}
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
-          SUPERSET_WORKSPACE_NAME: superset
+          ROSTER_WORKSPACE_NAME: roster
         run: bun run compile:app
 
       - name: Build Electron app

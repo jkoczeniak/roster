@@ -72,18 +72,18 @@ export function htmlEnvTransformPlugin(): Plugin {
 			return html
 				.replace(
 					/%NEXT_PUBLIC_API_URL%/g,
-					process.env.NEXT_PUBLIC_API_URL || "https://api.superset.sh",
+					process.env.NEXT_PUBLIC_API_URL || "https://api.roster.local",
 				)
 				.replace(
 					/%NEXT_PUBLIC_ELECTRIC_URL%/g,
 					new URL(
 						process.env.NEXT_PUBLIC_ELECTRIC_URL ||
-							"https://api.superset.sh/api/electric",
+							"https://api.roster.local/api/electric",
 					).origin,
 				)
 				.replace(
 					/%NEXT_PUBLIC_STREAMS_URL%/g,
-					process.env.NEXT_PUBLIC_STREAMS_URL || "https://streams.superset.sh",
+					process.env.NEXT_PUBLIC_STREAMS_URL || "https://streams.roster.local",
 				);
 		},
 	};

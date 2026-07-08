@@ -1,4 +1,4 @@
-import type { TerminalPreset } from "@superset/local-db";
+import type { TerminalPreset } from "@roster/local-db";
 import type { RefObject } from "react";
 import { PresetRow } from "../../../PresetRow";
 

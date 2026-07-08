@@ -15,10 +15,7 @@ import { useHotkeysSync } from "renderer/stores/hotkeys";
 import { useAgentHookListener } from "renderer/stores/tabs/useAgentHookListener";
 import { useTabsSyncSubscription } from "renderer/stores/tabs/useTabsSyncSubscription";
 import { useWorkspaceInitStore } from "renderer/stores/workspace-init";
-import { MOCK_ORG_ID } from "shared/constants";
-import { AgentHooks } from "./components/AgentHooks";
 import { TeardownLogsDialog } from "./components/TeardownLogsDialog";
-import { CollectionsProvider } from "./providers/CollectionsProvider";
 
 export const Route = createFileRoute("/_authenticated")({
 	component: AuthenticatedLayout,
@@ -27,9 +24,6 @@ export const Route = createFileRoute("/_authenticated")({
 function AuthenticatedLayout() {
 	const navigate = useNavigate();
 	const utils = electronTrpc.useUtils();
-
-	// Local build: always authenticated, no cloud auth
-	const activeOrganizationId = MOCK_ORG_ID;
 
 	useAgentHookListener();
 	useUpdateListener();
@@ -55,8 +49,8 @@ function AuthenticatedLayout() {
 	electronTrpc.menu.subscribe.useSubscription(undefined, {
 		onData: (event) => {
 			if (event.type === "open-settings") {
-				const section = event.data.section || "account";
-				navigate({ to: `/settings/${section}` as "/settings/account" });
+				const section = event.data.section || "appearance";
+				navigate({ to: `/settings/${section}` as "/settings/appearance" });
 			} else if (event.type === "open-workspace") {
 				navigate({ to: `/workspace/${event.data.workspaceId}` });
 			}
@@ -65,15 +59,12 @@ function AuthenticatedLayout() {
 
 	return (
 		<DndProvider manager={dragDropManager}>
-			<CollectionsProvider>
-				<AgentHooks />
-				<Outlet />
-				<WorkspaceInitEffects />
-				<NewAgentModal />
-				<NewCategoryModal />
-				<InitGitDialog />
-				<TeardownLogsDialog />
-			</CollectionsProvider>
+			<Outlet />
+			<WorkspaceInitEffects />
+			<NewAgentModal />
+			<NewCategoryModal />
+			<InitGitDialog />
+			<TeardownLogsDialog />
 		</DndProvider>
 	);
 }

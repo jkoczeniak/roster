@@ -54,7 +54,7 @@ mock.module("main/lib/local-db", () => ({
 	},
 }));
 
-mock.module("@superset/local-db", () => ({
+mock.module("@roster/local-db", () => ({
 	workspaces: { id: "id" },
 }));
 

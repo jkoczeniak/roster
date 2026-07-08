@@ -1,4 +1,4 @@
-import { toast } from "@superset/ui/sonner";
+import { toast } from "@roster/ui/sonner";
 import { electronTrpc } from "renderer/lib/electron-trpc";
 import { AUTO_UPDATE_STATUS } from "shared/auto-update";
 import { UpdateToast } from "./UpdateToast";

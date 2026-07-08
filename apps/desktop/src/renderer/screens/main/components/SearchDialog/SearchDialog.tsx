@@ -1,13 +1,13 @@
-import { Button } from "@superset/ui/button";
+import { Button } from "@roster/ui/button";
 import {
 	CommandDialog,
 	CommandEmpty,
 	CommandInput,
 	CommandItem,
 	CommandList,
-} from "@superset/ui/command";
-import { Input } from "@superset/ui/input";
-import { Spinner } from "@superset/ui/spinner";
+} from "@roster/ui/command";
+import { Input } from "@roster/ui/input";
+import { Spinner } from "@roster/ui/spinner";
 import type { ReactNode } from "react";
 import { LuChevronDown, LuChevronRight } from "react-icons/lu";
 

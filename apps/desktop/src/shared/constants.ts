@@ -1,4 +1,4 @@
-import { PROTOCOL_SCHEMES } from "@superset/shared/constants";
+import { PROTOCOL_SCHEMES } from "@roster/shared/constants";
 import { getWorkspaceName } from "./env.shared";
 
 export const PLATFORM = {
@@ -8,14 +8,14 @@ export const PLATFORM = {
 };
 
 const workspace = getWorkspaceName();
-export const SUPERSET_DIR_NAME = workspace
-	? `.ade-${workspace}`
-	: ".ade";
+export const ROSTER_DIR_NAME = workspace
+	? `.roster-${workspace}`
+	: ".roster";
 export const PROTOCOL_SCHEME = workspace
-	? `ade-${workspace}`
+	? `roster-${workspace}`
 	: PROTOCOL_SCHEMES.PROD;
-// Project-level directory name (always .ade, not conditional)
-export const PROJECT_SUPERSET_DIR_NAME = ".ade";
+// Project-level directory name (always .roster, not conditional)
+export const PROJECT_ROSTER_DIR_NAME = ".roster";
 export const WORKTREES_DIR_NAME = "worktrees";
 export const PROJECTS_DIR_NAME = "projects";
 export const CONFIG_FILE_NAME = "config.json";

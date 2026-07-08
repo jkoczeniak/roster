@@ -27,7 +27,7 @@ import { connect, type Socket } from "node:net";
 import { homedir } from "node:os";
 import { join } from "node:path";
 import { app } from "electron";
-import { SUPERSET_DIR_NAME } from "shared/constants";
+import { ROSTER_DIR_NAME } from "shared/constants";
 import {
 	type ClearScrollbackRequest,
 	type CreateOrAttachRequest,
@@ -64,16 +64,16 @@ enum ConnectionState {
 // Configuration
 // =============================================================================
 
-const DEBUG_CLIENT = process.env.SUPERSET_TERMINAL_DEBUG === "1";
+const DEBUG_CLIENT = process.env.ROSTER_TERMINAL_DEBUG === "1";
 
 // Get from shared constants for multi-worktree support (imported at top of file)
-const SUPERSET_HOME_DIR = join(homedir(), SUPERSET_DIR_NAME);
+const ROSTER_HOME_DIR = join(homedir(), ROSTER_DIR_NAME);
 
-const SOCKET_PATH = join(SUPERSET_HOME_DIR, "terminal-host.sock");
-const TOKEN_PATH = join(SUPERSET_HOME_DIR, "terminal-host.token");
-const PID_PATH = join(SUPERSET_HOME_DIR, "terminal-host.pid");
-const SPAWN_LOCK_PATH = join(SUPERSET_HOME_DIR, "terminal-host.spawn.lock");
-const SCRIPT_MTIME_PATH = join(SUPERSET_HOME_DIR, "terminal-host.mtime");
+const SOCKET_PATH = join(ROSTER_HOME_DIR, "terminal-host.sock");
+const TOKEN_PATH = join(ROSTER_HOME_DIR, "terminal-host.token");
+const PID_PATH = join(ROSTER_HOME_DIR, "terminal-host.pid");
+const SPAWN_LOCK_PATH = join(ROSTER_HOME_DIR, "terminal-host.spawn.lock");
+const SCRIPT_MTIME_PATH = join(ROSTER_HOME_DIR, "terminal-host.mtime");
 
 // Connection timeouts
 const CONNECT_TIMEOUT_MS = 5000;
@@ -175,8 +175,8 @@ export class TerminalHostClient extends EventEmitter {
 		super();
 		if (DEBUG_CLIENT) {
 			console.log("[TerminalHostClient] Initialized with paths:", {
-				SUPERSET_DIR_NAME,
-				SUPERSET_HOME_DIR,
+				ROSTER_DIR_NAME,
+				ROSTER_HOME_DIR,
 				SOCKET_PATH,
 				NODE_ENV: process.env.NODE_ENV,
 			});
@@ -955,12 +955,12 @@ export class TerminalHostClient extends EventEmitter {
 	 */
 	private acquireSpawnLock(): boolean {
 		try {
-			// Ensure superset home directory exists before any file operations
-			if (!existsSync(SUPERSET_HOME_DIR)) {
-				mkdirSync(SUPERSET_HOME_DIR, { recursive: true, mode: 0o700 });
+			// Ensure roster home directory exists before any file operations
+			if (!existsSync(ROSTER_HOME_DIR)) {
+				mkdirSync(ROSTER_HOME_DIR, { recursive: true, mode: 0o700 });
 			}
 			try {
-				chmodSync(SUPERSET_HOME_DIR, 0o700);
+				chmodSync(ROSTER_HOME_DIR, 0o700);
 			} catch {
 				// Best-effort.
 			}
@@ -1073,7 +1073,7 @@ export class TerminalHostClient extends EventEmitter {
 			}
 
 			// Open log file for daemon output (helps debug daemon-side issues)
-			const logPath = join(SUPERSET_HOME_DIR, "daemon.log");
+			const logPath = join(ROSTER_HOME_DIR, "daemon.log");
 			let logFd: number;
 			try {
 				if (existsSync(logPath)) {

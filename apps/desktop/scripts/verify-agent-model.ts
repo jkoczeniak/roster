@@ -3,7 +3,7 @@
  * Verification harness for the ADE agent-fleet data model (Phase B).
  *
  * Writes a Category + Agent (with its own git repo) directly into the live
- * ~/.ade-default DB (via bun:sqlite raw SQL) using the REAL setupAgentRepo
+ * ~/.roster-default DB (via bun:sqlite raw SQL) using the REAL setupAgentRepo
  * helper for the repo mechanics, then asserts the on-disk repo + stored
  * runtime + cwd source. Run with the app NOT running. Temporary; not shipped.
  */
@@ -13,7 +13,7 @@ import { homedir } from "node:os";
 import { join } from "node:path";
 
 // Point app-environment at the real ADE data dir before importing helpers.
-process.env.ADE_HOME_DIR = join(homedir(), ".ade-default");
+process.env.ADE_HOME_DIR = join(homedir(), ".roster-default");
 
 import { Database } from "bun:sqlite";
 import { setupAgentRepo } from "../src/main/lib/agent-repo";

@@ -20,7 +20,7 @@ const canaryWinIconPath = join(pkg.resources, "build/icons/icon-canary.ico");
 
 const config: Configuration = {
 	...baseConfig,
-	appId: "studio.persimmons.ade.canary",
+	appId: "com.koczeniak.roster.canary",
 	productName,
 
 	// Inherit the public release repo from the base config (single source of
@@ -45,7 +45,7 @@ const config: Configuration = {
 		...baseConfig.linux,
 		...(existsSync(canaryLinuxIconPath) ? { icon: canaryLinuxIconPath } : {}),
 		synopsis: `${pkg.description} (Canary)`,
-		artifactName: `ade-canary-\${version}-\${arch}.\${ext}`,
+		artifactName: `roster-canary-\${version}-\${arch}.\${ext}`,
 	},
 
 	win: {

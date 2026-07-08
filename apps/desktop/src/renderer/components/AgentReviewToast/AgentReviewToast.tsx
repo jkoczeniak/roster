@@ -1,4 +1,4 @@
-import { toast } from "@superset/ui/sonner";
+import { toast } from "@roster/ui/sonner";
 import { HiMiniXMark } from "react-icons/hi2";
 
 interface AgentReviewToastProps {

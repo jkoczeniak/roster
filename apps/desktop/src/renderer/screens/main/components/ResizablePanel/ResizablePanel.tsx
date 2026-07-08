@@ -1,4 +1,4 @@
-import { cn } from "@superset/ui/utils";
+import { cn } from "@roster/ui/utils";
 import { useCallback, useEffect, useRef } from "react";
 
 interface ResizablePanelProps {

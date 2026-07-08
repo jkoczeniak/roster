@@ -1,6 +1,6 @@
-import { COMPANY } from "@superset/shared/constants";
-import { Button } from "@superset/ui/button";
-import { toast } from "@superset/ui/sonner";
+import { COMPANY } from "@roster/shared/constants";
+import { Button } from "@roster/ui/button";
+import { toast } from "@roster/ui/sonner";
 import { HiMiniXMark } from "react-icons/hi2";
 import { electronTrpc } from "renderer/lib/electron-trpc";
 import { AUTO_UPDATE_STATUS } from "shared/auto-update";

@@ -1,6 +1,6 @@
 import path from "node:path";
 import { pathToFileURL } from "node:url";
-import { settings } from "@superset/local-db";
+import { settings } from "@roster/local-db";
 import {
 	app,
 	BrowserWindow,
@@ -19,7 +19,7 @@ import {
 import { getWorkspaceName } from "shared/env.shared";
 import { backfillAgentMemory } from "./lib/agent-memory-backfill";
 import { setupAgentHooks } from "./lib/agent-setup";
-import { SUPERSET_HOME_DIR } from "./lib/app-environment";
+import { ROSTER_HOME_DIR } from "./lib/app-environment";
 import { initAppState } from "./lib/app-state";
 import { startAppStateWatcher } from "./lib/app-state/watcher";
 import { setupAutoUpdater } from "./lib/auto-updater";
@@ -41,8 +41,8 @@ import { MainWindow } from "./windows/main";
 console.log("[main] Local database ready:", !!localDb);
 
 // Local build: set userData to our workspace-specific dir so singleton lock
-// doesn't conflict with the production Superset.app
-app.setPath("userData", SUPERSET_HOME_DIR);
+// doesn't conflict with the production Roster.app
+app.setPath("userData", ROSTER_HOME_DIR);
 
 // Dev mode: label the app with the workspace name so multiple worktrees are distinguishable
 if (process.env.NODE_ENV === "development") {
@@ -67,7 +67,7 @@ async function processDeepLink(url: string): Promise<void> {
 	console.log("[main] Processing deep link:", url);
 
 	// Deep links: extract path and navigate in renderer
-	// e.g. superset://tasks/my-slug -> /tasks/my-slug
+	// e.g. roster://tasks/my-slug -> /tasks/my-slug
 	const path = `/${url.split("://")[1]}`;
 	focusMainWindow();
 
@@ -229,7 +229,7 @@ if (process.env.NODE_ENV === "development") {
 
 protocol.registerSchemesAsPrivileged([
 	{
-		scheme: "superset-icon",
+		scheme: "roster-icon",
 		privileges: {
 			standard: true,
 			secure: true,
@@ -259,7 +259,7 @@ if (!gotTheLock) {
 
 		// Must register on both default session and the app's custom partition
 		const iconProtocolHandler = (request: Request) => {
-			// superset-icon://<namespace>/<id> — namespace is the URL host
+			// roster-icon://<namespace>/<id> — namespace is the URL host
 			// ("projects" for Category photos, "workspaces" for Agent avatars).
 			const url = new URL(request.url);
 			const namespace = url.hostname === "workspaces" ? "workspaces" : "projects";
@@ -270,10 +270,10 @@ if (!gotTheLock) {
 			}
 			return net.fetch(pathToFileURL(iconPath).toString());
 		};
-		protocol.handle("superset-icon", iconProtocolHandler);
+		protocol.handle("roster-icon", iconProtocolHandler);
 		session
-			.fromPartition("persist:superset")
-			.protocol.handle("superset-icon", iconProtocolHandler);
+			.fromPartition("persist:roster")
+			.protocol.handle("roster-icon", iconProtocolHandler);
 
 		ensureProjectIconsDir();
 		ensureWorkspaceIconsDir();

@@ -1,4 +1,4 @@
-import { Alerter } from "@superset/ui/atoms/Alert";
+import { Alerter } from "@roster/ui/atoms/Alert";
 import type { ReactNode } from "react";
 import { ThemedToaster } from "renderer/components/ThemedToaster";
 import { AuthProvider } from "renderer/providers/AuthProvider";

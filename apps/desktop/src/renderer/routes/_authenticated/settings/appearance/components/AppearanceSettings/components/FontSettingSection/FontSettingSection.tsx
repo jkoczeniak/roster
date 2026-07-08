@@ -1,5 +1,5 @@
-import { Button } from "@superset/ui/button";
-import { Input } from "@superset/ui/input";
+import { Button } from "@roster/ui/button";
+import { Input } from "@roster/ui/input";
 import { useCallback, useEffect, useState } from "react";
 import { electronTrpc } from "renderer/lib/electron-trpc";
 import { MONACO_EDITOR_OPTIONS } from "renderer/providers/MonacoProvider";

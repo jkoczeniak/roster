@@ -1,7 +1,7 @@
 import { EventEmitter } from "node:events";
 import { existsSync, type FSWatcher, statSync, watch } from "node:fs";
 import { join } from "node:path";
-import { PORTS_FILE_NAME, PROJECT_SUPERSET_DIR_NAME } from "shared/constants";
+import { PORTS_FILE_NAME, PROJECT_ROSTER_DIR_NAME } from "shared/constants";
 
 /**
  * Watches for changes to ports.json files across workspaces.
@@ -23,15 +23,15 @@ class StaticPortsWatcher extends EventEmitter {
 
 		const portsPath = join(
 			worktreePath,
-			PROJECT_SUPERSET_DIR_NAME,
+			PROJECT_ROSTER_DIR_NAME,
 			PORTS_FILE_NAME,
 		);
-		const supersetDir = join(worktreePath, PROJECT_SUPERSET_DIR_NAME);
+		const rosterDir = join(worktreePath, PROJECT_ROSTER_DIR_NAME);
 
 		// Determine what to watch:
 		// 1. If ports.json exists, watch it directly
-		// 2. If .superset dir exists, watch it for ports.json creation
-		// 3. If neither exists, watch the worktree root for .superset creation
+		// 2. If .roster dir exists, watch it for ports.json creation
+		// 3. If neither exists, watch the worktree root for .roster creation
 		let watchPath: string;
 		let watchingFor: "file" | "dir" | "root";
 
@@ -45,8 +45,8 @@ class StaticPortsWatcher extends EventEmitter {
 			} catch {
 				// File may have been deleted between check and stat
 			}
-		} else if (existsSync(supersetDir)) {
-			watchPath = supersetDir;
+		} else if (existsSync(rosterDir)) {
+			watchPath = rosterDir;
 			watchingFor = "dir";
 		} else if (existsSync(worktreePath)) {
 			watchPath = worktreePath;
@@ -59,17 +59,17 @@ class StaticPortsWatcher extends EventEmitter {
 			const watcher = watch(watchPath, (_eventType, filename) => {
 				// Filter events based on what we're watching for
 				if (watchingFor === "dir") {
-					// Watching .superset dir - only care about ports.json
+					// Watching .roster dir - only care about ports.json
 					if (filename && filename !== PORTS_FILE_NAME) {
 						return;
 					}
 				} else if (watchingFor === "root") {
-					// Watching worktree root - only care about .superset dir creation
-					if (filename && filename !== PROJECT_SUPERSET_DIR_NAME) {
+					// Watching worktree root - only care about .roster dir creation
+					if (filename && filename !== PROJECT_ROSTER_DIR_NAME) {
 						return;
 					}
-					// .superset was created, switch to watching it
-					if (existsSync(supersetDir)) {
+					// .roster was created, switch to watching it
+					if (existsSync(rosterDir)) {
 						this.watch(workspaceId, worktreePath);
 						return;
 					}

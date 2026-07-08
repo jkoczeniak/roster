@@ -8,7 +8,7 @@ import {
 	type SelectProject,
 	settings,
 	workspaces,
-} from "@superset/local-db";
+} from "@roster/local-db";
 import { TRPCError } from "@trpc/server";
 import { and, desc, eq, inArray, isNull, not } from "drizzle-orm";
 import type { BrowserWindow } from "electron";

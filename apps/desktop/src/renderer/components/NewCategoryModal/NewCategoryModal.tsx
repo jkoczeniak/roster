@@ -1,13 +1,13 @@
-import { Button } from "@superset/ui/button";
+import { Button } from "@roster/ui/button";
 import {
 	Dialog,
 	DialogContent,
 	DialogHeader,
 	DialogTitle,
-} from "@superset/ui/dialog";
-import { Input } from "@superset/ui/input";
-import { Label } from "@superset/ui/label";
-import { toast } from "@superset/ui/sonner";
+} from "@roster/ui/dialog";
+import { Input } from "@roster/ui/input";
+import { Label } from "@roster/ui/label";
+import { toast } from "@roster/ui/sonner";
 import { useNavigate } from "@tanstack/react-router";
 import type { ChangeEvent } from "react";
 import { useEffect, useRef, useState } from "react";

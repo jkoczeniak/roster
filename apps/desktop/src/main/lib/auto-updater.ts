@@ -18,8 +18,8 @@ const UPDATE_CHECK_INTERVAL_MS = 1000 * 60 * 60 * 4; // 4 hours
 // TODO(release): before publishing, confirm the GitHub owner/org and set the
 // public repo name. These two constants are the ONLY place the updater names
 // the release repo.
-const RELEASE_REPO_OWNER = "per-simmons"; // TODO(release): confirm GitHub owner/org
-const RELEASE_REPO_NAME = "damon-ade"; // TODO(release): set public repo name
+const RELEASE_REPO_OWNER = "jkoczeniak";
+const RELEASE_REPO_NAME = "roster";
 
 // Auto-update is intentionally DISABLED for the v1 public launch. To turn it
 // on later: set RELEASE_REPO_NAME above and flip this single flag to `true`.

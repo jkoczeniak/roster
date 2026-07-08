@@ -1,4 +1,4 @@
-import { AGENT_RUNTIMES, workspaces, worktrees } from "@superset/local-db";
+import { AGENT_RUNTIMES, workspaces, worktrees } from "@roster/local-db";
 import { and, eq, isNull, not } from "drizzle-orm";
 import { localDb } from "main/lib/local-db";
 import {
