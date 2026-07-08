@@ -88,7 +88,7 @@ export function NewCategoryModal() {
 		<Dialog modal open={isOpen} onOpenChange={(open) => !open && closeModal()}>
 			<DialogContent className="sm:max-w-[420px]">
 				<DialogHeader>
-					<DialogTitle>New category</DialogTitle>
+					<DialogTitle>New team</DialogTitle>
 				</DialogHeader>
 
 				<div className="flex items-center gap-3 py-2">
@@ -130,7 +130,7 @@ export function NewCategoryModal() {
 						Cancel
 					</Button>
 					<Button onClick={handleCreate} disabled={!canCreate}>
-						{createCategory.isPending ? "Creating…" : "Create category"}
+						{createCategory.isPending ? "Creating…" : "Create team"}
 					</Button>
 				</div>
 			</DialogContent>
