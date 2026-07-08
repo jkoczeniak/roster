@@ -4,6 +4,7 @@ import { eq } from "drizzle-orm";
 import { retryAgentInit } from "main/lib/agent-init";
 import { localDb } from "main/lib/local-db";
 import { workspaceInitManager } from "main/lib/workspace-init-manager";
+import { isTrusted } from "main/lib/workspace-trust";
 import type { WorkspaceInitProgress } from "shared/types/workspace-init";
 import { deduplicateBranchName } from "shared/utils/branch";
 import { z } from "zod";
@@ -210,10 +211,18 @@ export const createInitProcedures = () => {
 				});
 				const defaultPresets = getPresetsForTrigger("applyOnWorkspaceCreated");
 
+				// The renderer gates auto-running repo-supplied `setup` commands on
+				// whether the user has trusted this repo root (workspace-trust). Ship
+				// the root + current trust so WorkspaceInitEffects can decide without a
+				// second round-trip.
+				const mainRepoRoot = project.mainRepoPath;
+
 				return {
 					projectId: project.id,
 					initialCommands: setupConfig?.setup ?? null,
 					defaultPresets,
+					mainRepoRoot,
+					trusted: isTrusted(mainRepoRoot),
 				};
 			}),
 	});

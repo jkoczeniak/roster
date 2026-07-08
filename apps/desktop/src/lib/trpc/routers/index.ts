@@ -20,6 +20,7 @@ import { createRingtoneRouter } from "./ringtone";
 import { createSettingsRouter } from "./settings";
 import { createSyncRouter } from "./sync";
 import { createTerminalRouter } from "./terminal";
+import { createTrustRouter } from "./trust";
 import { createUiStateRouter } from "./ui-state";
 import { createWindowRouter } from "./window";
 import { createWorkspacesRouter } from "./workspaces";
@@ -49,6 +50,7 @@ export const createAppRouter = (getWindow: () => BrowserWindow | null) => {
 		uiState: createUiStateRouter(),
 		sync: createSyncRouter(),
 		ringtone: createRingtoneRouter(getWindow),
+		trust: createTrustRouter(),
 	});
 };
 

@@ -12,6 +12,7 @@ import {
 	type PendingTerminalSetup,
 	useWorkspaceInitStore,
 } from "renderer/stores/workspace-init";
+import { useWorkspaceTrustDialogStore } from "renderer/stores/workspace-trust-dialog";
 import { DEFAULT_AUTO_APPLY_DEFAULT_PRESET } from "shared/constants";
 
 /** Mounted at app root to survive dialog unmounts. */
@@ -41,6 +42,10 @@ export function WorkspaceInitEffects() {
 	const terminalCreateOrAttach =
 		electronTrpc.terminal.createOrAttach.useMutation();
 	const terminalWrite = electronTrpc.terminal.write.useMutation();
+	const setTrust = electronTrpc.trust.setTrust.useMutation();
+	const openTrustDialog = useWorkspaceTrustDialogStore((s) => s.open);
+	const setTrustDialogPending = useWorkspaceTrustDialogStore((s) => s.setIsPending);
+	const closeTrustDialog = useWorkspaceTrustDialogStore((s) => s.close);
 	const utils = electronTrpc.useUtils();
 
 	const openPresetsInActiveTab = useCallback(
@@ -101,7 +106,7 @@ export function WorkspaceInitEffects() {
 		[terminalWrite],
 	);
 
-	const handleTerminalSetup = useCallback(
+	const runTerminalSetup = useCallback(
 		(setup: PendingTerminalSetup, onComplete: () => void) => {
 			const hasSetupScript =
 				Array.isArray(setup.initialCommands) &&
@@ -313,6 +318,115 @@ export function WorkspaceInitEffects() {
 		],
 	);
 
+	// Workspace-trust prompt: surface the exact repo-supplied setup commands and
+	// wait for the user to opt in ("Run and trust this folder") or skip. Only the
+	// `.roster/config.json` setup script is gated — presets/agent command are not.
+	const promptTrust = useCallback(
+		(setup: PendingTerminalSetup, root: string, onComplete: () => void) => {
+			openTrustDialog({
+				root,
+				commands: setup.initialCommands ?? [],
+				onConfirm: () => {
+					setTrustDialogPending(true);
+					setTrust
+						.mutateAsync({ root })
+						.catch((error) => {
+							console.error(
+								"[WorkspaceInitEffects] Failed to persist workspace trust:",
+								error,
+							);
+						})
+						.finally(() => {
+							closeTrustDialog();
+							runTerminalSetup({ ...setup, trusted: true }, onComplete);
+						});
+				},
+				onSkip: () => {
+					closeTrustDialog();
+					// Open the workspace, running presets/agent but NOT the repo setup.
+					runTerminalSetup(
+						{ ...setup, initialCommands: null, trusted: true },
+						onComplete,
+					);
+				},
+			});
+		},
+		[
+			openTrustDialog,
+			closeTrustDialog,
+			setTrustDialogPending,
+			setTrust,
+			runTerminalSetup,
+		],
+	);
+
+	const handleTerminalSetup = useCallback(
+		(setup: PendingTerminalSetup, onComplete: () => void) => {
+			const hasSetupScript =
+				Array.isArray(setup.initialCommands) &&
+				setup.initialCommands.length > 0;
+
+			// Trust gate: never auto-run a repo's `.roster/config.json` setup
+			// commands (real PTY, outside the agent sandbox) for a root the user
+			// hasn't trusted. Presets/agent command are launched by runTerminalSetup
+			// as usual — only the repo-supplied setup script is gated.
+			if (!hasSetupScript || setup.trusted === true) {
+				runTerminalSetup(setup, onComplete);
+				return;
+			}
+
+			if (setup.mainRepoRoot) {
+				promptTrust(setup, setup.mainRepoRoot, onComplete);
+				return;
+			}
+
+			// Root/trust not known yet — resolve once, then re-decide.
+			utils.workspaces.getSetupCommands
+				.fetch({ workspaceId: setup.workspaceId })
+				.then((data) => {
+					if (data?.trusted === true) {
+						runTerminalSetup(
+							{ ...setup, mainRepoRoot: data.mainRepoRoot, trusted: true },
+							onComplete,
+						);
+						return;
+					}
+					if (data?.mainRepoRoot) {
+						promptTrust(
+							{ ...setup, mainRepoRoot: data.mainRepoRoot },
+							data.mainRepoRoot,
+							onComplete,
+						);
+						return;
+					}
+					// Can't verify the root — do NOT auto-run; skip with a visible signal.
+					toast.warning("Setup commands skipped", {
+						description:
+							"Could not verify this folder is trusted, so its setup commands were not run.",
+					});
+					runTerminalSetup(
+						{ ...setup, initialCommands: null, trusted: true },
+						onComplete,
+					);
+				})
+				.catch((error) => {
+					console.error(
+						"[WorkspaceInitEffects] Failed to resolve workspace trust:",
+						error,
+					);
+					toast.warning("Setup commands skipped", {
+						description:
+							"Could not verify this folder is trusted, so its setup commands were not run.",
+					});
+					runTerminalSetup(
+						{ ...setup, initialCommands: null, trusted: true },
+						onComplete,
+					);
+				});
+		},
+		[runTerminalSetup, promptTrust, utils.workspaces.getSetupCommands],
+	);
+
 	useEffect(() => {
 		for (const [workspaceId, setup] of Object.entries(pendingTerminalSetups)) {
 			const progress = initProgress[workspaceId];
@@ -342,6 +456,8 @@ export function WorkspaceInitEffects() {
 							const completeSetup: PendingTerminalSetup = {
 								...setup,
 								defaultPresets: setupData?.defaultPresets ?? [],
+								mainRepoRoot: setupData?.mainRepoRoot ?? setup.mainRepoRoot,
+								trusted: setupData?.trusted ?? setup.trusted,
 							};
 							handleTerminalSetup(completeSetup, () => {
 								removePendingTerminalSetup(workspaceId);
@@ -402,6 +518,8 @@ export function WorkspaceInitEffects() {
 						projectId: setupData.projectId,
 						initialCommands: setupData.initialCommands,
 						defaultPresets: setupData.defaultPresets ?? [],
+						mainRepoRoot: setupData.mainRepoRoot,
+						trusted: setupData.trusted,
 					};
 
 					handleTerminalSetup(fetchedSetup, () => {

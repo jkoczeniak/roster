@@ -39,6 +39,8 @@ export function useCreateBranchWorkspace(
 					projectId: data.projectId,
 					initialCommands: setupData?.initialCommands ?? null,
 					defaultPresets: setupData?.defaultPresets ?? [],
+					mainRepoRoot: setupData?.mainRepoRoot,
+					trusted: setupData?.trusted,
 				});
 
 				// Branch workspaces skip git init, so mark ready immediately to trigger terminal setup

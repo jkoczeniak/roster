@@ -11,6 +11,14 @@ export interface PendingTerminalSetup {
 	defaultPresets?: TerminalPreset[];
 	/** Agent command to run in a separate pane from the setup script */
 	agentCommand?: string;
+	/** Repo root that owns the `.roster` setup commands — key for the trust gate. */
+	mainRepoRoot?: string;
+	/**
+	 * Whether the user has trusted `mainRepoRoot`. When the setup script is
+	 * present but this is not explicitly `true`, WorkspaceInitEffects prompts
+	 * before auto-running the repo-supplied `setup` commands.
+	 */
+	trusted?: boolean;
 }
 
 interface WorkspaceInitState {
