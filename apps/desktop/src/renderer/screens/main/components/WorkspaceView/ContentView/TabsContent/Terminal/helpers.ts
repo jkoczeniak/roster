@@ -47,6 +47,7 @@ import {
 	getPreferredEngine,
 	isGhosttyReady,
 	isScrolledToBottom,
+	redrawTerminal,
 } from "./engine";
 import { FilePathLinkProvider, UrlLinkProvider } from "./link-providers";
 import { GhosttySearchController } from "./search/GhosttySearchController";
@@ -915,6 +916,11 @@ export function setupResizeHandlers(
 		const wasAtBottom = isScrolledToBottom(xterm);
 		fitAddon.fit();
 		onResize(xterm.cols, xterm.rows);
+		// ghostty renders to a canvas and won't repaint on its own when a
+		// container becomes sized after a tab switch / re-mount (or when fit()
+		// leaves the cell grid unchanged), leaving the terminal blank. Force a
+		// repaint so the restored buffer shows immediately. No-op-safe on xterm.
+		redrawTerminal(xterm);
 		if (wasAtBottom) {
 			requestAnimationFrame(() => scrollToBottom(xterm));
 		}

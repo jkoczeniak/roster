@@ -349,3 +349,22 @@ export function adaptKeyHandlerForGhostty(
 ): (event: KeyboardEvent) => boolean {
 	return (event: KeyboardEvent) => !handler(event);
 }
+
+/**
+ * Force the terminal to repaint its current buffer.
+ *
+ * xterm re-renders on visibility/resize on its own; `refresh()` is its
+ * imperative repaint. ghostty renders to a canvas and does NOT necessarily
+ * repaint when it becomes visible again or when a resize doesn't change the
+ * cell grid — so after a tab switch / re-mount its canvas can sit blank until
+ * new output arrives. Forcing a full render (`render(..., forceAll=true)`)
+ * paints the restored buffer immediately.
+ */
+export function redrawTerminal(term: TerminalInstance): void {
+	const ghosttyRenderer = term.renderer;
+	if (ghosttyRenderer && term.wasmTerm) {
+		ghosttyRenderer.render(term.wasmTerm, true, term.getViewportY?.() ?? 0, term);
+		return;
+	}
+	term.refresh?.(0, Math.max(0, term.rows - 1));
+}

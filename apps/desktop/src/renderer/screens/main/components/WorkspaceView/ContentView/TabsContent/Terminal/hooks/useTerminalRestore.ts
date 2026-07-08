@@ -1,6 +1,7 @@
 import { useCallback, useRef } from "react";
 import { DEBUG_TERMINAL } from "../config";
 import type { FitHandle, TerminalInstance } from "../engine";
+import { redrawTerminal } from "../engine";
 import type {
 	CreateOrAttachResult,
 	TerminalExitReason,
@@ -124,6 +125,9 @@ export function useTerminalRestore({
 					if (xtermRef.current !== xterm) return;
 					if (restoreSequenceRef.current !== restoreSequence) return;
 					fitAddon.fit();
+					// ghostty won't repaint restored content on its own; force it so
+					// the terminal isn't left blank after a re-mount / tab switch.
+					redrawTerminal(xterm);
 					scrollToBottom(xterm);
 				});
 			};

@@ -14,7 +14,7 @@ import type {
 	TerminalInstance,
 	TerminalTheme,
 } from "../engine";
-import { isScrolledToBottom } from "../engine";
+import { isScrolledToBottom, redrawTerminal } from "../engine";
 import {
 	createTerminalInstance,
 	setupClickToMoveCursor,
@@ -633,8 +633,9 @@ export function useTerminalLifecycle({
 			rendererRef.current?.current.clearTextureAtlas?.();
 
 			fitAddon.fit();
-			// ghostty repaints itself; refresh() is an xterm-only surface.
-			xterm.refresh?.(0, Math.max(0, xterm.rows - 1));
+			// Force a repaint: xterm exposes refresh(); ghostty needs an explicit
+			// full render or its canvas stays blank after occlusion / re-show.
+			redrawTerminal(xterm);
 
 			if (forceResize || xterm.cols !== prevCols || xterm.rows !== prevRows) {
 				resizeRef.current({ paneId, cols: xterm.cols, rows: xterm.rows });

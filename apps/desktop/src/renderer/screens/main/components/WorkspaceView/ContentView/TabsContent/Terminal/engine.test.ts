@@ -1,5 +1,9 @@
 import { describe, expect, it } from "bun:test";
-import { adaptKeyHandlerForGhostty } from "./engine";
+import {
+	adaptKeyHandlerForGhostty,
+	redrawTerminal,
+	type TerminalInstance,
+} from "./engine";
 
 // Regression guard for a bug that left the ghostty terminal input-dead:
 // ghostty-web swallows a key when the custom key handler returns truthy,
@@ -27,5 +31,41 @@ describe("adaptKeyHandlerForGhostty", () => {
 		});
 		adapted(ev);
 		expect(seen).toEqual([ev]);
+	});
+});
+
+// Regression guard: the ghostty canvas can sit blank after a tab switch /
+// re-mount unless we force a full render. redrawTerminal must force-render on
+// ghostty (renderer.render(..., forceAll=true)) and use refresh() on xterm.
+describe("redrawTerminal", () => {
+	it("forces a full ghostty canvas render", () => {
+		const calls: Array<{ forceAll?: boolean }> = [];
+		const term = {
+			rows: 24,
+			wasmTerm: {},
+			getViewportY: () => 0,
+			renderer: {
+				setTheme() {},
+				charWidth: 8,
+				charHeight: 16,
+				render(_buffer: unknown, forceAll?: boolean) {
+					calls.push({ forceAll });
+				},
+			},
+		} as unknown as TerminalInstance;
+		redrawTerminal(term);
+		expect(calls).toEqual([{ forceAll: true }]);
+	});
+
+	it("falls back to xterm refresh() when there is no ghostty renderer", () => {
+		const refreshCalls: Array<[number, number]> = [];
+		const term = {
+			rows: 10,
+			refresh(start: number, end: number) {
+				refreshCalls.push([start, end]);
+			},
+		} as unknown as TerminalInstance;
+		redrawTerminal(term);
+		expect(refreshCalls).toEqual([[0, 9]]);
 	});
 });

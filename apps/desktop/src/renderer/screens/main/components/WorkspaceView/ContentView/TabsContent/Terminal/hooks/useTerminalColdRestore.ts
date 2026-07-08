@@ -2,6 +2,7 @@ import { useCallback, useRef, useState } from "react";
 import { electronTrpcClient as trpcClient } from "renderer/lib/trpc-client";
 import { consumeSyncedPane } from "renderer/stores/tabs/syncedPaneRegistry";
 import type { FitHandle, TerminalInstance } from "../engine";
+import { redrawTerminal } from "../engine";
 import { coldRestoreState } from "../state";
 import type {
 	CreateOrAttachMutate,
@@ -116,6 +117,9 @@ export function useTerminalColdRestore({
 							currentXterm.write(scrollback, () => {
 								requestAnimationFrame(() => {
 									if (xtermRef.current !== currentXterm) return;
+									// ghostty needs an explicit repaint or restored
+									// scrollback can render blank after a re-mount.
+									redrawTerminal(currentXterm);
 									scrollToBottom(currentXterm);
 								});
 							});
