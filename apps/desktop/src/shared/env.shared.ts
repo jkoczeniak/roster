@@ -8,7 +8,7 @@
  * DO NOT spread ...process.env here - that only works in main process.
  *
  * For main-process-only env vars (API URLs, etc.), use src/main/env.main.ts
- * For renderer-only env vars (PostHog, etc.), use src/renderer/env.renderer.ts
+ * For renderer-only env vars, use src/renderer/env.renderer.ts
  */
 import { z } from "zod/v4";
 

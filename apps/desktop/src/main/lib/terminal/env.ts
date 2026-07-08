@@ -7,6 +7,7 @@ import defaultShell from "default-shell";
 import { env } from "shared/env.shared";
 import { getAgentCodexHome } from "../agent-home";
 import { getShellEnv } from "../agent-setup/shell-wrappers";
+import { getNotificationToken } from "../notifications/token";
 
 const MACOS_SYSTEM_CERT_FILE = "/etc/ssl/cert.pem";
 let cachedUtf8Locale: string | null = null;
@@ -443,6 +444,10 @@ export function buildTerminalEnv(params: {
 		ROSTER_WORKSPACE_PATH: workspacePath || "",
 		ROSTER_ROOT_PATH: rootPath || "",
 		ROSTER_PORT: String(env.DESKTOP_NOTIFICATIONS_PORT),
+		// Shared secret the notify hook (and any in-terminal caller) must send as
+		// the x-roster-token header to reach the notification/hook server. The
+		// ROSTER_ prefix keeps it whitelisted through terminal-host's buildSafeEnv.
+		ROSTER_HOOK_TOKEN: getNotificationToken(),
 		// Environment identifier for dev/prod separation
 		ROSTER_ENV: env.NODE_ENV === "development" ? "development" : "production",
 		// Hook protocol version for forward compatibility

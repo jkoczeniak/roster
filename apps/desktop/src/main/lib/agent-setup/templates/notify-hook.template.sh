@@ -60,6 +60,7 @@ fi
 if [ "$DEBUG_HOOKS_ENABLED" = "1" ]; then
   STATUS_CODE=$(curl -sG "http://127.0.0.1:${ROSTER_PORT:-{{DEFAULT_PORT}}}/hook/complete" \
     --connect-timeout 1 --max-time 2 \
+    -H "x-roster-token: ${ROSTER_HOOK_TOKEN}" \
     --data-urlencode "paneId=$ROSTER_PANE_ID" \
     --data-urlencode "tabId=$ROSTER_TAB_ID" \
     --data-urlencode "workspaceId=$ROSTER_WORKSPACE_ID" \
@@ -72,6 +73,7 @@ if [ "$DEBUG_HOOKS_ENABLED" = "1" ]; then
 else
   curl -sG "http://127.0.0.1:${ROSTER_PORT:-{{DEFAULT_PORT}}}/hook/complete" \
     --connect-timeout 1 --max-time 2 \
+    -H "x-roster-token: ${ROSTER_HOOK_TOKEN}" \
     --data-urlencode "paneId=$ROSTER_PANE_ID" \
     --data-urlencode "tabId=$ROSTER_TAB_ID" \
     --data-urlencode "workspaceId=$ROSTER_WORKSPACE_ID" \

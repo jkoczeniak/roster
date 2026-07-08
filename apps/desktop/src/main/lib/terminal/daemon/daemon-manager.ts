@@ -1,6 +1,5 @@
 import { EventEmitter } from "node:events";
 import { workspaces } from "@roster/local-db";
-import { track } from "main/lib/analytics";
 import { appState } from "main/lib/app-state";
 import { localDb } from "main/lib/local-db";
 import { HistoryReader, truncateUtf8ToLastBytes } from "../../terminal-history";
@@ -219,9 +218,6 @@ export class DaemonTerminalManager extends EventEmitter {
 			const activeSessionCount = Array.from(this.sessions.values()).filter(
 				(s) => s.isAlive,
 			).length;
-			track("terminal_daemon_disconnected", {
-				active_session_count: activeSessionCount,
-			});
 			this.daemonAliveSessionIds.clear();
 			this.daemonSessionIdsHydrated = false;
 			for (const [paneId, session] of this.sessions.entries()) {
@@ -461,13 +457,6 @@ export class DaemonTerminalManager extends EventEmitter {
 			}
 
 			if (response.wasRecovered) {
-				track("terminal_warm_attached", {
-					workspace_id: workspaceId,
-					pane_id: paneId,
-					snapshot_bytes: response.snapshot.snapshotAnsi
-						? Buffer.byteLength(response.snapshot.snapshotAnsi, "utf8")
-						: 0,
-				});
 			}
 
 			// Read claudeSessionId from previous meta.json even for non-cold-restore paths,
@@ -553,13 +542,6 @@ export class DaemonTerminalManager extends EventEmitter {
 			rows: metadata.rows || rows,
 		});
 
-		track("terminal_cold_restored", {
-			workspace_id: workspaceId,
-			pane_id: paneId,
-			scrollback_bytes: scrollbackBytes,
-			has_claude_session: !!claudeSessionId,
-		});
-
 		return {
 			isNew: false,
 			scrollback,
@@ -582,7 +564,8 @@ export class DaemonTerminalManager extends EventEmitter {
 	private extractClaudeSessionId(scrollback: string): string | undefined {
 		// Strip ANSI escape sequences for cleaner matching
 		const plain = scrollback.replace(/\x1b\[[0-9;]*[a-zA-Z]/g, "");
-		const UUID_RE = "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}";
+		const UUID_RE =
+			"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}";
 
 		// Pattern 1: `claude --resume <uuid>` — explicit resume command
 		const resumeMatch = plain.match(

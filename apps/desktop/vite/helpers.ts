@@ -63,28 +63,17 @@ export function copyResourcesPlugin(): Plugin {
 }
 
 /**
- * Injects environment variables into index.html CSP.
+ * Formerly injected cloud/telemetry origins into the index.html CSP. The
+ * local-only build ships a static, self-contained CSP (no cloud, PostHog, or
+ * Sentry hosts), so there are no placeholders left to substitute. Kept as a
+ * pass-through so the plugin wiring stays stable; remove if it never regains a
+ * substitution.
  */
 export function htmlEnvTransformPlugin(): Plugin {
 	return {
 		name: "html-env-transform",
 		transformIndexHtml(html) {
-			return html
-				.replace(
-					/%NEXT_PUBLIC_API_URL%/g,
-					process.env.NEXT_PUBLIC_API_URL || "https://api.roster.local",
-				)
-				.replace(
-					/%NEXT_PUBLIC_ELECTRIC_URL%/g,
-					new URL(
-						process.env.NEXT_PUBLIC_ELECTRIC_URL ||
-							"https://api.roster.local/api/electric",
-					).origin,
-				)
-				.replace(
-					/%NEXT_PUBLIC_STREAMS_URL%/g,
-					process.env.NEXT_PUBLIC_STREAMS_URL || "https://streams.roster.local",
-				);
+			return html;
 		},
 	};
 }

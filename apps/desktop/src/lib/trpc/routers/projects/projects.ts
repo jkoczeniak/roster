@@ -13,7 +13,6 @@ import { TRPCError } from "@trpc/server";
 import { and, desc, eq, inArray, isNull, not } from "drizzle-orm";
 import type { BrowserWindow } from "electron";
 import { dialog } from "electron";
-import { track } from "main/lib/analytics";
 import { localDb } from "main/lib/local-db";
 import {
 	deleteProjectIcon,
@@ -197,14 +196,6 @@ async function ensureMainWorkspace(project: Project): Promise<void> {
 
 	if (!wasExisting) {
 		activateProject(project);
-
-		track("workspace_opened", {
-			workspace_id: workspace.id,
-			project_id: project.id,
-			type: "branch",
-			was_existing: false,
-			auto_created: true,
-		});
 	}
 }
 
@@ -513,11 +504,6 @@ export const createProjectsRouter = (getWindow: () => BrowserWindow | null) => {
 					const project = upsertProject(mainRepoPath, defaultBranch);
 					await ensureMainWorkspace(project);
 
-					track("project_opened", {
-						project_id: project.id,
-						method: "open",
-					});
-
 					outcomes.push({ status: "success", project });
 				} catch (gitError) {
 					if (gitError instanceof NotGitRepoError) {
@@ -585,11 +571,6 @@ export const createProjectsRouter = (getWindow: () => BrowserWindow | null) => {
 				const project = upsertProject(mainRepoPath, defaultBranch);
 				await ensureMainWorkspace(project);
 
-				track("project_opened", {
-					project_id: project.id,
-					method: "drop",
-				});
-
 				return {
 					canceled: false,
 					project,
@@ -603,11 +584,6 @@ export const createProjectsRouter = (getWindow: () => BrowserWindow | null) => {
 
 				const project = upsertProject(input.path, defaultBranch);
 				await ensureMainWorkspace(project);
-
-				track("project_opened", {
-					project_id: project.id,
-					method: "init",
-				});
 
 				return { project };
 			}),
@@ -698,11 +674,6 @@ export const createProjectsRouter = (getWindow: () => BrowserWindow | null) => {
 								lastOpenedAt: Date.now(),
 							});
 
-							track("project_opened", {
-								project_id: existingProject.id,
-								method: "clone",
-							});
-
 							return {
 								canceled: false as const,
 								success: true as const,
@@ -746,11 +717,6 @@ export const createProjectsRouter = (getWindow: () => BrowserWindow | null) => {
 
 					// Auto-create main workspace if it doesn't exist
 					await ensureMainWorkspace(project);
-
-					track("project_opened", {
-						project_id: project.id,
-						method: "clone",
-					});
 
 					return {
 						canceled: false as const,
@@ -807,11 +773,6 @@ export const createProjectsRouter = (getWindow: () => BrowserWindow | null) => {
 					}
 					const project = upsertProject(repoPath, defaultBranch);
 					await ensureMainWorkspace(project);
-
-					track("project_opened", {
-						project_id: project.id,
-						method: "create_empty",
-					});
 
 					return {
 						canceled: false as const,
@@ -1052,8 +1013,6 @@ export const createProjectsRouter = (getWindow: () => BrowserWindow | null) => {
 						? `${totalFailed} terminal process(es) may still be running`
 						: undefined;
 
-				track("project_closed", { project_id: input.id });
-
 				return { success: true, terminalWarning };
 			}),
 
@@ -1192,7 +1151,8 @@ export const createProjectsRouter = (getWindow: () => BrowserWindow | null) => {
 			.mutation(({ input }) => {
 				const allProjects = localDb.select().from(projects).all();
 				const maxTabOrder = allProjects.reduce(
-					(max, p) => (p.tabOrder != null && p.tabOrder > max ? p.tabOrder : max),
+					(max, p) =>
+						p.tabOrder != null && p.tabOrder > max ? p.tabOrder : max,
 					-1,
 				);
 

@@ -166,10 +166,10 @@ describe("env", () => {
 				expect(result.NEON_API_KEY).toBeUndefined();
 			});
 
-			it("should exclude SENTRY_AUTH_TOKEN", () => {
-				const env = { SENTRY_AUTH_TOKEN: "sentry-token", PATH: "/usr/bin" };
+			it("should exclude an arbitrary service *_AUTH_TOKEN secret", () => {
+				const env = { SERVICE_AUTH_TOKEN: "secret-token", PATH: "/usr/bin" };
 				const result = buildSafeEnv(env);
-				expect(result.SENTRY_AUTH_TOKEN).toBeUndefined();
+				expect(result.SERVICE_AUTH_TOKEN).toBeUndefined();
 			});
 
 			it("should exclude GH_CLIENT_SECRET", () => {
@@ -195,12 +195,12 @@ describe("env", () => {
 			it("should exclude NEXT_PUBLIC_* vars", () => {
 				const env = {
 					NEXT_PUBLIC_API_URL: "https://api.example.com",
-					NEXT_PUBLIC_POSTHOG_KEY: "phkey",
+					NEXT_PUBLIC_ANALYTICS_KEY: "phkey",
 					PATH: "/usr/bin",
 				};
 				const result = buildSafeEnv(env);
 				expect(result.NEXT_PUBLIC_API_URL).toBeUndefined();
-				expect(result.NEXT_PUBLIC_POSTHOG_KEY).toBeUndefined();
+				expect(result.NEXT_PUBLIC_ANALYTICS_KEY).toBeUndefined();
 			});
 
 			it("should exclude TURBO_* vars", () => {
@@ -649,6 +649,14 @@ describe("env", () => {
 				expect(result.ROSTER_PANE_ID).toBe("pane-1");
 				expect(result.ROSTER_TAB_ID).toBe("tab-1");
 				expect(result.ROSTER_WORKSPACE_ID).toBe("ws-1");
+			});
+
+			it("should inject a non-empty ROSTER_HOOK_TOKEN for the notify hook", () => {
+				const result = buildTerminalEnv(baseParams);
+				// The ROSTER_ prefix keeps it whitelisted through buildSafeEnv, so the
+				// notify hook can authenticate to the notification server.
+				expect(result.ROSTER_HOOK_TOKEN).toBeDefined();
+				expect(result.ROSTER_HOOK_TOKEN?.length).toBeGreaterThan(0);
 			});
 
 			it("should handle optional workspace params", () => {

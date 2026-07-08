@@ -8,16 +8,23 @@
       Content Security Policy
       https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP
 
-      - default-src 'self': Only allow resources from same origin
-      - script-src 'self' 'wasm-unsafe-eval' https://*.posthog.com: Allow scripts from same origin + WebAssembly (for xterm ImageAddon) + PostHog
-      - style-src 'self' 'unsafe-inline': Allow styles from same origin + inline (needed for CSS-in-JS)
-      - connect-src 'self' data: blob: ws: wss: %NEXT_PUBLIC_API_URL% %NEXT_PUBLIC_ELECTRIC_URL% https://*.posthog.com https://*.sentry.io sentry-ipc:: Allow WebSocket + API + Electric proxy + PostHog + Sentry + data URIs (file attachment upload via data URL) + blob URIs
-      - img-src 'self' data: blob: https: http:: Allow images from any source (needed for favicons, browser pane webview content, and file attachment previews)
-      - font-src 'self': Allow fonts from same origin
-      - frame-src https: http: data: blob:: Allow webview browser pane to load any URL
-      - child-src 'self' blob:: Allow workers from same origin + blob workers
+      Local-only build: no cloud or telemetry hosts. The renderer talks to
+      the main process over trpc-over-IPC (not the network), so connect-src needs
+      no remote origins — only ws/wss for the Vite HMR socket in dev. The built-in
+      browser / <webview> panes load arbitrary web pages, so frame-src and img-src
+      stay permissive; that content is isolated in <webview>, not this document.
+
+      - default-src 'self': only same-origin resources by default
+      - script-src 'self' 'wasm-unsafe-eval': same-origin scripts + WASM (ghostty-web / xterm)
+      - style-src 'self' 'unsafe-inline': same-origin + inline styles (CSS-in-JS)
+      - connect-src 'self' data: blob: ws: wss:: IPC-backed trpc + dev HMR socket + data/blob URIs
+      - img-src 'self' data: blob: https: http:: favicons, webview thumbnails, disk/web avatars, attachment previews
+      - font-src 'self': same-origin fonts
+      - frame-src https: http: data: blob:: built-in browser panes load any URL
+      - child-src 'self' blob:: same-origin + blob workers
+      - object-src 'none': no plugins/embeds
     -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' https://*.posthog.com; style-src 'self' 'unsafe-inline'; connect-src 'self' data: blob: ws: wss: %NEXT_PUBLIC_API_URL% %NEXT_PUBLIC_ELECTRIC_URL% https://*.posthog.com https://*.sentry.io sentry-ipc:; img-src 'self' data: blob: https: http:; font-src 'self'; frame-src https: http: data: blob:; child-src 'self' blob:;" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; connect-src 'self' data: blob: ws: wss:; img-src 'self' data: blob: https: http:; font-src 'self'; frame-src https: http: data: blob:; child-src 'self' blob:; object-src 'none';" />
   </head>
 
   <body>

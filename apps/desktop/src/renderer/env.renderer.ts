@@ -15,14 +15,9 @@ const envSchema = z.object({
 	NODE_ENV: z
 		.enum(["development", "production", "test"])
 		.default("development"),
+	// Retained for the local desktop-version check + IPC cache origin. Points at a
+	// non-routable placeholder host in local-only builds; no telemetry endpoints.
 	NEXT_PUBLIC_API_URL: z.url().default("https://api.roster.local"),
-	NEXT_PUBLIC_WEB_URL: z.url().default("https://app.roster.local"),
-	NEXT_PUBLIC_ELECTRIC_URL: z
-		.url()
-		.default("https://api.roster.local/api/electric"),
-	NEXT_PUBLIC_POSTHOG_KEY: z.string().optional(),
-	NEXT_PUBLIC_POSTHOG_HOST: z.string().default("https://us.i.posthog.com"),
-	SENTRY_DSN_DESKTOP: z.string().optional(),
 });
 
 /**
@@ -35,15 +30,6 @@ const rawEnv = {
 	// These are replaced by Vite's define at build time
 	NODE_ENV: process.env.NODE_ENV,
 	NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL,
-	NEXT_PUBLIC_WEB_URL: process.env.NEXT_PUBLIC_WEB_URL,
-	NEXT_PUBLIC_ELECTRIC_URL: process.env.NEXT_PUBLIC_ELECTRIC_URL,
-	NEXT_PUBLIC_POSTHOG_KEY: import.meta.env.NEXT_PUBLIC_POSTHOG_KEY as
-		| string
-		| undefined,
-	NEXT_PUBLIC_POSTHOG_HOST: import.meta.env.NEXT_PUBLIC_POSTHOG_HOST as
-		| string
-		| undefined,
-	SENTRY_DSN_DESKTOP: import.meta.env.SENTRY_DSN_DESKTOP as string | undefined,
 };
 
 // Local build: always skip cloud validation (fully local)

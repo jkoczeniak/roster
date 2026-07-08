@@ -4,6 +4,8 @@ import { BrowserWindow } from "electron";
 import express from "express";
 import { NOTIFICATION_EVENTS } from "shared/constants";
 import { env } from "shared/env.shared";
+import { createNotificationAuthMiddleware } from "./auth";
+import { getNotificationToken } from "./token";
 import type {
 	AgentInvokeEvent,
 	AgentLifecycleEvent,
@@ -40,15 +42,8 @@ const app = express();
 // Parse JSON request bodies
 app.use(express.json());
 
-// CORS
-app.use((req, res, next) => {
-	res.setHeader("Access-Control-Allow-Origin", "*");
-	res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
-	if (req.method === "OPTIONS") {
-		return res.status(200).end();
-	}
-	next();
-});
+// Shared-secret + loopback-Host gate on every endpoint except GET /health.
+app.use(createNotificationAuthMiddleware(getNotificationToken));
 
 /**
  * Resolves paneId from tabId or workspaceId using synced tabs state.

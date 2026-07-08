@@ -40,12 +40,33 @@ export async function makeAppSetup(
 	});
 
 	app.on("web-contents-created", (_, contents) => {
+		// Browser/DevTools <webview> panes navigate freely by design; only the app
+		// window's own contents are locked to their origin here.
 		if (contents.getType() === "webview") return;
 		contents.on("will-navigate", (event, url) => {
-			// Always prevent in-app navigation for external URLs
-			if (url.startsWith("http://") || url.startsWith("https://")) {
+			let target: URL;
+			try {
+				target = new URL(url);
+			} catch {
+				// Unparseable target — never let the app frame navigate to it.
 				event.preventDefault();
-				shell.openExternal(url);
+				return;
+			}
+
+			// Same-origin navigations (initial load, dev HMR full reload) are fine.
+			let sameOrigin = false;
+			try {
+				sameOrigin = new URL(contents.getURL()).origin === target.origin;
+			} catch {
+				sameOrigin = false;
+			}
+			if (sameOrigin) return;
+
+			// Anything leaving the app origin is blocked. Real external links open
+			// in the system browser; other schemes (file:, etc.) are just denied.
+			event.preventDefault();
+			if (target.protocol === "http:" || target.protocol === "https:") {
+				void shell.openExternal(url);
 			}
 		});
 	});
@@ -70,7 +91,15 @@ PLATFORM.IS_WINDOWS &&
 
 app.commandLine.appendSwitch("force-color-profile", "srgb");
 
-// Enable CDP for browser DevTools and desktop automation MCP
+// Enable CDP for browser DevTools and desktop automation MCP.
+// The port binds to loopback. remote-allow-origins is scoped to the CDP
+// server's own loopback origins rather than "*" — Chromium's origin check
+// exists precisely to stop web content (e.g. a page in a built-in browser
+// pane) from attaching to the DevTools WebSocket and driving the app. The
+// DevTools frontend and the automation MCP both connect from these origins.
 const cdpPort = String(process.env.DESKTOP_AUTOMATION_PORT || 41729);
 app.commandLine.appendSwitch("remote-debugging-port", cdpPort);
-app.commandLine.appendSwitch("remote-allow-origins", "*");
+app.commandLine.appendSwitch(
+	"remote-allow-origins",
+	`http://127.0.0.1:${cdpPort},http://localhost:${cdpPort}`,
+);

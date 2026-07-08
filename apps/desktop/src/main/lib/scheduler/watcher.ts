@@ -1,6 +1,7 @@
 import { type FSWatcher, existsSync, readFileSync, watch } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
+import { getNotificationToken } from "../notifications/token";
 
 /**
  * Lightweight, NON-LLM event watcher. Detects new files in configured drops
@@ -72,7 +73,10 @@ export class AgentWatcher {
 		try {
 			await fetch(`http://127.0.0.1:${this.port}/agent/invoke`, {
 				method: "POST",
-				headers: { "content-type": "application/json" },
+				headers: {
+					"content-type": "application/json",
+					"x-roster-token": getNotificationToken(),
+				},
 				body: JSON.stringify({ agent: cfg.agent, prompt }),
 			});
 			console.log(`[agent-watcher] fired ${cfg.agent} for ${file}`);

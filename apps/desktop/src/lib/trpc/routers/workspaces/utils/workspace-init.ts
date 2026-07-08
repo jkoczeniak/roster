@@ -1,6 +1,5 @@
 import { projects, worktrees } from "@roster/local-db";
 import { eq } from "drizzle-orm";
-import { track } from "main/lib/analytics";
 import { localDb } from "main/lib/local-db";
 import { workspaceInitManager } from "main/lib/workspace-init-manager";
 import type { WorkspaceInitStep } from "shared/types/workspace-init";
@@ -142,14 +141,6 @@ export async function initializeWorkspaceWorktree({
 				.run();
 
 			manager.updateProgress(workspaceId, "ready", "Ready");
-
-			track("workspace_initialized", {
-				workspace_id: workspaceId,
-				project_id: projectId,
-				branch,
-				base_branch: branch,
-				use_existing_branch: true,
-			});
 
 			return;
 		}
@@ -445,13 +436,6 @@ export async function initializeWorkspaceWorktree({
 			.run();
 
 		manager.updateProgress(workspaceId, "ready", "Ready");
-
-		track("workspace_initialized", {
-			workspace_id: workspaceId,
-			project_id: projectId,
-			branch,
-			base_branch: effectiveBaseBranch,
-		});
 	} catch (error) {
 		const errorMessage = error instanceof Error ? error.message : String(error);
 		console.error(

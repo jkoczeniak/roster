@@ -92,6 +92,24 @@ async function openPathInApp(
 export const createExternalRouter = () => {
 	return router({
 		openUrl: publicProcedure.input(z.string()).mutation(async ({ input }) => {
+			// Scheme allowlist: shell.openExternal hands the URL to the OS, so an
+			// unvalidated string could launch arbitrary protocol handlers. Only
+			// web + mail links are ever intended here.
+			let scheme: string;
+			try {
+				scheme = new URL(input).protocol;
+			} catch {
+				throw new TRPCError({
+					code: "BAD_REQUEST",
+					message: `Invalid URL: ${input}`,
+				});
+			}
+			if (scheme !== "http:" && scheme !== "https:" && scheme !== "mailto:") {
+				throw new TRPCError({
+					code: "BAD_REQUEST",
+					message: `Refusing to open URL with disallowed scheme: ${scheme}`,
+				});
+			}
 			try {
 				await shell.openExternal(input);
 			} catch (error) {

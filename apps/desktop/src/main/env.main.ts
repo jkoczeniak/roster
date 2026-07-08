@@ -14,15 +14,9 @@ export const env = createEnv({
 		NODE_ENV: z
 			.enum(["development", "production", "test"])
 			.default("development"),
+		// Retained for the local desktop-version check + IPC cache origin. Points
+		// at a non-routable placeholder host in local-only builds.
 		NEXT_PUBLIC_API_URL: z.url().default("https://api.roster.local"),
-		NEXT_PUBLIC_STREAMS_URL: z.url().default("https://streams.roster.local"),
-		NEXT_PUBLIC_ELECTRIC_URL: z
-			.url()
-			.default("https://api.roster.local/api/electric"),
-		NEXT_PUBLIC_WEB_URL: z.url().default("https://app.roster.local"),
-		NEXT_PUBLIC_POSTHOG_KEY: z.string().optional(),
-		NEXT_PUBLIC_POSTHOG_HOST: z.string().default("https://us.i.posthog.com"),
-		SENTRY_DSN_DESKTOP: z.string().optional(),
 	},
 
 	runtimeEnv: {
@@ -31,12 +25,6 @@ export const env = createEnv({
 		// (spreading process.env only works at runtime, not for bundled apps)
 		NODE_ENV: process.env.NODE_ENV,
 		NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL,
-		NEXT_PUBLIC_STREAMS_URL: process.env.NEXT_PUBLIC_STREAMS_URL,
-		NEXT_PUBLIC_ELECTRIC_URL: process.env.NEXT_PUBLIC_ELECTRIC_URL,
-		NEXT_PUBLIC_WEB_URL: process.env.NEXT_PUBLIC_WEB_URL,
-		NEXT_PUBLIC_POSTHOG_KEY: process.env.NEXT_PUBLIC_POSTHOG_KEY,
-		NEXT_PUBLIC_POSTHOG_HOST: process.env.NEXT_PUBLIC_POSTHOG_HOST,
-		SENTRY_DSN_DESKTOP: process.env.SENTRY_DSN_DESKTOP,
 	},
 	emptyStringAsUndefined: true,
 	// Local build: always skip cloud validation (fully local)

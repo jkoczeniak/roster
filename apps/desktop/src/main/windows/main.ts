@@ -126,11 +126,41 @@ export async function MainWindow() {
 		webPreferences: {
 			preload: join(__dirname, "../preload/index.js"),
 			webviewTag: true,
+			// Explicit Electron security posture (defaults, pinned so a future
+			// Electron default-flip can't silently weaken us). The preload only
+			// uses contextBridge/ipcRenderer/webUtils, all sandbox-compatible.
+			contextIsolation: true,
+			nodeIntegration: false,
+			sandbox: true,
 			// Isolate Electron session from system browser cookies
 			// This ensures desktop uses bearer token auth, not web cookies
 			partition: "persist:roster",
 		},
 	});
+
+	// Harden every <webview> the renderer attaches (built-in browser + DevTools
+	// panes): strip any preload, keep Node off, force isolation + sandbox, and
+	// only allow web/data schemes (blocks file:// and app-internal loads from
+	// being framed into an attacker-controlled pane).
+	window.webContents.on(
+		"will-attach-webview",
+		(event, webPreferences, params) => {
+			// biome-ignore lint/performance/noDelete: Electron reads own-property presence
+			delete webPreferences.preload;
+			webPreferences.nodeIntegration = false;
+			webPreferences.nodeIntegrationInSubFrames = false;
+			webPreferences.contextIsolation = true;
+			webPreferences.sandbox = true;
+
+			const src = params.src ?? "";
+			const allowed =
+				src === "" || /^(https?:|about:blank$|data:|blob:)/i.test(src);
+			if (!allowed) {
+				console.warn("[main-window] Blocked webview attach for src:", src);
+				event.preventDefault();
+			}
+		},
+	);
 
 	createApplicationMenu();
 	registerMenuHotkeyUpdates();
@@ -165,8 +195,12 @@ export async function MainWindow() {
 			if (currentIndex === -1) return;
 
 			const targetIndex = input.shift
-				? (currentIndex === 0 ? orderedIds.length - 1 : currentIndex - 1)
-				: (currentIndex === orderedIds.length - 1 ? 0 : currentIndex + 1);
+				? currentIndex === 0
+					? orderedIds.length - 1
+					: currentIndex - 1
+				: currentIndex === orderedIds.length - 1
+					? 0
+					: currentIndex + 1;
 
 			window.webContents.send(
 				"deep-link-navigate",
