@@ -61,9 +61,12 @@ Roster orchestrates coding CLIs; it does not bundle them. You need:
    - **Name** — required (for example, `Scout`).
    - **Role** — optional. A sentence describing what this agent is for. Leave it blank if you'd rather shape the agent by talking to it — Roster seeds the agent's identity file either way, and it refines itself over time.
    - **Runtime** — the coding CLI this agent runs: **Claude** or **Codex**. Claude is the default.
-   - **Repository** — start a new empty repo, clone from a URL, or point at an existing local path.
+   - **Repository** — pick how the agent's workspace is set up:
+     - **New empty repo** — a fresh git repo (`git init`).
+     - **Folder (no git)** — just a plain folder on your Mac, no version control. The agent still gets all the same things — its own rules, memory, skills, sessions, and model switching. Choose this if you don't use git/GitHub and just want an agent to work with.
+     - **Clone from URL** / **Clone from local path** — for an existing repo.
 
-   Roster creates the agent, gives it its own git worktree, and scaffolds its memory in the background.
+   Roster creates the agent, gives it its own workspace, and scaffolds its memory in the background. Git is only required for the repo/clone options — a **Folder** agent needs no git at all.
 
 **4. Add profile photos.** Right-click any agent in the rail and choose **Change Photo** (or **Remove Photo**) to give it a circular avatar. Team photos are set the same way from the team's header menu. Photos are optional but make a busy rail readable.
 
