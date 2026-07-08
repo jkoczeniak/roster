@@ -173,7 +173,12 @@ function WorkspacePage() {
 			runtime: workspace?.runtime ?? null,
 			worktreePath: workspace?.worktreePath ?? null,
 		});
-	}, [spawnAgentSession, workspaceId, workspace?.runtime, workspace?.worktreePath]);
+	}, [
+		spawnAgentSession,
+		workspaceId,
+		workspace?.runtime,
+		workspace?.worktreePath,
+	]);
 
 	// Wait for the persisted tabs store to hydrate before deciding whether an
 	// agent has any existing session — otherwise we'd race persistence and
@@ -200,7 +205,14 @@ function WorkspacePage() {
 		if (autoSpawnedRef.current.has(workspaceId)) return;
 		autoSpawnedRef.current.add(workspaceId);
 		spawnSession();
-	}, [tabsHydrated, workspace, showInitView, tabs.length, workspaceId, spawnSession]);
+	}, [
+		tabsHydrated,
+		workspace,
+		showInitView,
+		tabs.length,
+		workspaceId,
+		spawnSession,
+	]);
 
 	const { presets } = usePresets();
 
@@ -427,8 +439,10 @@ function WorkspacePage() {
 		[workspace?.worktreePath],
 	);
 
-	// Open PR shortcut (⌘⇧P)
-	const { pr } = usePRStatus({ workspaceId });
+	// Open PR shortcut (⌘⇧P) — folder agents (isRepo=false) have no PRs, so the
+	// status query stays off and the hotkey is inert for them.
+	const isRepo = workspace?.isRepo === true;
+	const { pr } = usePRStatus({ workspaceId, enabled: isRepo });
 	const createPRMutation = electronTrpc.changes.createPR.useMutation({
 		onSuccess: () => toast.success("Opening GitHub..."),
 		onError: (error) => toast.error(`Failed: ${error.message}`),
@@ -436,6 +450,7 @@ function WorkspacePage() {
 	useAppHotkey(
 		"OPEN_PR",
 		() => {
+			if (!isRepo) return;
 			if (pr?.url) {
 				window.open(pr.url, "_blank");
 			} else if (workspace?.worktreePath) {
@@ -443,7 +458,7 @@ function WorkspacePage() {
 			}
 		},
 		undefined,
-		[pr?.url, workspace?.worktreePath],
+		[isRepo, pr?.url, workspace?.worktreePath],
 	);
 
 	const commandPalette = useCommandPalette({
@@ -478,10 +493,15 @@ function WorkspacePage() {
 		toggleSidebar,
 	]);
 
-	// Toggle expand/collapse sidebar (⌘⇧L)
+	// Toggle expand/collapse sidebar (⌘⇧L). Folder agents have no Changes view
+	// (WorkspaceLayout won't mount it), so for them this is a plain toggle.
 	useAppHotkey(
 		"TOGGLE_EXPAND_SIDEBAR",
 		() => {
+			if (!isRepo) {
+				toggleSidebar();
+				return;
+			}
 			if (!isSidebarOpen) {
 				setSidebarOpen(true);
 				setSidebarMode(SidebarMode.Changes);
@@ -491,7 +511,14 @@ function WorkspacePage() {
 			}
 		},
 		undefined,
-		[isSidebarOpen, setSidebarOpen, setSidebarMode, currentSidebarMode],
+		[
+			isRepo,
+			toggleSidebar,
+			isSidebarOpen,
+			setSidebarOpen,
+			setSidebarMode,
+			currentSidebarMode,
+		],
 	);
 
 	// Pane splitting helper - resolves target pane for split operations

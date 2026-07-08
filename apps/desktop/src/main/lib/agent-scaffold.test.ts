@@ -196,6 +196,60 @@ describe("optional role seeds the AGENT.md persona", () => {
 	});
 });
 
+describe("vcs-aware prompt copy (Folder vs git agents)", () => {
+	const gitAgentId = "agent-vcs-git";
+	const folderAgentId = "agent-vcs-folder";
+	beforeAll(async () => {
+		await setupAgentRepo({ agentId: gitAgentId, source: { type: "init" } });
+		scaffoldAgentMemory({
+			agentId: gitAgentId,
+			agentName: "Gitty",
+			runtime: "claude",
+			userName: "Pat",
+			vcs: "git",
+		});
+		await setupAgentRepo({
+			agentId: folderAgentId,
+			source: { type: "folder" },
+		});
+		scaffoldAgentMemory({
+			agentId: folderAgentId,
+			agentName: "Foldy",
+			runtime: "claude",
+			userName: "Pat",
+			vcs: "none",
+		});
+	});
+
+	it("git agents keep the worktree identity", () => {
+		const agentMd = readFileSync(
+			join(getAgentMemoryDir(gitAgentId), "AGENT.md"),
+			"utf8",
+		);
+		expect(agentMd).toContain("a dedicated git worktree");
+		expect(agentMd).not.toContain("NOT a git repository");
+	});
+
+	it("folder agents get a prompt with no git vocabulary", () => {
+		const agentMd = readFileSync(
+			join(getAgentMemoryDir(folderAgentId), "AGENT.md"),
+			"utf8",
+		);
+		expect(agentMd).toContain("a dedicated folder");
+		expect(agentMd).toContain("NOT a git repository");
+		expect(agentMd).not.toContain("git worktree");
+		expect(agentMd).not.toMatch(/\{\{\w+\}\}/);
+	});
+
+	it("legacy callers (no vcs param) default to the git copy", () => {
+		const agentMd = readFileSync(
+			join(getAgentMemoryDir("agent-claude"), "AGENT.md"),
+			"utf8",
+		);
+		expect(agentMd).toContain("a dedicated git worktree");
+	});
+});
+
 describe("Claude Code session-reflection hook (Hermes learning-loop analog)", () => {
 	const agentId = "agent-reflect";
 	beforeAll(async () => {
@@ -460,7 +514,9 @@ describe("skills symlink — .claude/skills → <agent-home>/skills", () => {
 	it("scaffold creates the symlink pointing at the canonical skills dir", () => {
 		const linkPath = join(getAgentWorktreePath(agentId), ".claude", "skills");
 		expect(fs.lstatSync(linkPath).isSymbolicLink()).toBe(true);
-		expect(fs.readlinkSync(linkPath)).toBe(join(getAgentHome(agentId), "skills"));
+		expect(fs.readlinkSync(linkPath)).toBe(
+			join(getAgentHome(agentId), "skills"),
+		);
 		// The link resolves: a skill written through it lands in agent-home.
 		fs.writeFileSync(join(linkPath, "via-link.md"), "x", "utf8");
 		expect(
@@ -472,7 +528,9 @@ describe("skills symlink — .claude/skills → <agent-home>/skills", () => {
 		const linkPath = join(getAgentWorktreePath(agentId), ".claude", "skills");
 		ensureClaudeSkillsLink(agentId);
 		expect(fs.lstatSync(linkPath).isSymbolicLink()).toBe(true);
-		expect(fs.readlinkSync(linkPath)).toBe(join(getAgentHome(agentId), "skills"));
+		expect(fs.readlinkSync(linkPath)).toBe(
+			join(getAgentHome(agentId), "skills"),
+		);
 	});
 
 	it("replaces a symlink that points somewhere else", () => {
@@ -482,7 +540,9 @@ describe("skills symlink — .claude/skills → <agent-home>/skills", () => {
 		fs.unlinkSync(linkPath);
 		fs.symlinkSync(elsewhere, linkPath, "dir");
 		ensureClaudeSkillsLink(agentId);
-		expect(fs.readlinkSync(linkPath)).toBe(join(getAgentHome(agentId), "skills"));
+		expect(fs.readlinkSync(linkPath)).toBe(
+			join(getAgentHome(agentId), "skills"),
+		);
 	});
 
 	it("does NOT clobber a real .claude/skills directory with content (user-owned)", () => {

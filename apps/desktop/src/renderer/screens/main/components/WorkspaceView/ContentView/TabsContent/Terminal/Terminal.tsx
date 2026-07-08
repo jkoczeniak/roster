@@ -214,6 +214,26 @@ export const Terminal = ({ paneId, tabId, workspaceId }: TerminalProps) => {
 		onErrorEvent: (event, xterm) => handleStreamErrorRef.current(event, xterm),
 		onDisconnectEvent: (reason) =>
 			setConnectionError(reason || "Connection to terminal daemon lost"),
+		// Restore keyboard focus once the restored buffer is applied. The mount
+		// path focuses synchronously before ghostty is focus-ready, so without
+		// this a switched-to tab looks active but eats keystrokes until clicked.
+		onRestoreApplied: () => {
+			if (!isFocusedRef.current || !document.hasFocus()) return;
+			const active = document.activeElement;
+			// Never steal focus from a field the user is typing in (tab rename,
+			// search box, …); the terminal's own hidden textarea doesn't count.
+			if (
+				active instanceof HTMLElement &&
+				active !== document.body &&
+				!terminalRef.current?.contains(active) &&
+				(active.tagName === "INPUT" ||
+					active.tagName === "TEXTAREA" ||
+					active.isContentEditable)
+			) {
+				return;
+			}
+			xtermRef.current?.focus();
+		},
 	});
 
 	// Cold restore handling

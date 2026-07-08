@@ -226,6 +226,7 @@ export function useTerminalLifecycle({
 
 		const {
 			terminal: xterm,
+			engine,
 			fitAddon,
 			search,
 			renderer,
@@ -264,22 +265,31 @@ export function useTerminalLifecycle({
 		let renderDisposable: TerminalDisposable | null = null;
 		let firstRenderFallback: ReturnType<typeof setTimeout> | null = null;
 
-		renderDisposable = xterm.onRender(() => {
-			if (firstRenderFallback) {
-				clearTimeout(firstRenderFallback);
-				firstRenderFallback = null;
-			}
-			renderDisposable?.dispose();
-			renderDisposable = null;
+		if (engine === "ghostty") {
+			// ghostty-web declares onRender but never fires it (0.4.0 has no
+			// renderEmitter.fire), so gating restore on it burned the full
+			// fallback timeout — a guaranteed blank window on every tab switch.
+			// ghostty's open()+fit() are synchronous and the restore path forces
+			// its own repaint (redrawTerminal), so it is safe to apply immediately.
 			didFirstRenderRef.current = true;
-			maybeApplyInitialState();
-		});
+		} else {
+			renderDisposable = xterm.onRender(() => {
+				if (firstRenderFallback) {
+					clearTimeout(firstRenderFallback);
+					firstRenderFallback = null;
+				}
+				renderDisposable?.dispose();
+				renderDisposable = null;
+				didFirstRenderRef.current = true;
+				maybeApplyInitialState();
+			});
 
-		firstRenderFallback = setTimeout(() => {
-			if (isUnmounted || didFirstRenderRef.current) return;
-			didFirstRenderRef.current = true;
-			maybeApplyInitialState();
-		}, FIRST_RENDER_RESTORE_FALLBACK_MS);
+			firstRenderFallback = setTimeout(() => {
+				if (isUnmounted || didFirstRenderRef.current) return;
+				didFirstRenderRef.current = true;
+				maybeApplyInitialState();
+			}, FIRST_RENDER_RESTORE_FALLBACK_MS);
+		}
 
 		const restartTerminalSession = () => {
 			isExitedRef.current = false;

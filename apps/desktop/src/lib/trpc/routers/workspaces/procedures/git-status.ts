@@ -38,6 +38,11 @@ export const createGitStatusProcedures = () => {
 					);
 				}
 
+				// Folder agents (vcs="none") have no branch or remote to refresh.
+				if (worktree.vcs === "none") {
+					return { gitStatus: worktree.gitStatus ?? null, defaultBranch: "" };
+				}
+
 				const project = getProject(workspace.projectId);
 				if (!project) {
 					throw new Error(`Project ${workspace.projectId} not found`);
@@ -114,6 +119,12 @@ export const createGitStatusProcedures = () => {
 					? getWorktree(workspace.worktreeId)
 					: null;
 				if (!worktree) {
+					return null;
+				}
+
+				// Folder agents (vcs="none") can't have a PR. Guarding here covers
+				// every renderer caller at once (list rows, hover cards, hotkeys).
+				if (worktree.vcs === "none") {
 					return null;
 				}
 

@@ -223,7 +223,14 @@ export const createDeleteProcedures = () => {
 				if (workspace.type === "worktree" && workspace.worktreeId) {
 					worktree = getWorktree(workspace.worktreeId);
 
-					if (worktree && project && existsSync(worktree.path)) {
+					// Folder agents (vcs="none") have no repo-supplied teardown; running
+					// the category's teardown commands in a plain folder makes no sense.
+					if (
+						worktree &&
+						worktree.vcs !== "none" &&
+						project &&
+						existsSync(worktree.path)
+					) {
 						teardownPromise = runTeardown({
 							mainRepoPath: project.mainRepoPath,
 							worktreePath: worktree.path,

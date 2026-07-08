@@ -913,6 +913,12 @@ export function setupResizeHandlers(
 	onResize: (cols: number, rows: number) => void,
 ): () => void {
 	const debouncedHandleResize = debounce(() => {
+		// A hidden or mid-layout container measures ~0×0 (ResizeObserver fires
+		// once on observe(), i.e. during every tab-switch remount). Fitting then
+		// pushes a bogus tiny grid to the PTY — SIGWINCH reflow that garbles
+		// TUIs. Skip; a real size change will fire the observer again.
+		const rect = container.getBoundingClientRect();
+		if (rect.width <= 1 || rect.height <= 1) return;
 		const wasAtBottom = isScrolledToBottom(xterm);
 		fitAddon.fit();
 		onResize(xterm.cols, xterm.rows);

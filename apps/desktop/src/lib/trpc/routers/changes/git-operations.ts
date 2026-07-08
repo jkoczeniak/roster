@@ -7,7 +7,7 @@ import {
 	getProcessEnvWithShellPath,
 } from "../workspaces/utils/shell-env";
 import { isUpstreamMissingError } from "./git-utils";
-import { assertRegisteredWorktree } from "./security";
+import { assertGitWorktree } from "./security";
 
 export { isUpstreamMissingError };
 
@@ -110,7 +110,7 @@ export const createGitOperationsRouter = () => {
 			)
 			.mutation(
 				async ({ input }): Promise<{ success: boolean; hash: string }> => {
-					assertRegisteredWorktree(input.worktreePath);
+					assertGitWorktree(input.worktreePath);
 
 					const git = await getGitWithShellPath(input.worktreePath);
 					const result = await git.commit(input.message);
@@ -126,7 +126,7 @@ export const createGitOperationsRouter = () => {
 				}),
 			)
 			.mutation(async ({ input }): Promise<{ success: boolean }> => {
-				assertRegisteredWorktree(input.worktreePath);
+				assertGitWorktree(input.worktreePath);
 
 				const git = await getGitWithShellPath(input.worktreePath);
 				const hasUpstream = await hasUpstreamBranch(git);
@@ -159,7 +159,7 @@ export const createGitOperationsRouter = () => {
 				}),
 			)
 			.mutation(async ({ input }): Promise<{ success: boolean }> => {
-				assertRegisteredWorktree(input.worktreePath);
+				assertGitWorktree(input.worktreePath);
 
 				const git = await getGitWithShellPath(input.worktreePath);
 				try {
@@ -184,7 +184,7 @@ export const createGitOperationsRouter = () => {
 				}),
 			)
 			.mutation(async ({ input }): Promise<{ success: boolean }> => {
-				assertRegisteredWorktree(input.worktreePath);
+				assertGitWorktree(input.worktreePath);
 
 				const git = await getGitWithShellPath(input.worktreePath);
 				try {
@@ -208,7 +208,7 @@ export const createGitOperationsRouter = () => {
 		fetch: publicProcedure
 			.input(z.object({ worktreePath: z.string() }))
 			.mutation(async ({ input }): Promise<{ success: boolean }> => {
-				assertRegisteredWorktree(input.worktreePath);
+				assertGitWorktree(input.worktreePath);
 				const git = await getGitWithShellPath(input.worktreePath);
 				await fetchCurrentBranch(git);
 				return { success: true };
@@ -222,7 +222,7 @@ export const createGitOperationsRouter = () => {
 			)
 			.mutation(
 				async ({ input }): Promise<{ success: boolean; url: string }> => {
-					assertRegisteredWorktree(input.worktreePath);
+					assertGitWorktree(input.worktreePath);
 
 					const git = await getGitWithShellPath(input.worktreePath);
 					const branch = (await git.revparse(["--abbrev-ref", "HEAD"])).trim();
@@ -268,7 +268,7 @@ export const createGitOperationsRouter = () => {
 			)
 			.mutation(
 				async ({ input }): Promise<{ success: boolean; mergedAt?: string }> => {
-					assertRegisteredWorktree(input.worktreePath);
+					assertGitWorktree(input.worktreePath);
 
 					const args = ["pr", "merge", `--${input.strategy}`];
 

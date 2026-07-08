@@ -1,10 +1,7 @@
 import simpleGit from "simple-git";
 import { runWithPostCheckoutHookTolerance } from "../../utils/git-hook-tolerance";
 import { getProcessEnvWithShellPath } from "../../workspaces/utils/shell-env";
-import {
-	assertRegisteredWorktree,
-	assertValidGitPath,
-} from "./path-validation";
+import { assertGitWorktree, assertValidGitPath } from "./path-validation";
 
 /**
  * Git command helpers with semantic naming.
@@ -52,7 +49,7 @@ export async function gitSwitchBranch(
 	worktreePath: string,
 	branch: string,
 ): Promise<void> {
-	assertRegisteredWorktree(worktreePath);
+	assertGitWorktree(worktreePath);
 
 	// Validate: reject anything that looks like a flag
 	if (branch.startsWith("-")) {
@@ -100,7 +97,7 @@ export async function gitCheckoutFile(
 	worktreePath: string,
 	filePath: string,
 ): Promise<void> {
-	assertRegisteredWorktree(worktreePath);
+	assertGitWorktree(worktreePath);
 	assertValidGitPath(filePath);
 
 	const git = await getGitWithShellPath(worktreePath);
@@ -118,7 +115,7 @@ export async function gitStageFile(
 	worktreePath: string,
 	filePath: string,
 ): Promise<void> {
-	assertRegisteredWorktree(worktreePath);
+	assertGitWorktree(worktreePath);
 	assertValidGitPath(filePath);
 
 	const git = await getGitWithShellPath(worktreePath);
@@ -138,7 +135,7 @@ export async function gitStageFiles(
 	if (filePaths.length === 0) {
 		throw new Error("filePaths must not be empty");
 	}
-	assertRegisteredWorktree(worktreePath);
+	assertGitWorktree(worktreePath);
 	for (const filePath of filePaths) {
 		assertValidGitPath(filePath);
 	}
@@ -160,7 +157,7 @@ export async function gitUnstageFiles(
 	if (filePaths.length === 0) {
 		throw new Error("filePaths must not be empty");
 	}
-	assertRegisteredWorktree(worktreePath);
+	assertGitWorktree(worktreePath);
 	for (const filePath of filePaths) {
 		assertValidGitPath(filePath);
 	}
@@ -175,7 +172,7 @@ export async function gitUnstageFiles(
  * Uses `git add -A` to stage all changes (new, modified, deleted).
  */
 export async function gitStageAll(worktreePath: string): Promise<void> {
-	assertRegisteredWorktree(worktreePath);
+	assertGitWorktree(worktreePath);
 
 	const git = await getGitWithShellPath(worktreePath);
 	await git.add("-A");
@@ -191,7 +188,7 @@ export async function gitUnstageFile(
 	worktreePath: string,
 	filePath: string,
 ): Promise<void> {
-	assertRegisteredWorktree(worktreePath);
+	assertGitWorktree(worktreePath);
 	assertValidGitPath(filePath);
 
 	const git = await getGitWithShellPath(worktreePath);
@@ -205,7 +202,7 @@ export async function gitUnstageFile(
  * discarding them.
  */
 export async function gitUnstageAll(worktreePath: string): Promise<void> {
-	assertRegisteredWorktree(worktreePath);
+	assertGitWorktree(worktreePath);
 
 	const git = await getGitWithShellPath(worktreePath);
 	await git.reset(["HEAD"]);
@@ -220,7 +217,7 @@ export async function gitUnstageAll(worktreePath: string): Promise<void> {
 export async function gitDiscardAllUnstaged(
 	worktreePath: string,
 ): Promise<void> {
-	assertRegisteredWorktree(worktreePath);
+	assertGitWorktree(worktreePath);
 
 	const git = await getGitWithShellPath(worktreePath);
 	await git.checkout(["--", "."]);
@@ -233,7 +230,7 @@ export async function gitDiscardAllUnstaged(
  * Does NOT affect untracked files.
  */
 export async function gitDiscardAllStaged(worktreePath: string): Promise<void> {
-	assertRegisteredWorktree(worktreePath);
+	assertGitWorktree(worktreePath);
 
 	const git = await getGitWithShellPath(worktreePath);
 	await git.reset(["HEAD"]);
@@ -246,7 +243,7 @@ export async function gitDiscardAllStaged(worktreePath: string): Promise<void> {
  * Uses `git stash push` to save current work-in-progress.
  */
 export async function gitStash(worktreePath: string): Promise<void> {
-	assertRegisteredWorktree(worktreePath);
+	assertGitWorktree(worktreePath);
 
 	const git = await getGitWithShellPath(worktreePath);
 	await git.stash(["push"]);
@@ -260,7 +257,7 @@ export async function gitStash(worktreePath: string): Promise<void> {
 export async function gitStashIncludeUntracked(
 	worktreePath: string,
 ): Promise<void> {
-	assertRegisteredWorktree(worktreePath);
+	assertGitWorktree(worktreePath);
 
 	const git = await getGitWithShellPath(worktreePath);
 	await git.stash(["push", "--include-untracked"]);
@@ -273,7 +270,7 @@ export async function gitStashIncludeUntracked(
  * Throws if no stash exists or if there are conflicts.
  */
 export async function gitStashPop(worktreePath: string): Promise<void> {
-	assertRegisteredWorktree(worktreePath);
+	assertGitWorktree(worktreePath);
 
 	const git = await getGitWithShellPath(worktreePath);
 	await git.stash(["pop"]);

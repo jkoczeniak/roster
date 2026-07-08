@@ -33,6 +33,7 @@ export type PathValidationErrorCode =
 	| "ABSOLUTE_PATH"
 	| "PATH_TRAVERSAL"
 	| "UNREGISTERED_WORKTREE"
+	| "NON_GIT_WORKTREE"
 	| "INVALID_TARGET"
 	| "SYMLINK_ESCAPE";
 
@@ -73,6 +74,48 @@ export function assertRegisteredWorktree(workspacePath: string): void {
 	}
 
 	// Check projects.mainRepoPath for branch workspaces
+	const projectExists = localDb
+		.select()
+		.from(projects)
+		.where(eq(projects.mainRepoPath, workspacePath))
+		.get();
+
+	if (projectExists) {
+		return;
+	}
+
+	throw new PathValidationError(
+		"Workspace path not registered in database",
+		"UNREGISTERED_WORKTREE",
+	);
+}
+
+/**
+ * Validates that a workspace path is registered AND version-controlled.
+ * Guard every git/gh mutation with this: a "Folder (no git)" agent's worktree
+ * row has vcs === "none", and running git there yields raw simple-git errors
+ * (or worse, acts on an enclosing repo). Legacy rows with vcs = null are git.
+ *
+ * @throws PathValidationError if unregistered or a non-git folder workspace
+ */
+export function assertGitWorktree(workspacePath: string): void {
+	const worktree = localDb
+		.select()
+		.from(worktrees)
+		.where(eq(worktrees.path, workspacePath))
+		.get();
+
+	if (worktree) {
+		if (worktree.vcs === "none") {
+			throw new PathValidationError(
+				"This agent works in a plain folder (no git); git operations are not available",
+				"NON_GIT_WORKTREE",
+			);
+		}
+		return;
+	}
+
+	// Branch workspaces operate on the project's main repo — always git.
 	const projectExists = localDb
 		.select()
 		.from(projects)

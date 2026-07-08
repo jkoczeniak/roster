@@ -1,12 +1,12 @@
-import { workspaces, worktrees } from "@roster/local-db";
 import type { AgentRuntime } from "@roster/local-db";
+import { workspaces, worktrees } from "@roster/local-db";
 import { eq } from "drizzle-orm";
 import { localDb } from "main/lib/local-db";
 import { workspaceInitManager } from "main/lib/workspace-init-manager";
-import { MEMORY_SCAFFOLD_ENABLED } from "./feature-flags";
 import { type AgentRepoSource, setupAgentRepo } from "./agent-repo";
 import { scaffoldAgentMemory } from "./agent-scaffold";
 import { resolveAgentWorktreePath } from "./agent-worktree";
+import { MEMORY_SCAFFOLD_ENABLED } from "./feature-flags";
 import { getUserName } from "./user-profile";
 
 /**
@@ -38,10 +38,7 @@ export function isAgentInit(agentId: string): boolean {
 }
 
 /** Start the background init job for a freshly-created agent. */
-export function beginAgentInit(
-	agentId: string,
-	ctx: AgentInitContext,
-): void {
+export function beginAgentInit(agentId: string, ctx: AgentInitContext): void {
 	contexts.set(agentId, ctx);
 	workspaceInitManager.clearJob(agentId);
 	workspaceInitManager.startJob(agentId, ctx.categoryId);
@@ -63,12 +60,19 @@ export function retryAgentInit(agentId: string): boolean {
 			.where(eq(workspaces.id, agentId))
 			.get();
 		if (!workspace?.worktreeId || !workspace.runtime) return false;
+		// The worktree row's vcs marks folder agents — without this a retried
+		// folder agent would be silently recreated as a git repo.
+		const worktree = localDb
+			.select()
+			.from(worktrees)
+			.where(eq(worktrees.id, workspace.worktreeId))
+			.get();
 		ctx = {
 			categoryId: workspace.projectId,
 			worktreeId: workspace.worktreeId,
 			agentName: workspace.name,
 			runtime: workspace.runtime,
-			source: { type: "init" },
+			source: { type: worktree?.vcs === "none" ? "folder" : "init" },
 		};
 		contexts.set(agentId, ctx);
 	}
@@ -135,6 +139,7 @@ async function runAgentInit(agentId: string): Promise<void> {
 				runtime: ctx.runtime,
 				userName: getUserName(),
 				worktreePath: resolveAgentWorktreePath(agentId, ctx.worktreeId),
+				vcs,
 			});
 		}
 

@@ -1,7 +1,7 @@
 import { existsSync, readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
-import { workspaces } from "@roster/local-db";
-import { isNotNull } from "drizzle-orm";
+import { workspaces, worktrees } from "@roster/local-db";
+import { eq, isNotNull } from "drizzle-orm";
 import { getAgentMemoryDir } from "./agent-home";
 import { scaffoldAgentMemory } from "./agent-scaffold";
 import { resolveAgentWorktreePath } from "./agent-worktree";
@@ -55,13 +55,25 @@ export function backfillAgentMemory(): void {
 			// worktrees row — using the derived path would skip it (no .git there)
 			// and, worse, drop bridges into a non-existent dir. Fall back to the
 			// derived path when the row has none.
-			const worktreePath = resolveAgentWorktreePath(
-				agent.id,
-				agent.worktreeId,
-			);
-			// Repo must already exist and be a git repo; this guard also filters
-			// out any non-Roster workspace that happens to carry a runtime value.
-			if (!existsSync(join(worktreePath, ".git"))) continue;
+			const worktreePath = resolveAgentWorktreePath(agent.id, agent.worktreeId);
+			// Folder agents (vcs === "none") have a worktree with no .git — they
+			// still get the scaffold, with the git-free prompt variant.
+			const worktree = agent.worktreeId
+				? localDb
+						.select()
+						.from(worktrees)
+						.where(eq(worktrees.id, agent.worktreeId))
+						.get()
+				: undefined;
+			const vcs = worktree?.vcs ?? "git";
+			// The workspace must already be set up: a git agent needs its repo, a
+			// folder agent just its directory. This guard also filters out any
+			// non-Roster workspace that happens to carry a runtime value.
+			if (vcs === "none") {
+				if (!existsSync(worktreePath)) continue;
+			} else if (!existsSync(join(worktreePath, ".git"))) {
+				continue;
+			}
 
 			if (!memoryDirIsEmpty(getAgentMemoryDir(agent.id))) continue;
 
@@ -71,6 +83,7 @@ export function backfillAgentMemory(): void {
 				runtime: agent.runtime,
 				userName,
 				worktreePath,
+				vcs,
 			});
 			scaffolded++;
 		} catch (error) {
@@ -79,7 +92,9 @@ export function backfillAgentMemory(): void {
 	}
 
 	if (scaffolded > 0) {
-		console.log(`[memory-backfill] Scaffolded memory for ${scaffolded} agent(s).`);
+		console.log(
+			`[memory-backfill] Scaffolded memory for ${scaffolded} agent(s).`,
+		);
 	}
 }
 

@@ -49,6 +49,7 @@ export function WorkspaceRow({
 				enabled:
 					hasHovered &&
 					workspace.type === "worktree" &&
+					workspace.isRepo &&
 					!!workspace.workspaceId,
 				staleTime: GITHUB_STATUS_STALE_TIME,
 			},

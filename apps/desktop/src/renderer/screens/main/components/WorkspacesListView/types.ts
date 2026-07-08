@@ -15,6 +15,8 @@ export interface WorkspaceItem {
 	createdAt: number;
 	isUnread: boolean;
 	isOpen: boolean;
+	// False for "Folder (no git)" agents — hides PR/diff affordances.
+	isRepo: boolean;
 }
 
 export interface ProjectGroup {

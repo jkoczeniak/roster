@@ -22,11 +22,14 @@ export function WorkspaceHoverCardContent({
 			{ enabled: !!workspaceId },
 		);
 
-	const { repoUrl, branchExistsOnRemote } = usePRStatus({ workspaceId });
-
 	// Folder agents (isRepo === false) have no branch/VCS surface — suppress the
-	// whole git block (branch row + needs-rebase warning) for them.
+	// whole git block (branch row + needs-rebase warning) for them, and don't
+	// fire the PR-status query at all.
 	const isRepo = worktreeInfo?.isRepo ?? true;
+	const { repoUrl, branchExistsOnRemote } = usePRStatus({
+		workspaceId,
+		enabled: isRepo,
+	});
 	const needsRebase = isRepo && worktreeInfo?.gitStatus?.needsRebase;
 	const behindCount = worktreeInfo?.gitStatus?.behind;
 

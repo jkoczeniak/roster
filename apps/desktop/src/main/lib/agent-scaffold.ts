@@ -12,7 +12,7 @@ import {
 	writeFileSync,
 } from "node:fs";
 import { dirname, join, resolve } from "node:path";
-import type { AgentRuntime } from "@roster/local-db";
+import type { AgentRuntime, VcsKind } from "@roster/local-db";
 import {
 	getAgentCodexHome,
 	getAgentHome,
@@ -63,6 +63,13 @@ export interface ScaffoldParams {
 	 * git repo before passing it.
 	 */
 	worktreePath?: string;
+	/**
+	 * Version control of the agent's workspace. "none" (folder agents) selects
+	 * prompt copy with no git vocabulary — the identity and operating brief must
+	 * not prime the agent toward branches/commits/PRs that don't exist.
+	 * Defaults to "git" for legacy callers.
+	 */
+	vcs?: VcsKind;
 }
 
 function sub(template: string, vars: Record<string, string>): string {
@@ -86,11 +93,13 @@ function writeIfMissing(path: string, content: string): void {
 // AGENT.md is the Roster analog of Hermes' SOUL.md: a short identity that leads the
 // context (who you are + voice), followed by an operating brief. Hermes keeps
 // SOUL.md to a single prose paragraph — we keep AGENT.md deliberately short too.
-// {{role_section}} is built in code from the optional `role` param.
+// {{role_section}} is built in code from the optional `role` param;
+// {{workspace_kind}} / {{workspace_word}} / {{vcs_brief}} come from `vcs` so a
+// folder agent's prompt never mentions git.
 const AGENT_MD = `# {{agent_name}}
 
-You are {{agent_name}}, an autonomous coding agent working in a dedicated git
-worktree. You are direct, precise, and prize being genuinely useful over being
+You are {{agent_name}}, an autonomous coding agent working in {{workspace_kind}}.
+You are direct, precise, and prize being genuinely useful over being
 verbose. You admit uncertainty, prefer small verifiable changes, and you keep
 your own persistent memory (MEMORY.md, USER.md) current as you learn — read it,
 trust it, and maintain it per the write-back protocol.
@@ -99,7 +108,7 @@ trust it, and maintain it per the write-back protocol.
 {{role_section}}
 
 ## Operating brief
-- Work only within your worktree: {{agent_home}}/worktree
+- Work only within your {{workspace_word}}: {{worktree_path}}{{vcs_brief}}
 - Prefer small, verifiable changes. Run the project's checks before declaring done.
 - When you learn something durable about {{user_name}} or the project, save it to
   memory per the write-back protocol.
@@ -492,7 +501,11 @@ export function regenerateCodexAgentsMd(agentId: string): void {
 	}
 
 	parts.push(CODEX_REFLECTION_FOOTER);
-	writeFileSync(join(codexHome, "AGENTS.md"), `${parts.join("\n\n")}\n`, "utf8");
+	writeFileSync(
+		join(codexHome, "AGENTS.md"),
+		`${parts.join("\n\n")}\n`,
+		"utf8",
+	);
 }
 
 /**
@@ -549,7 +562,10 @@ export function ensureClaudeSkillsLink(
 		mkdirSync(skillsDir, { recursive: true });
 		symlinkSync(skillsDir, linkPath, "dir");
 	} catch (error) {
-		console.warn("[agent-scaffold] Failed to ensure .claude/skills link:", error);
+		console.warn(
+			"[agent-scaffold] Failed to ensure .claude/skills link:",
+			error,
+		);
 	}
 }
 
@@ -576,6 +592,7 @@ export function scaffoldAgentMemory({
 	userName,
 	role,
 	worktreePath: worktreePathOverride,
+	vcs,
 }: ScaffoldParams): void {
 	const agentHome = getAgentHome(agentId);
 	const memoryDir = getAgentMemoryDir(agentId);
@@ -587,6 +604,7 @@ export function scaffoldAgentMemory({
 	const skillsDir = join(agentHome, "skills");
 	const resolvedUserName = userName?.trim() || "the user";
 	const sharedUserMd = getSharedUserProfilePath();
+	const isGit = vcs !== "none";
 
 	const vars: Record<string, string> = {
 		agent_name: agentName,
@@ -597,6 +615,14 @@ export function scaffoldAgentMemory({
 		role_section: roleSection(role, resolvedUserName),
 		runtime,
 		created_date: new Date().toISOString().slice(0, 10),
+		worktree_path: worktreePath,
+		workspace_kind: isGit ? "a dedicated git worktree" : "a dedicated folder",
+		workspace_word: isGit ? "worktree" : "folder",
+		vcs_brief: isGit
+			? ""
+			: "\n- Your folder is NOT a git repository: there are no branches, commits," +
+				"\n  or pull requests here. Do not run git or gh — changes take effect by" +
+				"\n  saving files.",
 	};
 
 	mkdirSync(memoryDir, { recursive: true });
@@ -617,7 +643,10 @@ export function scaffoldAgentMemory({
 	mkdirSync(dirname(sharedUserMd), { recursive: true });
 	writeIfMissing(sharedUserMd, sub(USER_MD, vars));
 	writeIfMissing(join(skillsDir, "README.md"), sub(SKILLS_README, vars));
-	writeIfMissing(join(skillsDir, "SKILL.template.md"), sub(SKILL_TEMPLATE, vars));
+	writeIfMissing(
+		join(skillsDir, "SKILL.template.md"),
+		sub(SKILL_TEMPLATE, vars),
+	);
 
 	// Per-runtime bridge files in the worktree (point each CLI at canonical
 	// memory). Idempotent so we never clobber a bridge the user customized.
@@ -628,7 +657,10 @@ export function scaffoldAgentMemory({
 	// point native auto-memory at the canonical dir. Both are Claude-Code-only
 	// surfaces; harmless to the other runtimes.
 	const reflectHookPath = join(claudeDir, "reflect-on-stop.mjs");
-	writeIfMissing(reflectHookPath, reflectHookScript(agentHome, resolvedUserName));
+	writeIfMissing(
+		reflectHookPath,
+		reflectHookScript(agentHome, resolvedUserName),
+	);
 	writeIfMissing(
 		join(claudeDir, "settings.json"),
 		`${JSON.stringify(
@@ -661,7 +693,8 @@ export function scaffoldAgentMemory({
 	// Keep the generated bridge files out of the repo (local, per-worktree).
 	// Guard against a duplicate block when re-run by the backfill.
 	const excludePath = join(worktreePath, ".git", "info", "exclude");
-	const excludeMarker = "# Roster agent bridge files (generated, not committed)";
+	const excludeMarker =
+		"# Roster agent bridge files (generated, not committed)";
 	if (existsSync(join(worktreePath, ".git"))) {
 		mkdirSync(join(worktreePath, ".git", "info"), { recursive: true });
 		const existingExclude = existsSync(excludePath)

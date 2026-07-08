@@ -2,7 +2,7 @@ import simpleGit from "simple-git";
 import { z } from "zod";
 import { publicProcedure, router } from "../..";
 import {
-	assertRegisteredWorktree,
+	assertGitWorktree,
 	gitCheckoutFile,
 	gitDiscardAllStaged,
 	gitDiscardAllUnstaged,
@@ -20,14 +20,14 @@ import {
 import { parseGitStatus } from "./utils/parse-status";
 
 async function getUntrackedFilePaths(worktreePath: string): Promise<string[]> {
-	assertRegisteredWorktree(worktreePath);
+	assertGitWorktree(worktreePath);
 	const git = simpleGit(worktreePath);
 	const status = await git.status();
 	return parseGitStatus(status).untracked.map((f) => f.path);
 }
 
 async function getStagedNewFilePaths(worktreePath: string): Promise<string[]> {
-	assertRegisteredWorktree(worktreePath);
+	assertGitWorktree(worktreePath);
 	const git = simpleGit(worktreePath);
 	const status = await git.status();
 	return parseGitStatus(status)

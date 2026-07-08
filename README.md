@@ -47,7 +47,7 @@ Roster orchestrates coding CLIs; it does not bundle them. You need:
   npm i -g @openai/codex               # OpenAI Codex
   ```
 
-  Each CLI authenticates through its own login (your Anthropic and ChatGPT/OpenAI accounts). Roster stores no API keys.
+  Each CLI authenticates through its own login (your Anthropic and ChatGPT/OpenAI accounts). Roster stores no API keys. See [docs/authentication.md](docs/authentication.md) for exactly how agents inherit your logins (and the one env-var gotcha).
 - **Node.js** — only as the vehicle for installing the CLIs above via `npm`. Roster itself does not need a separate Node runtime.
 - **Ghostty** (optional) — install [Ghostty.app](https://ghostty.org) if you want the **Open in Ghostty** action (opens an agent's worktree in a native Ghostty window). The in-app terminal already runs Ghostty's core and needs no separate install.
 

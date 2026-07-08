@@ -29,6 +29,13 @@ export interface UseTerminalRestoreOptions {
 		xterm: TerminalInstance,
 	) => void;
 	onDisconnectEvent: (reason: string | undefined) => void;
+	/**
+	 * Called once the restored content has been applied, fitted, and repainted
+	 * (inside the post-restore animation frame). Used to restore keyboard focus
+	 * to the pane — focusing at mount time is too early for ghostty, whose
+	 * canvas isn't focus-ready until after the restore pass.
+	 */
+	onRestoreApplied?: () => void;
 }
 
 export interface UseTerminalRestoreReturn {
@@ -62,6 +69,7 @@ export function useTerminalRestore({
 	onExitEvent,
 	onErrorEvent,
 	onDisconnectEvent,
+	onRestoreApplied,
 }: UseTerminalRestoreOptions): UseTerminalRestoreReturn {
 	// Gate streaming until initial state restoration is applied
 	const isStreamReadyRef = useRef(false);
@@ -81,6 +89,8 @@ export function useTerminalRestore({
 	onErrorEventRef.current = onErrorEvent;
 	const onDisconnectEventRef = useRef(onDisconnectEvent);
 	onDisconnectEventRef.current = onDisconnectEvent;
+	const onRestoreAppliedRef = useRef(onRestoreApplied);
+	onRestoreAppliedRef.current = onRestoreApplied;
 
 	const flushPendingEvents = useCallback(() => {
 		const xterm = xtermRef.current;
@@ -129,6 +139,7 @@ export function useTerminalRestore({
 					// the terminal isn't left blank after a re-mount / tab switch.
 					redrawTerminal(xterm);
 					scrollToBottom(xterm);
+					onRestoreAppliedRef.current?.();
 				});
 			};
 

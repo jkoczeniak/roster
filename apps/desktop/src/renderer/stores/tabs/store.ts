@@ -318,6 +318,13 @@ export const useTabsStore = create<TabsStore>()(
 						}
 					}
 
+					// Repair the tab's focused pane if it's missing or points at a pane
+					// no longer in the layout — otherwise the tab mounts with no
+					// focused pane and is keyboard-dead until the user clicks.
+					const focusedPaneId = state.focusedPaneIds[tabId];
+					const needsFocusRepair =
+						!focusedPaneId || !tabPaneIds.includes(focusedPaneId);
+
 					set({
 						activeTabIds: {
 							...state.activeTabIds,
@@ -328,6 +335,14 @@ export const useTabsStore = create<TabsStore>()(
 							[workspaceId]: newHistoryStack,
 						},
 						...(hasChanges ? { panes: newPanes } : {}),
+						...(needsFocusRepair
+							? {
+									focusedPaneIds: {
+										...state.focusedPaneIds,
+										[tabId]: getFirstPaneId(tab.layout),
+									},
+								}
+							: {}),
 					});
 				},
 

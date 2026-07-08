@@ -69,6 +69,7 @@ export function WorkspacesListView() {
 					createdAt: ws.createdAt,
 					isUnread: ws.isUnread,
 					isOpen: true,
+					isRepo: ws.isRepo,
 				});
 			}
 		}
@@ -98,6 +99,7 @@ export function WorkspacesListView() {
 					createdAt: wt.createdAt,
 					isUnread: false,
 					isOpen: false,
+					isRepo: wt.vcs !== "none",
 				});
 			}
 		}
