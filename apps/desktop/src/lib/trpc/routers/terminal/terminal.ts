@@ -2,7 +2,10 @@ import { projects, workspaces, worktrees } from "@roster/local-db";
 import { TRPCError } from "@trpc/server";
 import { observable } from "@trpc/server/observable";
 import { eq } from "drizzle-orm";
-import { regenerateCodexAgentsMd } from "main/lib/agent-scaffold";
+import {
+	ensureClaudeSkillsLink,
+	regenerateCodexAgentsMd,
+} from "main/lib/agent-scaffold";
 import { requestAppleEventsAccessOnce } from "main/lib/apple-events-permission";
 import { MEMORY_SCAFFOLD_ENABLED } from "main/lib/feature-flags";
 import { appState } from "main/lib/app-state";
@@ -140,6 +143,15 @@ export const createTerminalRouter = () => {
 				// also self-guarding: it no-ops when no canonical memory exists.
 				if (workspace?.runtime === "codex" && MEMORY_SCAFFOLD_ENABLED) {
 					regenerateCodexAgentsMd(workspaceId);
+				}
+
+				// Claude Code loads skills from <worktree>/.claude/skills; the agent
+				// WRITES them to <agent-home>/skills. Re-ensure the symlink between
+				// the two before every Claude launch (the Claude analog of the codex
+				// bridge regen above). Best-effort + idempotent; a user-owned real
+				// .claude/skills directory is left alone.
+				if (workspace?.runtime === "claude" && MEMORY_SCAFFOLD_ENABLED) {
+					ensureClaudeSkillsLink(workspaceId, workspacePath);
 				}
 
 				try {

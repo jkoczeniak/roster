@@ -8,6 +8,7 @@ import {
 	getAgentHome,
 	getAgentMemoryDir,
 	getAgentWorktreePath,
+	getSharedUserProfilePath,
 } from "main/lib/agent-home";
 import { MEMORY_SCAFFOLD_ENABLED } from "main/lib/feature-flags";
 import { localDb } from "main/lib/local-db";
@@ -58,15 +59,20 @@ function findSkillFiles(skillsDir: string): string[] {
 function collectAgentFiles(agentId: string): AgentFileEntry[] {
 	const entries: AgentFileEntry[] = [];
 
-	// Canonical memory dir
+	// Canonical memory dir. USER.md is the SHARED profile (one per user, all
+	// agents — see getSharedUserProfilePath); a per-agent memory/USER.md is
+	// legacy but still listed if it exists on disk.
 	const memoryDir = getAgentMemoryDir(agentId);
+	const sharedUserMd = getSharedUserProfilePath();
 	for (const name of [
 		"AGENT.md",
+		"USER.md (shared)",
 		"USER.md",
 		"MEMORY.md",
 		".writeback-protocol.md",
 	]) {
-		const abs = join(memoryDir, name);
+		const abs =
+			name === "USER.md (shared)" ? sharedUserMd : join(memoryDir, name);
 		if (existsSync(abs)) {
 			entries.push({
 				label: name,

@@ -1,25 +1,34 @@
 import {
 	appendFileSync,
 	existsSync,
+	lstatSync,
 	mkdirSync,
+	readdirSync,
 	readFileSync,
+	readlinkSync,
+	rmdirSync,
+	symlinkSync,
+	unlinkSync,
 	writeFileSync,
 } from "node:fs";
-import { join } from "node:path";
+import { dirname, join, resolve } from "node:path";
 import type { AgentRuntime } from "@roster/local-db";
 import {
 	getAgentCodexHome,
 	getAgentHome,
 	getAgentMemoryDir,
 	getAgentWorktreePath,
+	getSharedUserProfilePath,
 } from "./agent-home";
 
 /**
  * Memory scaffold written on agent creation (ADE Phase E, docs/memory.md).
  * Writes the canonical memory/*.md files, the write-back protocol,
- * a skills seed, and the per-runtime bridge files that point each CLI at the
- * canonical memory. Electron-free so it composes with setupAgentRepo and is
- * unit-verifiable. Templates are kept short — they are context on every turn.
+ * a skills seed, the SHARED user profile (<ROSTER_HOME_DIR>/memory/USER.md,
+ * one per user across all agents), and the per-runtime bridge files that point
+ * each CLI at the canonical memory. Electron-free so it composes with
+ * setupAgentRepo and is unit-verifiable. Templates are kept short — they are
+ * context on every turn.
  *
  * Faithful to the Hermes agent (github.com/NousResearch/hermes-agent): the
  * self-curation guidance in .writeback-protocol.md is ported from Hermes'
@@ -61,14 +70,16 @@ function sub(template: string, vars: Record<string, string>): string {
 }
 
 /**
- * Write `content` only if the target is missing or empty. Makes the scaffold
- * idempotent so the launch-time backfill (agent-memory-backfill.ts) can re-run
- * over an existing agent without ever clobbering a canonical file or bridge the
- * user (or the agent) has already filled in. On a fresh agent every file is
- * absent, so this behaves exactly like a plain write.
+ * Write `content` only if the target is MISSING. Makes the scaffold idempotent
+ * so the launch-time backfill (agent-memory-backfill.ts) can re-run over an
+ * existing agent without ever clobbering a canonical file or bridge the user
+ * (or the agent) has already touched. Deliberately does NOT re-seed an
+ * existing-but-empty file: emptying a memory file is a valid user action
+ * ("forget this") and must stick across backfill re-runs. On a fresh agent
+ * every file is absent, so this behaves exactly like a plain write.
  */
-function writeIfEmpty(path: string, content: string): void {
-	if (existsSync(path) && readFileSync(path, "utf8").trim().length > 0) return;
+function writeIfMissing(path: string, content: string): void {
+	if (existsSync(path)) return;
 	writeFileSync(path, content, "utf8");
 }
 
@@ -98,7 +109,12 @@ trust it, and maintain it per the write-back protocol.
 - (none yet — {{user_name}} will add these, or you will learn them)
 `;
 
+// Seeded at the SHARED path (<ROSTER_HOME_DIR>/memory/USER.md) — one profile
+// for all agents, so a preference learned by one agent benefits every agent.
 const USER_MD = `# User profile
+
+<!-- SHARED across ALL of the user's agents. Any agent may update it; every
+     agent reads it. Agent-specific notes belong in that agent's MEMORY.md. -->
 
 - Name: {{user_name}}
 - (The agent maintains this file. Add stable facts about the user: role,
@@ -145,8 +161,11 @@ session. Memory is injected into every future turn, so keep entries compact and
 high-signal — everything here costs tokens forever. The best memory stops
 {{user_name}} from having to repeat themselves.
 
-- {{agent_home}}/memory/USER.md   — who the human is: name, role, preferences,
+- {{shared_user_md}} — who the human is: name, role, preferences,
   communication style, hard "always/never" rules. Target < 1,375 chars.
+  This file is SHARED across ALL of {{user_name}}'s agents — a preference you
+  learn here benefits every agent, and other agents' learnings appear here for
+  you. Keep it strictly about the user; agent-specific notes go to MEMORY.md.
 - {{agent_home}}/memory/MEMORY.md — your own notes: environment facts, project
   conventions, tool quirks, lessons learned, and a short index of any
   memory/<topic>.md detail files. Target < 2,200 chars for the inline notes.
@@ -265,7 +284,8 @@ A single command or check that proves the skill worked.
 `;
 
 const CLAUDE_BRIDGE = `@{{agent_home}}/memory/AGENT.md
-@{{agent_home}}/memory/USER.md
+@{{shared_user_md}}
+@{{agent_home}}/memory/.writeback-protocol.md
 <!-- MEMORY.md is loaded via Claude Code native auto-memory (autoMemoryDirectory). -->
 `;
 
@@ -275,14 +295,20 @@ const CLAUDE_BRIDGE = `@{{agent_home}}/memory/AGENT.md
 // the stop_hook_active guard means the review turn itself stops cleanly instead
 // of looping. Runs under `node` (always present in a Claude Code host); reads
 // the hook JSON from stdin (fd 0). Lives in .claude/ (git-excluded) so it never
-// enters the repo. See docs/memory.md.
+// enters the repo. Also enforces: a trivial-session skip (tiny transcript →
+// nothing durable to reflect on), a <memory>/.reflect.lock so concurrent
+// sessions of the same agent don't reflect simultaneously, and per-file size
+// budgets appended to the reflection prompt. See docs/memory.md.
 function reflectHookScript(agentHome: string, userName: string): string {
+	const memoryDir = join(agentHome, "memory");
+	const sharedUserMd = getSharedUserProfilePath();
 	const reason =
 		`[session reflection] Before you finish, review this conversation and update ` +
 		`your persistent memory and skills so the next session starts smarter, per the ` +
 		`Session-end reflection section of your write-back protocol ` +
 		`(${agentHome}/memory/.writeback-protocol.md). Save durable preferences/facts ` +
-		`about ${userName} to USER.md, stable environment/convention facts to MEMORY.md, ` +
+		`about ${userName} to the shared USER.md (${sharedUserMd}), stable ` +
+		`environment/convention facts to MEMORY.md, ` +
 		`and embed any style/format/workflow correction in the skill that governs that ` +
 		`class of task under ${agentHome}/skills/. Do NOT capture environment-dependent ` +
 		`failures, negative tool claims, transient errors, or one-off narratives. Make ` +
@@ -292,14 +318,58 @@ function reflectHookScript(agentHome: string, userName: string): string {
 // ADE session-reflection hook (Claude Code Stop hook). Native analog of the
 // Hermes post-turn review loop. Generated by agent-scaffold.ts; do not edit —
 // it is regenerated on scaffold. See docs/memory.md.
-import { readFileSync } from "node:fs";
+//
+// Behavior:
+// - stop_hook_active (the post-reflection stop): clear the lock, exit 0 — the
+//   guard that makes the reflection turn stop cleanly instead of looping.
+// - Trivial-session skip: transcript_path smaller than 16 KB → no reflection.
+// - Concurrency lock: a fresh <memory>/.reflect.lock (mtime < 10 min) means
+//   another session of this agent is already reflecting → exit 0.
+// - Budget check: MEMORY.md / shared USER.md over their soft size targets get a
+//   consolidate-first NOTE appended to the reflection prompt.
+import { readFileSync, statSync, unlinkSync, writeFileSync } from "node:fs";
+const LOCK_PATH = ${JSON.stringify(join(memoryDir, ".reflect.lock"))};
+const LOCK_MAX_AGE_MS = 10 * 60 * 1000;
+const TRIVIAL_TRANSCRIPT_BYTES = 16 * 1024;
 let raw = "";
 try { raw = readFileSync(0, "utf8"); } catch {}
 let data = {};
 try { data = JSON.parse(raw || "{}"); } catch {}
-// Already inside the reflection turn we injected — let it stop (no loop).
-if (data && data.stop_hook_active) process.exit(0);
-const reason = ${JSON.stringify(reason)};
+// Already inside the reflection turn we injected — release the lock and let it
+// stop (no loop).
+if (data && data.stop_hook_active) {
+  try { unlinkSync(LOCK_PATH); } catch {}
+  process.exit(0);
+}
+// Trivial-session skip: a tiny transcript has nothing durable to reflect on.
+// Absent field or unreadable file → proceed (fail open).
+if (data && typeof data.transcript_path === "string" && data.transcript_path) {
+  try {
+    if (statSync(data.transcript_path).size < TRIVIAL_TRANSCRIPT_BYTES) process.exit(0);
+  } catch {}
+}
+// Concurrency lock: a fresh lock means another session is mid-reflection.
+// A stale lock (>10 min — e.g. a crashed session) is overwritten below.
+try {
+  if (Date.now() - statSync(LOCK_PATH).mtimeMs < LOCK_MAX_AGE_MS) process.exit(0);
+} catch {}
+try {
+  writeFileSync(LOCK_PATH, JSON.stringify({ pid: process.pid, at: new Date().toISOString() }));
+} catch {}
+let reason = ${JSON.stringify(reason)};
+// Size budgets: over-target files get a consolidate-first note in the prompt.
+const BUDGETS = [
+  [${JSON.stringify(join(memoryDir, "MEMORY.md"))}, 2200],
+  [${JSON.stringify(sharedUserMd)}, 1375],
+];
+for (const [file, target] of BUDGETS) {
+  try {
+    const n = statSync(file).size;
+    if (n > target) {
+      reason += \` NOTE: \${file} is over its size budget (\${n} chars > \${target}). Consolidate before adding: merge overlapping bullets, drop the stalest.\`;
+    }
+  } catch {}
+}
 process.stdout.write(JSON.stringify({ decision: "block", reason }));
 process.exit(0);
 `;
@@ -308,33 +378,179 @@ process.exit(0);
 /** Bridge files written into the worktree (git-excluded, never committed). */
 const BRIDGE_EXCLUDES = ["CLAUDE.md", ".claude/", "AGENTS.md"];
 
+/** One row of the Codex skills index. */
+interface SkillIndexEntry {
+	name: string;
+	description: string;
+	/** Absolute path to the SKILL.md. */
+	path: string;
+}
+
+/**
+ * Index the agent's skills (<agent-home>/skills/<name>/SKILL.md) for the Codex
+ * bridge: name + one-line description in context, body read on demand.
+ * Frontmatter `name:`/`description:` are preferred; a skill without frontmatter
+ * falls back to its directory name and the first non-heading body line.
+ */
+function readSkillIndex(skillsDir: string): SkillIndexEntry[] {
+	if (!existsSync(skillsDir)) return [];
+	const entries: SkillIndexEntry[] = [];
+	let dirents: import("node:fs").Dirent[];
+	try {
+		dirents = readdirSync(skillsDir, { withFileTypes: true });
+	} catch {
+		return [];
+	}
+	for (const dirent of dirents) {
+		if (!dirent.isDirectory()) continue;
+		const skillPath = join(skillsDir, String(dirent.name), "SKILL.md");
+		if (!existsSync(skillPath)) continue;
+		let name = String(dirent.name);
+		let description = "";
+		try {
+			const text = readFileSync(skillPath, "utf8");
+			const fm = text.match(/^---\r?\n([\s\S]*?)\r?\n---/);
+			if (fm) {
+				const nameMatch = fm[1].match(/^name:\s*(.+)$/m);
+				const descMatch = fm[1].match(/^description:\s*(.+)$/m);
+				if (nameMatch) name = nameMatch[1].trim();
+				if (descMatch) description = descMatch[1].trim();
+			}
+			if (!description) {
+				// No frontmatter description: first non-empty, non-heading body line.
+				const body = fm ? text.slice(fm[0].length) : text;
+				for (const line of body.split("\n")) {
+					const trimmed = line.trim();
+					if (!trimmed || trimmed.startsWith("#")) continue;
+					description = trimmed;
+					break;
+				}
+			}
+		} catch {
+			// Unreadable SKILL.md — index it by name only.
+		}
+		entries.push({
+			name,
+			description: description || "(no description)",
+			path: skillPath,
+		});
+	}
+	return entries;
+}
+
+// FIX 5 (docs/memory.md): Codex has no Stop hook, so its session-end reflection
+// is convention-driven — this standing instruction closes the bridge.
+const CODEX_REFLECTION_FOOTER =
+	"Before you consider a task complete, run the session-end reflection above " +
+	"and update MEMORY.md / the shared USER.md / skills if anything durable was " +
+	"learned.";
+
 /**
  * Regenerate <agent-home>/.codex/AGENTS.md from the canonical memory files.
  * Codex cannot @import, so its bridge is the concatenation, rebuilt on each
- * launch (and once at creation). Call this before launching a codex agent.
+ * launch (and once at creation): AGENT.md + the SHARED USER.md + MEMORY.md +
+ * the write-back protocol (whose session-end reflection Codex follows by
+ * convention — no stop hook), then a skills index (name/description in
+ * context, body on demand) and a standing reflect-before-done instruction.
+ * Call this before launching a codex agent.
  */
 export function regenerateCodexAgentsMd(agentId: string): void {
 	const memoryDir = getAgentMemoryDir(agentId);
 	const codexHome = getAgentCodexHome(agentId);
 	mkdirSync(codexHome, { recursive: true });
 
-	const parts: string[] = [];
-	for (const file of [
-		"AGENT.md",
-		"USER.md",
-		"MEMORY.md",
-		".writeback-protocol.md",
-	]) {
+	const agentParts: string[] = [];
+	for (const file of ["AGENT.md", "MEMORY.md", ".writeback-protocol.md"]) {
 		const p = join(memoryDir, file);
 		if (existsSync(p)) {
-			parts.push(readFileSync(p, "utf8"));
+			agentParts.push(readFileSync(p, "utf8"));
 		}
 	}
 	// No canonical memory (e.g. an agent created before the scaffold was
 	// enabled): leave any existing bridge untouched rather than clobbering it
-	// with an empty file. Codex then falls back to no global AGENTS.md.
-	if (parts.length === 0) return;
-	writeFileSync(join(codexHome, "AGENTS.md"), parts.join("\n\n"), "utf8");
+	// with an empty file. Codex then falls back to no global AGENTS.md. The
+	// shared USER.md doesn't count — it exists independently of this agent.
+	if (agentParts.length === 0) return;
+
+	const parts: string[] = [agentParts[0]];
+	// The user profile is the SHARED file (one per user, all agents), spliced in
+	// after AGENT.md. A legacy per-agent memory/USER.md is left on disk but no
+	// longer bridged.
+	const sharedUserMd = getSharedUserProfilePath();
+	if (existsSync(sharedUserMd)) {
+		parts.push(readFileSync(sharedUserMd, "utf8"));
+	}
+	parts.push(...agentParts.slice(1));
+
+	const skills = readSkillIndex(join(getAgentHome(agentId), "skills"));
+	if (skills.length > 0) {
+		const lines = skills.map(
+			(s) =>
+				`- **${s.name}** — ${s.description} (read ${s.path} before doing this kind of task)`,
+		);
+		parts.push(`## Skills\n\n${lines.join("\n")}`);
+	}
+
+	parts.push(CODEX_REFLECTION_FOOTER);
+	writeFileSync(join(codexHome, "AGENTS.md"), `${parts.join("\n\n")}\n`, "utf8");
+}
+
+/**
+ * Ensure <worktree>/.claude/skills is a symlink to the agent's canonical
+ * skills dir, so skills the agent writes are actually loaded back by Claude
+ * Code. Called at scaffold time AND before every Claude session launch
+ * (terminal createOrAttach), mirroring the per-launch Codex bridge regen.
+ *
+ * - Correct symlink already in place → no-op.
+ * - Symlink pointing elsewhere → replaced.
+ * - A REAL directory with content is user-owned: warn and leave it (an empty
+ *   real dir is replaced with the link).
+ * Best-effort: never throws, so it can sit on the terminal-launch path.
+ */
+export function ensureClaudeSkillsLink(
+	agentId: string,
+	worktreePath?: string,
+): void {
+	try {
+		const skillsDir = join(getAgentHome(agentId), "skills");
+		const resolvedWorktree =
+			worktreePath?.trim() || getAgentWorktreePath(agentId);
+		if (!existsSync(resolvedWorktree)) return;
+		const claudeDir = join(resolvedWorktree, ".claude");
+		mkdirSync(claudeDir, { recursive: true });
+		const linkPath = join(claudeDir, "skills");
+
+		let stat: import("node:fs").Stats | undefined;
+		try {
+			stat = lstatSync(linkPath);
+		} catch {
+			// Nothing at the path — create the link below.
+		}
+		if (stat?.isSymbolicLink()) {
+			const target = readlinkSync(linkPath);
+			// A relative link target resolves against the link's own directory.
+			if (resolve(dirname(linkPath), target) === resolve(skillsDir)) return;
+			unlinkSync(linkPath);
+		} else if (stat?.isDirectory()) {
+			const hasContent = readdirSync(linkPath).length > 0;
+			if (hasContent) {
+				console.warn(
+					`[agent-scaffold] ${linkPath} is a real directory with content; ` +
+						`leaving it in place (user-owned). Agent skills in ${skillsDir} ` +
+						`will not be loaded by Claude Code for this worktree.`,
+				);
+				return;
+			}
+			rmdirSync(linkPath);
+		} else if (stat) {
+			// A stray regular file — replace it with the link.
+			unlinkSync(linkPath);
+		}
+		mkdirSync(skillsDir, { recursive: true });
+		symlinkSync(skillsDir, linkPath, "dir");
+	} catch (error) {
+		console.warn("[agent-scaffold] Failed to ensure .claude/skills link:", error);
+	}
 }
 
 /**
@@ -370,12 +586,14 @@ export function scaffoldAgentMemory({
 		worktreePathOverride?.trim() || getAgentWorktreePath(agentId);
 	const skillsDir = join(agentHome, "skills");
 	const resolvedUserName = userName?.trim() || "the user";
+	const sharedUserMd = getSharedUserProfilePath();
 
 	const vars: Record<string, string> = {
 		agent_name: agentName,
 		agent_id: agentId,
 		agent_home: agentHome,
 		user_name: resolvedUserName,
+		shared_user_md: sharedUserMd,
 		role_section: roleSection(role, resolvedUserName),
 		runtime,
 		created_date: new Date().toISOString().slice(0, 10),
@@ -385,28 +603,33 @@ export function scaffoldAgentMemory({
 	mkdirSync(skillsDir, { recursive: true });
 
 	// Canonical memory files (source of truth, never committed). Idempotent:
-	// a non-empty file the agent/user has already written is preserved.
-	writeIfEmpty(join(memoryDir, "AGENT.md"), sub(AGENT_MD, vars));
-	writeIfEmpty(join(memoryDir, "USER.md"), sub(USER_MD, vars));
-	writeIfEmpty(join(memoryDir, "MEMORY.md"), sub(MEMORY_MD, vars));
-	writeIfEmpty(
+	// a file that already exists (even emptied on purpose) is preserved.
+	writeIfMissing(join(memoryDir, "AGENT.md"), sub(AGENT_MD, vars));
+	writeIfMissing(join(memoryDir, "MEMORY.md"), sub(MEMORY_MD, vars));
+	writeIfMissing(
 		join(memoryDir, ".writeback-protocol.md"),
 		sub(WRITEBACK_PROTOCOL, vars),
 	);
-	writeIfEmpty(join(skillsDir, "README.md"), sub(SKILLS_README, vars));
-	writeIfEmpty(join(skillsDir, "SKILL.template.md"), sub(SKILL_TEMPLATE, vars));
+	// The user profile is SHARED across all agents (one user, one profile):
+	// seeded once at <ROSTER_HOME_DIR>/memory/USER.md, first scaffold wins.
+	// Per-agent memory/USER.md is no longer created; a legacy one is left on
+	// disk but the bridges point at the shared file.
+	mkdirSync(dirname(sharedUserMd), { recursive: true });
+	writeIfMissing(sharedUserMd, sub(USER_MD, vars));
+	writeIfMissing(join(skillsDir, "README.md"), sub(SKILLS_README, vars));
+	writeIfMissing(join(skillsDir, "SKILL.template.md"), sub(SKILL_TEMPLATE, vars));
 
 	// Per-runtime bridge files in the worktree (point each CLI at canonical
 	// memory). Idempotent so we never clobber a bridge the user customized.
-	writeIfEmpty(join(worktreePath, "CLAUDE.md"), sub(CLAUDE_BRIDGE, vars));
+	writeIfMissing(join(worktreePath, "CLAUDE.md"), sub(CLAUDE_BRIDGE, vars));
 	const claudeDir = join(worktreePath, ".claude");
 	mkdirSync(claudeDir, { recursive: true });
 	// Session-reflection hook script + settings that wire it as a Stop hook and
 	// point native auto-memory at the canonical dir. Both are Claude-Code-only
 	// surfaces; harmless to the other runtimes.
 	const reflectHookPath = join(claudeDir, "reflect-on-stop.mjs");
-	writeIfEmpty(reflectHookPath, reflectHookScript(agentHome, resolvedUserName));
-	writeIfEmpty(
+	writeIfMissing(reflectHookPath, reflectHookScript(agentHome, resolvedUserName));
+	writeIfMissing(
 		join(claudeDir, "settings.json"),
 		`${JSON.stringify(
 			{
@@ -431,6 +654,10 @@ export function scaffoldAgentMemory({
 			2,
 		)}\n`,
 	);
+	// Skills the agent writes must be loaded back: link the worktree's
+	// .claude/skills at the canonical skills dir (also re-ensured before every
+	// Claude session launch). Covered by the ".claude/" git-exclude below.
+	ensureClaudeSkillsLink(agentId, worktreePath);
 	// Keep the generated bridge files out of the repo (local, per-worktree).
 	// Guard against a duplicate block when re-run by the backfill.
 	const excludePath = join(worktreePath, ".git", "info", "exclude");

@@ -43,3 +43,13 @@ export function getAgentMemoryDir(agentId: string): string {
 export function getAgentCodexHome(agentId: string): string {
 	return join(getAgentHome(agentId), ".codex");
 }
+
+/**
+ * The SHARED user profile, canonical across ALL agents:
+ * <ROSTER_HOME_DIR>/memory/USER.md. Who the user is doesn't vary per agent, so
+ * a preference learned by one agent benefits every agent. Agent-specific notes
+ * belong in that agent's memory/MEMORY.md instead. See docs/memory.md.
+ */
+export function getSharedUserProfilePath(): string {
+	return join(getRosterHomeDir(), "memory", "USER.md");
+}

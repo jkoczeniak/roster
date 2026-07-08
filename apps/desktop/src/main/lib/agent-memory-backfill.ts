@@ -22,8 +22,9 @@ import { getUserName } from "./user-profile";
  *   its own init job.
  * - Skips any agent whose memory/ dir already holds a non-empty *.md file, so a
  *   scaffolded (or hand-authored) memory is never re-processed.
- * - Delegates to scaffoldAgentMemory, which is write-if-empty: even if it runs,
- *   it never overwrites a non-empty canonical file or an existing bridge.
+ * - Delegates to scaffoldAgentMemory, which is write-if-missing: even if it
+ *   runs, it never overwrites an existing canonical file or bridge — including
+ *   one the user deliberately emptied.
  * - Per-agent try/catch so one bad agent never blocks the others or app launch.
  */
 export function backfillAgentMemory(): void {

@@ -24,9 +24,11 @@ let getAgentHome: (id: string) => string;
 let getAgentMemoryDir: (id: string) => string;
 let getAgentWorktreePath: (id: string) => string;
 let getAgentCodexHome: (id: string) => string;
+let getSharedUserProfilePath: () => string;
 let setupAgentRepo: typeof import("./agent-repo").setupAgentRepo;
 let scaffoldAgentMemory: typeof import("./agent-scaffold").scaffoldAgentMemory;
 let regenerateCodexAgentsMd: typeof import("./agent-scaffold").regenerateCodexAgentsMd;
+let ensureClaudeSkillsLink: typeof import("./agent-scaffold").ensureClaudeSkillsLink;
 
 beforeAll(async () => {
 	const home = await import("./agent-home");
@@ -34,11 +36,13 @@ beforeAll(async () => {
 	getAgentMemoryDir = home.getAgentMemoryDir;
 	getAgentWorktreePath = home.getAgentWorktreePath;
 	getAgentCodexHome = home.getAgentCodexHome;
+	getSharedUserProfilePath = home.getSharedUserProfilePath;
 	const repo = await import("./agent-repo");
 	setupAgentRepo = repo.setupAgentRepo;
 	const scaffold = await import("./agent-scaffold");
 	scaffoldAgentMemory = scaffold.scaffoldAgentMemory;
 	regenerateCodexAgentsMd = scaffold.regenerateCodexAgentsMd;
+	ensureClaudeSkillsLink = scaffold.ensureClaudeSkillsLink;
 
 	// Sanity: the env override must actually route paths under TEST_HOME.
 	expect(getAgentHome("x").startsWith(TEST_HOME)).toBe(true);
@@ -64,16 +68,22 @@ describe("scaffoldAgentMemory — canonical layout", () => {
 		await makeAgent(agentId, "claude");
 	});
 
-	it("writes the canonical memory/ files (AGENT/USER/MEMORY + protocol)", () => {
+	it("writes the canonical memory/ files (AGENT/MEMORY + protocol)", () => {
 		const mem = getAgentMemoryDir(agentId);
-		for (const f of [
-			"AGENT.md",
-			"USER.md",
-			"MEMORY.md",
-			".writeback-protocol.md",
-		]) {
+		for (const f of ["AGENT.md", "MEMORY.md", ".writeback-protocol.md"]) {
 			expect(existsSync(join(mem, f))).toBe(true);
 		}
+	});
+
+	it("seeds USER.md at the SHARED path, not per-agent", () => {
+		const shared = getSharedUserProfilePath();
+		expect(shared.startsWith(TEST_HOME)).toBe(true);
+		expect(shared.startsWith(getAgentHome(agentId))).toBe(false);
+		expect(existsSync(shared)).toBe(true);
+		const userMd = readFileSync(shared, "utf8");
+		expect(userMd).toContain("SHARED across ALL");
+		// Per-agent memory/USER.md is no longer scaffolded.
+		expect(existsSync(join(getAgentMemoryDir(agentId), "USER.md"))).toBe(false);
 	});
 
 	it("substitutes template variables (no literal {{...}} left)", () => {
@@ -81,9 +91,11 @@ describe("scaffoldAgentMemory — canonical layout", () => {
 		const agentMd = readFileSync(join(mem, "AGENT.md"), "utf8");
 		expect(agentMd).toContain("Testy");
 		expect(agentMd).not.toMatch(/\{\{\w+\}\}/);
-		const userMd = readFileSync(join(mem, "USER.md"), "utf8");
+		const userMd = readFileSync(getSharedUserProfilePath(), "utf8");
 		expect(userMd).toContain("Pat");
 		expect(userMd).not.toMatch(/\{\{\w+\}\}/);
+		const proto = readFileSync(join(mem, ".writeback-protocol.md"), "utf8");
+		expect(proto).not.toMatch(/\{\{\w+\}\}/);
 	});
 
 	it("seeds the skills/ dir with a README and a SKILL template", () => {
@@ -131,6 +143,17 @@ describe("scaffoldAgentMemory — canonical layout", () => {
 		expect(proto).toContain("2,200");
 		// The ported self-improvement loop.
 		expect(proto).toContain("Session-end reflection");
+	});
+
+	it("write-back protocol points at the SHARED USER.md and says it is shared", () => {
+		const proto = readFileSync(
+			join(getAgentMemoryDir(agentId), ".writeback-protocol.md"),
+			"utf8",
+		);
+		expect(proto).toContain(getSharedUserProfilePath());
+		expect(proto).toContain("SHARED across ALL");
+		// The old per-agent USER.md path must be gone from the protocol.
+		expect(proto).not.toContain(join(getAgentMemoryDir(agentId), "USER.md"));
 	});
 
 	it("AGENT.md invites the agent to build its role when none is given", () => {
@@ -209,6 +232,39 @@ describe("Claude Code session-reflection hook (Hermes learning-loop analog)", ()
 		expect(script).toContain('"block"');
 		expect(script).toContain("reason");
 	});
+
+	it("hook script skips trivial sessions via transcript_path size (< 16 KB)", () => {
+		const script = readFileSync(
+			join(getAgentWorktreePath(agentId), ".claude", "reflect-on-stop.mjs"),
+			"utf8",
+		);
+		expect(script).toContain("transcript_path");
+		expect(script).toContain("16 * 1024");
+	});
+
+	it("hook script takes/releases a .reflect.lock in the agent's memory dir", () => {
+		const script = readFileSync(
+			join(getAgentWorktreePath(agentId), ".claude", "reflect-on-stop.mjs"),
+			"utf8",
+		);
+		expect(script).toContain(join(getAgentMemoryDir(agentId), ".reflect.lock"));
+		expect(script).toContain("10 * 60 * 1000");
+		// Lock released on the post-reflection (stop_hook_active) call.
+		expect(script).toContain("unlinkSync(LOCK_PATH)");
+	});
+
+	it("hook script stats MEMORY.md and the SHARED USER.md against their budgets", () => {
+		const script = readFileSync(
+			join(getAgentWorktreePath(agentId), ".claude", "reflect-on-stop.mjs"),
+			"utf8",
+		);
+		expect(script).toContain("statSync");
+		expect(script).toContain(join(getAgentMemoryDir(agentId), "MEMORY.md"));
+		expect(script).toContain("2200");
+		expect(script).toContain(getSharedUserProfilePath());
+		expect(script).toContain("1375");
+		expect(script).toContain("over its size budget");
+	});
 });
 
 describe("Claude Code bridge", () => {
@@ -217,12 +273,16 @@ describe("Claude Code bridge", () => {
 		await makeAgent(agentId, "claude");
 	});
 
-	it("CLAUDE.md @imports the live canonical AGENT/USER files", () => {
+	it("CLAUDE.md @imports AGENT.md, the SHARED USER.md, and the protocol", () => {
 		const wt = getAgentWorktreePath(agentId);
 		const claudeMd = readFileSync(join(wt, "CLAUDE.md"), "utf8");
 		const mem = getAgentMemoryDir(agentId);
 		expect(claudeMd).toContain(`@${join(mem, "AGENT.md")}`);
-		expect(claudeMd).toContain(`@${join(mem, "USER.md")}`);
+		// USER.md is imported from the SHARED path, not the per-agent one.
+		expect(claudeMd).toContain(`@${getSharedUserProfilePath()}`);
+		expect(claudeMd).not.toContain(`@${join(mem, "USER.md")}`);
+		// The write-back protocol reaches Claude Code too.
+		expect(claudeMd).toContain(`@${join(mem, ".writeback-protocol.md")}`);
 		// MEMORY.md must NOT be @imported (native auto-memory owns it).
 		expect(claudeMd).not.toContain(`@${join(mem, "MEMORY.md")}`);
 	});
@@ -264,17 +324,96 @@ describe("Codex bridge regen", () => {
 		);
 	});
 
-	it("concatenates AGENT + USER + MEMORY + protocol from canonical files", () => {
+	it("concatenates AGENT + shared USER + MEMORY + protocol from canonical files", () => {
 		const agents = readFileSync(
 			join(getAgentCodexHome(agentId), "AGENTS.md"),
 			"utf8",
 		);
 		// Distinctive markers from each source file.
 		expect(agents).toContain("autonomous coding agent"); // AGENT.md
-		expect(agents).toContain("User profile"); // USER.md
+		expect(agents).toContain("User profile"); // the SHARED USER.md
+		expect(agents).toContain("SHARED across ALL"); // shared-profile marker
 		expect(agents).toContain("Memory — Testy"); // MEMORY.md
 		expect(agents).toContain("Your persistent memory — how to maintain it"); // protocol
+		// The protocol's session-end reflection text rides along (Codex has no
+		// stop hook — reflection is convention-driven).
+		expect(agents).toContain("Session-end reflection");
 		expect(Buffer.byteLength(agents, "utf8")).toBeLessThan(32 * 1024);
+	});
+
+	it("appends the standing reflect-before-done instruction (Codex parity)", () => {
+		const agents = readFileSync(
+			join(getAgentCodexHome(agentId), "AGENTS.md"),
+			"utf8",
+		);
+		expect(agents).toContain(
+			"Before you consider a task complete, run the session-end reflection",
+		);
+	});
+
+	it("omits the Skills section when the agent has no skills", () => {
+		// The scaffold seeds skills/README.md + SKILL.template.md (plain files,
+		// not skill dirs), so a fresh agent has no indexable skills.
+		const agents = readFileSync(
+			join(getAgentCodexHome(agentId), "AGENTS.md"),
+			"utf8",
+		);
+		// Exact-header match: the protocol's "## Skills — reusable know-how"
+		// section is always present; the generated index header is bare.
+		expect(agents).not.toContain("\n## Skills\n");
+		expect(agents).not.toContain("before doing this kind of task");
+	});
+
+	it("indexes skills (frontmatter name/description) after the memory files", () => {
+		const fs = require("node:fs") as typeof import("node:fs");
+		const skillDir = join(getAgentHome(agentId), "skills", "deploy-docs");
+		fs.mkdirSync(skillDir, { recursive: true });
+		const skillPath = join(skillDir, "SKILL.md");
+		fs.writeFileSync(
+			skillPath,
+			[
+				"---",
+				"name: deploy-docs",
+				"description: Build and publish the docs site.",
+				"version: 0.1.0",
+				"---",
+				"",
+				"# Deploy docs",
+				"",
+				"Body procedure here.",
+				"",
+			].join("\n"),
+			"utf8",
+		);
+		regenerateCodexAgentsMd(agentId);
+		const agents = readFileSync(
+			join(getAgentCodexHome(agentId), "AGENTS.md"),
+			"utf8",
+		);
+		expect(agents).toContain("\n## Skills\n");
+		expect(agents).toContain(
+			`- **deploy-docs** — Build and publish the docs site. (read ${skillPath} before doing this kind of task)`,
+		);
+	});
+
+	it("tolerates a SKILL.md without frontmatter (dir name + first body line)", () => {
+		const fs = require("node:fs") as typeof import("node:fs");
+		const skillDir = join(getAgentHome(agentId), "skills", "bare-skill");
+		fs.mkdirSync(skillDir, { recursive: true });
+		const skillPath = join(skillDir, "SKILL.md");
+		fs.writeFileSync(
+			skillPath,
+			"# Some heading\n\nRuns the release checklist end to end.\n",
+			"utf8",
+		);
+		regenerateCodexAgentsMd(agentId);
+		const agents = readFileSync(
+			join(getAgentCodexHome(agentId), "AGENTS.md"),
+			"utf8",
+		);
+		expect(agents).toContain(
+			`- **bare-skill** — Runs the release checklist end to end. (read ${skillPath} before doing this kind of task)`,
+		);
 	});
 
 	it("does not clobber an existing bridge when canonical memory is absent", async () => {
@@ -310,6 +449,114 @@ describe("Codex bridge regen", () => {
 	});
 });
 
+describe("skills symlink — .claude/skills → <agent-home>/skills", () => {
+	const fs = require("node:fs") as typeof import("node:fs");
+	const agentId = "agent-skills-link";
+
+	beforeAll(async () => {
+		await makeAgent(agentId, "claude");
+	});
+
+	it("scaffold creates the symlink pointing at the canonical skills dir", () => {
+		const linkPath = join(getAgentWorktreePath(agentId), ".claude", "skills");
+		expect(fs.lstatSync(linkPath).isSymbolicLink()).toBe(true);
+		expect(fs.readlinkSync(linkPath)).toBe(join(getAgentHome(agentId), "skills"));
+		// The link resolves: a skill written through it lands in agent-home.
+		fs.writeFileSync(join(linkPath, "via-link.md"), "x", "utf8");
+		expect(
+			fs.existsSync(join(getAgentHome(agentId), "skills", "via-link.md")),
+		).toBe(true);
+	});
+
+	it("re-ensuring is a no-op when the link is already correct", () => {
+		const linkPath = join(getAgentWorktreePath(agentId), ".claude", "skills");
+		ensureClaudeSkillsLink(agentId);
+		expect(fs.lstatSync(linkPath).isSymbolicLink()).toBe(true);
+		expect(fs.readlinkSync(linkPath)).toBe(join(getAgentHome(agentId), "skills"));
+	});
+
+	it("replaces a symlink that points somewhere else", () => {
+		const linkPath = join(getAgentWorktreePath(agentId), ".claude", "skills");
+		const elsewhere = join(TEST_HOME, "elsewhere-skills");
+		fs.mkdirSync(elsewhere, { recursive: true });
+		fs.unlinkSync(linkPath);
+		fs.symlinkSync(elsewhere, linkPath, "dir");
+		ensureClaudeSkillsLink(agentId);
+		expect(fs.readlinkSync(linkPath)).toBe(join(getAgentHome(agentId), "skills"));
+	});
+
+	it("does NOT clobber a real .claude/skills directory with content (user-owned)", () => {
+		const linkPath = join(getAgentWorktreePath(agentId), ".claude", "skills");
+		fs.unlinkSync(linkPath);
+		fs.mkdirSync(join(linkPath, "user-skill"), { recursive: true });
+		fs.writeFileSync(
+			join(linkPath, "user-skill", "SKILL.md"),
+			"# user-owned\n",
+			"utf8",
+		);
+		ensureClaudeSkillsLink(agentId);
+		// Left as a real directory, content intact.
+		expect(fs.lstatSync(linkPath).isSymbolicLink()).toBe(false);
+		expect(fs.lstatSync(linkPath).isDirectory()).toBe(true);
+		expect(fs.existsSync(join(linkPath, "user-skill", "SKILL.md"))).toBe(true);
+		// Restore the link for any later assertions on this agent.
+		fs.rmSync(linkPath, { recursive: true, force: true });
+		ensureClaudeSkillsLink(agentId);
+		expect(fs.lstatSync(linkPath).isSymbolicLink()).toBe(true);
+	});
+
+	it("honors an external worktree override", () => {
+		const externalWt = join(TEST_HOME, "external-repos", "skills-ext");
+		fs.mkdirSync(join(externalWt, ".git", "info"), { recursive: true });
+		scaffoldAgentMemory({
+			agentId: "agent-skills-ext",
+			agentName: "Exty",
+			runtime: "claude",
+			userName: "Pat",
+			worktreePath: externalWt,
+		});
+		const linkPath = join(externalWt, ".claude", "skills");
+		expect(fs.lstatSync(linkPath).isSymbolicLink()).toBe(true);
+		expect(fs.readlinkSync(linkPath)).toBe(
+			join(getAgentHome("agent-skills-ext"), "skills"),
+		);
+	});
+});
+
+describe("writeIfMissing semantics — an emptied file sticks", () => {
+	const fs = require("node:fs") as typeof import("node:fs");
+	const agentId = "agent-emptied";
+
+	beforeAll(async () => {
+		await makeAgent(agentId, "claude");
+	});
+
+	it("does NOT re-seed a canonical file the user deliberately emptied", () => {
+		const memoryPath = join(getAgentMemoryDir(agentId), "MEMORY.md");
+		fs.writeFileSync(memoryPath, "", "utf8");
+		// Re-run the scaffold (what the launch-time backfill invokes).
+		scaffoldAgentMemory({
+			agentId,
+			agentName: "Testy",
+			runtime: "claude",
+			userName: "Pat",
+		});
+		expect(readFileSync(memoryPath, "utf8")).toBe("");
+	});
+
+	it("does NOT re-seed an emptied bridge file either", () => {
+		const bridgePath = join(getAgentWorktreePath(agentId), "CLAUDE.md");
+		fs.writeFileSync(bridgePath, "", "utf8");
+		scaffoldAgentMemory({
+			agentId,
+			agentName: "Testy",
+			runtime: "claude",
+			userName: "Pat",
+		});
+		expect(readFileSync(bridgePath, "utf8")).toBe("");
+	});
+});
+
 describe("scaffoldAgentMemory — idempotent re-run (backfill safety)", () => {
 	const agentId = "agent-rerun";
 	const fs = require("node:fs") as typeof import("node:fs");
@@ -322,9 +569,9 @@ describe("scaffoldAgentMemory — idempotent re-run (backfill safety)", () => {
 	it("preserves a hand-edited canonical file and a customized bridge on re-run", () => {
 		const mem = getAgentMemoryDir(agentId);
 		const wt = getAgentWorktreePath(agentId);
-		const editedUser = "# MY PROFILE\n- custom fact\n";
+		const editedAgent = "# MY PERSONA\n- custom brief\n";
 		const editedBridge = "@custom/AGENT.md\n";
-		fs.writeFileSync(join(mem, "USER.md"), editedUser, "utf8");
+		fs.writeFileSync(join(mem, "AGENT.md"), editedAgent, "utf8");
 		fs.writeFileSync(join(wt, "CLAUDE.md"), editedBridge, "utf8");
 
 		// Re-run scaffold (this is exactly what the backfill invokes).
@@ -335,8 +582,22 @@ describe("scaffoldAgentMemory — idempotent re-run (backfill safety)", () => {
 			userName: "Pat",
 		});
 
-		expect(readFileSync(join(mem, "USER.md"), "utf8")).toBe(editedUser);
+		expect(readFileSync(join(mem, "AGENT.md"), "utf8")).toBe(editedAgent);
 		expect(readFileSync(join(wt, "CLAUDE.md"), "utf8")).toBe(editedBridge);
+	});
+
+	it("preserves a hand-edited SHARED USER.md on re-run (first scaffold wins)", () => {
+		const shared = getSharedUserProfilePath();
+		const before = readFileSync(shared, "utf8");
+		const edited = `${before}- learned: prefers tabs\n`;
+		fs.writeFileSync(shared, edited, "utf8");
+		scaffoldAgentMemory({
+			agentId,
+			agentName: "Testy",
+			runtime: "claude",
+			userName: "SomeoneElse",
+		});
+		expect(readFileSync(shared, "utf8")).toBe(edited);
 	});
 
 	it("does not duplicate the .git/info/exclude block across re-runs", () => {
@@ -477,7 +738,10 @@ describe("backfillAgentMemory — one-time migration of pre-flip agents", () => 
 	it("scaffolds an agent whose memory/ dir was empty", () => {
 		const mem = getAgentMemoryDir(EMPTY);
 		expect(fs.existsSync(join(mem, "AGENT.md"))).toBe(true);
-		expect(fs.existsSync(join(mem, "USER.md"))).toBe(true);
+		expect(fs.existsSync(join(mem, "MEMORY.md"))).toBe(true);
+		// USER.md lives at the shared path, never per-agent.
+		expect(fs.existsSync(join(mem, "USER.md"))).toBe(false);
+		expect(fs.existsSync(getSharedUserProfilePath())).toBe(true);
 		// Bridge for its runtime (claude) is written too.
 		expect(fs.existsSync(join(getAgentWorktreePath(EMPTY), "CLAUDE.md"))).toBe(
 			true,
@@ -490,7 +754,7 @@ describe("backfillAgentMemory — one-time migration of pre-flip agents", () => 
 			"# HAND AUTHORED — do not touch\n",
 		);
 		// Skipped before scaffolding, so the other canonical files were not created.
-		expect(fs.existsSync(join(mem, "USER.md"))).toBe(false);
+		expect(fs.existsSync(join(mem, "MEMORY.md"))).toBe(false);
 	});
 
 	it("skips an agent with no repo yet", () => {
