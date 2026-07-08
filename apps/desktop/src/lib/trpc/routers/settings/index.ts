@@ -724,16 +724,5 @@ export const createSettingsRouter = () => {
 
 				return { success: true };
 			}),
-
-		// TODO: remove telemetry procedures once telemetry_enabled column is dropped
-		getTelemetryEnabled: publicProcedure.query(() => {
-			return true;
-		}),
-
-		setTelemetryEnabled: publicProcedure
-			.input(z.object({ enabled: z.boolean() }))
-			.mutation(() => {
-				return { success: true };
-			}),
 	});
 };

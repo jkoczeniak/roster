@@ -169,7 +169,7 @@ app.get("/hook/complete", (req, res) => {
  * Autonomous agent invocation. A cron/watcher (or external trigger) POSTs here;
  * we start the agent turn server-side on the Claude subscription (mastracode
  * runtime, identity+skills+MCP read from the agent's folder) and open/focus that
- * agent's chat-mastra tab in ADE so the user watches it work.
+ * agent's chat-mastra tab in Roster so the user watches it work.
  *
  *   POST /agent/invoke  { agent, prompt, model? }
  */
@@ -215,7 +215,7 @@ app.post("/agent/invoke", async (req, res) => {
 		};
 		notificationsEmitter.emit(NOTIFICATION_EVENTS.AGENT_INVOKE, invokeEvent);
 
-		// Intentionally do NOT foreground ADE or steal focus — invokes are
+		// Intentionally do NOT foreground Roster or steal focus — invokes are
 		// background (cron/watcher). The agent's terminal opens + runs silently;
 		// claude's hooks light the rail dot + fire the review toast, and the user
 		// clicks in when they're ready.
@@ -230,7 +230,7 @@ app.post("/agent/invoke", async (req, res) => {
 /**
  * Agent feed message. An agent (from its terminal, via the post-to-feed skill)
  * or any trigger POSTs a finding here; we persist it to `agent_messages` and
- * broadcast it so the feed pane updates live. This is ADE's local "Convex":
+ * broadcast it so the feed pane updates live. This is Roster's local "Convex":
  * research streams in and shows up in a persistent channel.
  *
  *   POST /agent/message  { agent, content, conversation?, role?, metadata? }

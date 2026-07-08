@@ -54,7 +54,17 @@ export function assertSafeCloneUrl(url: string): void {
 
 	// scp-like syntax: user@host:path (host may be an IP/name; path is required).
 	// Excludes remote-helper syntax (`scheme::…`) handled by the reject below.
-	if (/^[\w.-]+@[\w.-]+:.+/.test(value) && !/::/.test(value)) {
+	const scpMatch = /^([\w.-]+)@([\w.-]+):.+/.exec(value);
+	if (scpMatch && !/::/.test(value)) {
+		const [, user, host] = scpMatch;
+		// A user/host segment beginning with "-" is parsed by ssh as an option
+		// (e.g. `git@-oProxyCommand=x:path`), so reject it defense-in-depth even
+		// though a whole-string leading dash is already rejected above.
+		if (user.startsWith("-") || host.startsWith("-")) {
+			throw new Error(
+				`Refusing to clone from an scp-like source whose user or host starts with "-": ${value}`,
+			);
+		}
 		return;
 	}
 
@@ -86,10 +96,10 @@ export interface AgentRepoResult {
 }
 
 /**
- * Build an Agent's standalone repo + home layout on disk (ADE Phase B, risk #1).
+ * Build an Agent's standalone repo + home layout on disk (Roster Phase B, risk #1).
  *
  * Unlike the shared-repo model (`git worktree add` off a project's
- * mainRepoPath), each ADE agent owns its OWN git repo at
+ * mainRepoPath), each Roster agent owns its OWN git repo at
  * <agent-home>/worktree. The canonical `memory/` dir is created as a sibling
  * (templates are written later, in the Phase E scaffolder). Returns the paths
  * and the checked-out branch so the caller can persist a `worktrees` row.
@@ -146,7 +156,7 @@ export async function setupAgentRepo({
 		// Set a local identity so the empty initial commit works even when the
 		// machine has no global git user configured. Fresh agent repos are
 		// standalone, so a local identity is appropriate.
-		await git.addConfig("user.name", "ADE Agent", false, "local");
+		await git.addConfig("user.name", "Roster Agent", false, "local");
 		await git.addConfig("user.email", "agent@ade.local", false, "local");
 		await git.raw(["commit", "--allow-empty", "-m", "Initial commit"]);
 		branch =

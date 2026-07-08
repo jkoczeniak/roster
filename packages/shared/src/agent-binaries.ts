@@ -1,7 +1,7 @@
 import type { AgentType } from "./agent-command";
 
 /**
- * The external CLIs ADE shells out to. Each agent runtime drives its own
+ * The external CLIs Roster shells out to. Each agent runtime drives its own
  * binary; git is checked separately for the create-agent preflight.
  */
 export type AgentBinary = "claude" | "codex" | "git";

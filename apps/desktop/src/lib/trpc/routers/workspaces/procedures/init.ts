@@ -4,7 +4,6 @@ import { eq } from "drizzle-orm";
 import { retryAgentInit } from "main/lib/agent-init";
 import { localDb } from "main/lib/local-db";
 import { workspaceInitManager } from "main/lib/workspace-init-manager";
-import { isTrusted } from "main/lib/workspace-trust";
 import type { WorkspaceInitProgress } from "shared/types/workspace-init";
 import { deduplicateBranchName } from "shared/utils/branch";
 import { z } from "zod";
@@ -13,7 +12,7 @@ import { getPresetsForTrigger } from "../../settings";
 import { getProject, getWorkspaceWithRelations } from "../utils/db-helpers";
 import { listBranches } from "../utils/git";
 import { resolveWorktreePath } from "../utils/resolve-worktree-path";
-import { loadSetupConfig } from "../utils/setup";
+import { resolveSetupCommands } from "../utils/setup";
 import { initializeWorkspaceWorktree } from "../utils/workspace-init";
 
 type WorkspaceRelations = NonNullable<
@@ -152,7 +151,7 @@ export const createInitProcedures = () => {
 				}),
 			)
 			.mutation(async ({ input }) => {
-				// ADE agents own a standalone repo; retry re-runs the agent init
+				// Roster agents own a standalone repo; retry re-runs the agent init
 				// job. Returns false for legacy shared-repo workspaces.
 				if (retryAgentInit(input.workspaceId)) {
 					return { success: true };
@@ -204,25 +203,24 @@ export const createInitProcedures = () => {
 					return null;
 				}
 
-				const setupConfig = loadSetupConfig({
+				// Resolve setup commands + trust in the MAIN process. `initialCommands`
+				// is non-null ONLY for a trusted root; for an untrusted root the
+				// commands are surfaced (review-only) in `untrustedSetupCommands` and
+				// `initialCommands` is null so no renderer path can auto-run them.
+				const setup = resolveSetupCommands({
 					mainRepoPath: project.mainRepoPath,
 					worktreePath: relations.worktree?.path,
 					projectId: project.id,
 				});
 				const defaultPresets = getPresetsForTrigger("applyOnWorkspaceCreated");
 
-				// The renderer gates auto-running repo-supplied `setup` commands on
-				// whether the user has trusted this repo root (workspace-trust). Ship
-				// the root + current trust so WorkspaceInitEffects can decide without a
-				// second round-trip.
-				const mainRepoRoot = project.mainRepoPath;
-
 				return {
 					projectId: project.id,
-					initialCommands: setupConfig?.setup ?? null,
+					initialCommands: setup.initialCommands,
+					untrustedSetupCommands: setup.untrustedSetupCommands,
 					defaultPresets,
-					mainRepoRoot,
-					trusted: isTrusted(mainRepoRoot),
+					mainRepoRoot: setup.mainRepoRoot,
+					trusted: setup.trusted,
 				};
 			}),
 	});

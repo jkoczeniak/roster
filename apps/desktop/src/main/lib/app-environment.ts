@@ -6,7 +6,7 @@ import { ROSTER_DIR_NAME } from "shared/constants";
 const ADE_HOME_DIR_ENV = "ADE_HOME_DIR";
 
 /**
- * Resolve the ADE home dir, reading ADE_HOME_DIR at call time. Prefer this over
+ * Resolve the Roster home dir, reading ADE_HOME_DIR at call time. Prefer this over
  * the ROSTER_HOME_DIR const in code paths that must honor an ADE_HOME_DIR set
  * after this module was first imported — e.g. a test that overrides the home in
  * its module scope but only after another test file already loaded this module
@@ -36,7 +36,7 @@ export function ensureRosterHomeDirExists(): void {
 		chmodSync(ROSTER_HOME_DIR, ROSTER_HOME_DIR_MODE);
 	} catch (error) {
 		console.warn(
-			"[app-environment] Failed to chmod ADE home dir (best-effort):",
+			"[app-environment] Failed to chmod Roster home dir (best-effort):",
 			ROSTER_HOME_DIR,
 			error,
 		);

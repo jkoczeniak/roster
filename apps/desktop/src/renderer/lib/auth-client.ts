@@ -58,7 +58,7 @@ export const authClient = {
 		getFullOrganization: async () => ({
 			data: {
 				id: MOCK_ORG_ID,
-				name: "ADE",
+				name: "Roster",
 				slug: "roster",
 				members: [
 					{

@@ -1,7 +1,9 @@
+import { resolve } from "node:path";
 import { projects, settings, workspaces, worktrees } from "@roster/local-db";
 import { and, eq, isNull, not } from "drizzle-orm";
 import { localDb } from "main/lib/local-db";
 import { workspaceInitManager } from "main/lib/workspace-init-manager";
+import { isTrusted } from "main/lib/workspace-trust";
 import { z } from "zod";
 import { publicProcedure, router } from "../../..";
 import { resolveWorkspaceBaseBranch } from "../utils/base-branch";
@@ -35,7 +37,7 @@ import {
 	worktreeExists,
 } from "../utils/git";
 import { resolveWorktreePath } from "../utils/resolve-worktree-path";
-import { copyRosterConfigToWorktree, loadSetupConfig } from "../utils/setup";
+import { copyRosterConfigToWorktree, resolveSetupCommands } from "../utils/setup";
 import { initializeWorkspaceWorktree } from "../utils/workspace-init";
 
 interface CreateWorkspaceFromWorktreeParams {
@@ -78,6 +80,9 @@ function getPrWorkspaceName(prInfo: PullRequestInfo): string {
 interface PrWorkspaceResult {
 	workspace: typeof workspaces.$inferSelect;
 	initialCommands: string[] | null;
+	untrustedSetupCommands: string[] | null;
+	mainRepoRoot: string;
+	trusted: boolean;
 	worktreePath: string;
 	projectId: string;
 	prNumber: number;
@@ -118,6 +123,9 @@ function handleExistingWorktree({
 		return {
 			workspace: existingWorkspace,
 			initialCommands: null,
+			untrustedSetupCommands: null,
+			mainRepoRoot: resolve(project.mainRepoPath),
+			trusted: isTrusted(project.mainRepoPath),
 			worktreePath: existingWorktree.path,
 			projectId: project.id,
 			prNumber: prInfo.number,
@@ -135,7 +143,7 @@ function handleExistingWorktree({
 
 	activateProject(project);
 
-	const setupConfig = loadSetupConfig({
+	const setup = resolveSetupCommands({
 		mainRepoPath: project.mainRepoPath,
 		worktreePath: existingWorktree.path,
 		projectId: project.id,
@@ -143,7 +151,10 @@ function handleExistingWorktree({
 
 	return {
 		workspace,
-		initialCommands: setupConfig?.setup || null,
+		initialCommands: setup.initialCommands,
+		untrustedSetupCommands: setup.untrustedSetupCommands,
+		mainRepoRoot: setup.mainRepoRoot,
+		trusted: setup.trusted,
 		worktreePath: existingWorktree.path,
 		projectId: project.id,
 		prNumber: prInfo.number,
@@ -246,7 +257,7 @@ async function handleNewWorktree({
 		skipWorktreeCreation: true,
 	});
 
-	const setupConfig = loadSetupConfig({
+	const setup = resolveSetupCommands({
 		mainRepoPath: project.mainRepoPath,
 		worktreePath,
 		projectId: project.id,
@@ -254,7 +265,10 @@ async function handleNewWorktree({
 
 	return {
 		workspace,
-		initialCommands: setupConfig?.setup || null,
+		initialCommands: setup.initialCommands,
+		untrustedSetupCommands: setup.untrustedSetupCommands,
+		mainRepoRoot: setup.mainRepoRoot,
+		trusted: setup.trusted,
 		worktreePath,
 		projectId: project.id,
 		prNumber: prInfo.number,
@@ -371,6 +385,9 @@ export const createCreateProcedures = () => {
 						return {
 							workspace: existing.workspace,
 							initialCommands: null,
+							untrustedSetupCommands: null,
+							mainRepoRoot: resolve(project.mainRepoPath),
+							trusted: isTrusted(project.mainRepoPath),
 							worktreePath: existing.worktree.path,
 							projectId: project.id,
 							isInitializing: false,
@@ -390,14 +407,17 @@ export const createCreateProcedures = () => {
 							name: input.name ?? branch,
 						});
 						activateProject(project);
-						const setupConfig = loadSetupConfig({
+						const setup = resolveSetupCommands({
 							mainRepoPath: project.mainRepoPath,
 							worktreePath: orphanedWorktree.path,
 							projectId: project.id,
 						});
 						return {
 							workspace,
-							initialCommands: setupConfig?.setup || null,
+							initialCommands: setup.initialCommands,
+							untrustedSetupCommands: setup.untrustedSetupCommands,
+							mainRepoRoot: setup.mainRepoRoot,
+							trusted: setup.trusted,
 							worktreePath: orphanedWorktree.path,
 							projectId: project.id,
 							isInitializing: false,
@@ -464,7 +484,7 @@ export const createCreateProcedures = () => {
 					useExistingBranch: input.useExistingBranch,
 				});
 
-				const setupConfig = loadSetupConfig({
+				const setup = resolveSetupCommands({
 					mainRepoPath: project.mainRepoPath,
 					worktreePath,
 					projectId: project.id,
@@ -472,7 +492,10 @@ export const createCreateProcedures = () => {
 
 				return {
 					workspace,
-					initialCommands: setupConfig?.setup || null,
+					initialCommands: setup.initialCommands,
+					untrustedSetupCommands: setup.untrustedSetupCommands,
+					mainRepoRoot: setup.mainRepoRoot,
+					trusted: setup.trusted,
 					worktreePath,
 					projectId: project.id,
 					isInitializing: true,
@@ -648,7 +671,7 @@ export const createCreateProcedures = () => {
 				setLastActiveWorkspace(workspace.id);
 				activateProject(project);
 
-				const setupConfig = loadSetupConfig({
+				const setup = resolveSetupCommands({
 					mainRepoPath: project.mainRepoPath,
 					worktreePath: worktree.path,
 					projectId: project.id,
@@ -656,7 +679,10 @@ export const createCreateProcedures = () => {
 
 				return {
 					workspace,
-					initialCommands: setupConfig?.setup || null,
+					initialCommands: setup.initialCommands,
+					untrustedSetupCommands: setup.untrustedSetupCommands,
+					mainRepoRoot: setup.mainRepoRoot,
+					trusted: setup.trusted,
 					worktreePath: worktree.path,
 					projectId: project.id,
 				};
@@ -730,6 +756,9 @@ export const createCreateProcedures = () => {
 						return {
 							workspace: existingWorkspace,
 							initialCommands: null,
+							untrustedSetupCommands: null,
+							mainRepoRoot: resolve(project.mainRepoPath),
+							trusted: isTrusted(project.mainRepoPath),
 							worktreePath: existingWorktree.path,
 							projectId: project.id,
 							wasExisting: true,
@@ -757,7 +786,7 @@ export const createCreateProcedures = () => {
 						project.mainRepoPath,
 						existingWorktree.path,
 					);
-					const setupConfig = loadSetupConfig({
+					const setup = resolveSetupCommands({
 						mainRepoPath: project.mainRepoPath,
 						worktreePath: existingWorktree.path,
 						projectId: project.id,
@@ -765,7 +794,10 @@ export const createCreateProcedures = () => {
 
 					return {
 						workspace,
-						initialCommands: setupConfig?.setup || null,
+						initialCommands: setup.initialCommands,
+						untrustedSetupCommands: setup.untrustedSetupCommands,
+						mainRepoRoot: setup.mainRepoRoot,
+						trusted: setup.trusted,
 						worktreePath: existingWorktree.path,
 						projectId: project.id,
 						wasExisting: false,
@@ -815,7 +847,7 @@ export const createCreateProcedures = () => {
 				activateProject(project);
 
 				copyRosterConfigToWorktree(project.mainRepoPath, input.worktreePath);
-				const setupConfig = loadSetupConfig({
+				const setup = resolveSetupCommands({
 					mainRepoPath: project.mainRepoPath,
 					worktreePath: input.worktreePath,
 					projectId: project.id,
@@ -830,7 +862,10 @@ export const createCreateProcedures = () => {
 
 				return {
 					workspace,
-					initialCommands: setupConfig?.setup || null,
+					initialCommands: setup.initialCommands,
+					untrustedSetupCommands: setup.untrustedSetupCommands,
+					mainRepoRoot: setup.mainRepoRoot,
+					trusted: setup.trusted,
 					worktreePath: input.worktreePath,
 					projectId: project.id,
 					wasExisting: false,

@@ -48,7 +48,7 @@ app.setPath("userData", ROSTER_HOME_DIR);
 if (process.env.NODE_ENV === "development") {
 	const workspaceName = getWorkspaceName();
 	if (workspaceName) {
-		app.setName(`ADE (${workspaceName})`);
+		app.setName(`Roster (${workspaceName})`);
 	}
 }
 
@@ -171,7 +171,7 @@ app.on("before-quit", async (event) => {
 				buttons: ["Quit", "Cancel"],
 				defaultId: 0,
 				cancelId: 1,
-				title: "Quit ADE",
+				title: "Quit Roster",
 				message: "Are you sure you want to quit?",
 			});
 

@@ -2,7 +2,7 @@ import { join } from "node:path";
 import { getRosterHomeDir } from "./app-environment";
 
 /**
- * Per-agent home directory layout (ADE).
+ * Per-agent home directory layout (Roster).
  *
  * Each Agent (a `workspaces` row) owns a home dir under the app data dir:
  *

@@ -323,9 +323,13 @@ export function WorkspaceInitEffects() {
 	// `.roster/config.json` setup script is gated — presets/agent command are not.
 	const promptTrust = useCallback(
 		(setup: PendingTerminalSetup, root: string, onComplete: () => void) => {
+			// The commands to review live in `untrustedSetupCommands` — the main
+			// process nulled `initialCommands` precisely because this root is
+			// untrusted, so it can never be the auto-run source here.
+			const commands = setup.untrustedSetupCommands ?? [];
 			openTrustDialog({
 				root,
-				commands: setup.initialCommands ?? [],
+				commands,
 				onConfirm: () => {
 					setTrustDialogPending(true);
 					setTrust
@@ -338,14 +342,28 @@ export function WorkspaceInitEffects() {
 						})
 						.finally(() => {
 							closeTrustDialog();
-							runTerminalSetup({ ...setup, trusted: true }, onComplete);
+							// Now trusted: promote the reviewed commands to the auto-run slot.
+							runTerminalSetup(
+								{
+									...setup,
+									initialCommands: commands,
+									untrustedSetupCommands: null,
+									trusted: true,
+								},
+								onComplete,
+							);
 						});
 				},
 				onSkip: () => {
 					closeTrustDialog();
 					// Open the workspace, running presets/agent but NOT the repo setup.
 					runTerminalSetup(
-						{ ...setup, initialCommands: null, trusted: true },
+						{
+							...setup,
+							initialCommands: null,
+							untrustedSetupCommands: null,
+							trusted: true,
+						},
 						onComplete,
 					);
 				},
@@ -362,15 +380,17 @@ export function WorkspaceInitEffects() {
 
 	const handleTerminalSetup = useCallback(
 		(setup: PendingTerminalSetup, onComplete: () => void) => {
-			const hasSetupScript =
-				Array.isArray(setup.initialCommands) &&
-				setup.initialCommands.length > 0;
+			// The main process only ever puts repo setup commands in
+			// `untrustedSetupCommands` when the root is NOT trusted (auto-run
+			// `initialCommands` is nulled). So a non-empty `untrustedSetupCommands`
+			// is the single signal that a trust prompt is owed.
+			const hasUntrustedSetup =
+				Array.isArray(setup.untrustedSetupCommands) &&
+				setup.untrustedSetupCommands.length > 0;
 
-			// Trust gate: never auto-run a repo's `.roster/config.json` setup
-			// commands (real PTY, outside the agent sandbox) for a root the user
-			// hasn't trusted. Presets/agent command are launched by runTerminalSetup
-			// as usual — only the repo-supplied setup script is gated.
-			if (!hasSetupScript || setup.trusted === true) {
+			// Nothing gated: `initialCommands` (if any) is already trust-approved by
+			// the main process, so run it plus presets/agent as usual.
+			if (!hasUntrustedSetup) {
 				runTerminalSetup(setup, onComplete);
 				return;
 			}
@@ -380,32 +400,58 @@ export function WorkspaceInitEffects() {
 				return;
 			}
 
-			// Root/trust not known yet — resolve once, then re-decide.
+			// Root not known yet — resolve once (main process re-applies the gate),
+			// then re-decide.
 			utils.workspaces.getSetupCommands
 				.fetch({ workspaceId: setup.workspaceId })
 				.then((data) => {
-					if (data?.trusted === true) {
-						runTerminalSetup(
-							{ ...setup, mainRepoRoot: data.mainRepoRoot, trusted: true },
-							onComplete,
-						);
-						return;
-					}
-					if (data?.mainRepoRoot) {
+					const resolvedUntrusted =
+						Array.isArray(data?.untrustedSetupCommands) &&
+						data.untrustedSetupCommands.length > 0
+							? data.untrustedSetupCommands
+							: null;
+
+					if (resolvedUntrusted && data?.mainRepoRoot) {
 						promptTrust(
-							{ ...setup, mainRepoRoot: data.mainRepoRoot },
+							{
+								...setup,
+								untrustedSetupCommands: resolvedUntrusted,
+								initialCommands: data.initialCommands ?? null,
+								mainRepoRoot: data.mainRepoRoot,
+							},
 							data.mainRepoRoot,
 							onComplete,
 						);
 						return;
 					}
+
+					if (data?.trusted === true) {
+						// Trusted after all — run the main-process-approved commands.
+						runTerminalSetup(
+							{
+								...setup,
+								initialCommands: data.initialCommands ?? null,
+								untrustedSetupCommands: null,
+								mainRepoRoot: data.mainRepoRoot,
+								trusted: true,
+							},
+							onComplete,
+						);
+						return;
+					}
+
 					// Can't verify the root — do NOT auto-run; skip with a visible signal.
 					toast.warning("Setup commands skipped", {
 						description:
 							"Could not verify this folder is trusted, so its setup commands were not run.",
 					});
 					runTerminalSetup(
-						{ ...setup, initialCommands: null, trusted: true },
+						{
+							...setup,
+							initialCommands: null,
+							untrustedSetupCommands: null,
+							trusted: true,
+						},
 						onComplete,
 					);
 				})
@@ -419,7 +465,12 @@ export function WorkspaceInitEffects() {
 							"Could not verify this folder is trusted, so its setup commands were not run.",
 					});
 					runTerminalSetup(
-						{ ...setup, initialCommands: null, trusted: true },
+						{
+							...setup,
+							initialCommands: null,
+							untrustedSetupCommands: null,
+							trusted: true,
+						},
 						onComplete,
 					);
 				});
@@ -456,6 +507,11 @@ export function WorkspaceInitEffects() {
 							const completeSetup: PendingTerminalSetup = {
 								...setup,
 								defaultPresets: setupData?.defaultPresets ?? [],
+								initialCommands:
+									setupData?.initialCommands ?? setup.initialCommands,
+								untrustedSetupCommands:
+									setupData?.untrustedSetupCommands ??
+									setup.untrustedSetupCommands,
 								mainRepoRoot: setupData?.mainRepoRoot ?? setup.mainRepoRoot,
 								trusted: setupData?.trusted ?? setup.trusted,
 							};
@@ -517,6 +573,7 @@ export function WorkspaceInitEffects() {
 						workspaceId,
 						projectId: setupData.projectId,
 						initialCommands: setupData.initialCommands,
+						untrustedSetupCommands: setupData.untrustedSetupCommands,
 						defaultPresets: setupData.defaultPresets ?? [],
 						mainRepoRoot: setupData.mainRepoRoot,
 						trusted: setupData.trusted,

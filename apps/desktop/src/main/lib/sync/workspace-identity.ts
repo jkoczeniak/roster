@@ -67,7 +67,7 @@ export function resolveLocalWorkspaceId(
 	options?: ResolveLocalWorkspaceIdOptions,
 ): string | null {
 	// Fast path: scan local workspaces, recomputing each canonical hash.
-	// For ADE's scale (dozens of workspaces) this is fine; switching
+	// For Roster's scale (dozens of workspaces) this is fine; switching
 	// to a precomputed index is a future micro-optimization.
 	const local = findLocalWorkspaceByCanonical(canonical);
 	if (local) return local.id;

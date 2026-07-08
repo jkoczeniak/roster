@@ -614,7 +614,7 @@ describe("scaffoldAgentMemory — idempotent re-run (backfill safety)", () => {
 			userName: "Pat",
 		});
 		const exclude = readFileSync(excludePath, "utf8");
-		expect(count(exclude, "# ADE agent bridge files")).toBe(1);
+		expect(count(exclude, "# Roster agent bridge files")).toBe(1);
 	});
 });
 
@@ -652,7 +652,7 @@ describe("external worktree (local-path agents) — bridges honor the override",
 			join(externalWt, ".git", "info", "exclude"),
 			"utf8",
 		);
-		expect(exclude).toContain("# ADE agent bridge files");
+		expect(exclude).toContain("# Roster agent bridge files");
 	});
 
 	it("keeps canonical memory under <agent-home>, not the external worktree", () => {
@@ -784,7 +784,7 @@ describe("backfillAgentMemory — one-time migration of pre-flip agents", () => 
 			join(EXTERNAL_WT, ".git", "info", "exclude"),
 			"utf8",
 		);
-		expect(exclude).toContain("# ADE agent bridge files");
+		expect(exclude).toContain("# Roster agent bridge files");
 	});
 
 	it("is idempotent: a second run neither re-creates nor duplicates", () => {
@@ -802,7 +802,7 @@ describe("backfillAgentMemory — one-time migration of pre-flip agents", () => 
 			"exclude",
 		);
 		expect(
-			count(readFileSync(excludePath, "utf8"), "# ADE agent bridge files"),
+			count(readFileSync(excludePath, "utf8"), "# Roster agent bridge files"),
 		).toBe(1);
 	});
 });

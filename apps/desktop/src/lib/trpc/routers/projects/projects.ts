@@ -1138,7 +1138,7 @@ export const createProjectsRouter = (getWindow: () => BrowserWindow | null) => {
 				return { iconUrl };
 			}),
 
-		// ADE: create a Category (a grouping-only project with no shared repo).
+		// Roster: create a Category (a grouping-only project with no shared repo).
 		// mainRepoPath is "" (the repo-less sentinel); tabOrder = max+1 so it
 		// shows in the rail. Agents are added to it via workspaces.createAgent.
 		createCategory: publicProcedure

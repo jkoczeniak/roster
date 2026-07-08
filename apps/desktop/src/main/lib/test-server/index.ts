@@ -5,7 +5,7 @@ import express from "express";
  * Dev-only HTTP bridge. Lets external scripts (curl) drive the renderer by
  * executing arbitrary JS via webContents.executeJavaScript. Gated on
  * NODE_ENV=development at the call site. Listens on a fixed port distinct from
- * the Chromium debug port (which collides between dev/prod ADE instances).
+ * the Chromium debug port (which collides between dev/prod Roster instances).
  */
 
 export const TEST_SERVER_PORT = 41732;

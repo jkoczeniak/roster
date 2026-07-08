@@ -10,7 +10,7 @@ export const PROTOCOL_SCHEMES = {
 
 // Company
 export const COMPANY = {
-	NAME: "ADE",
+	NAME: "Roster",
 	DOMAIN: "roster.local",
 	EMAIL_DOMAIN: "@roster.local",
 	GITHUB_URL: "https://github.com/jkoczeniak/roster",
@@ -33,7 +33,7 @@ export const COMPANY = {
 export const THEME_STORAGE_KEY = "roster-theme";
 
 // Download URLs
-export const DOWNLOAD_URL_MAC_ARM64 = `${COMPANY.GITHUB_URL}/releases/latest/download/ADE-arm64.dmg`;
+export const DOWNLOAD_URL_MAC_ARM64 = `${COMPANY.GITHUB_URL}/releases/latest/download/Roster-arm64.dmg`;
 
 // Auth token configuration
 export const TOKEN_CONFIG = {

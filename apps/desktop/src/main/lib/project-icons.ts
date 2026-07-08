@@ -6,7 +6,7 @@ import { ROSTER_HOME_DIR } from "./app-environment";
 /**
  * Icon namespaces. The `roster-icon://<namespace>/<id>` protocol encodes the
  * namespace as the URL host, and each namespace has its own on-disk directory.
- * ADE uses `projects` for Category photos and `workspaces` for Agent avatars.
+ * Roster uses `projects` for Category photos and `workspaces` for Agent avatars.
  */
 export type IconNamespace = "projects" | "workspaces";
 
@@ -180,7 +180,7 @@ export function deleteProjectIcon(projectId: string): void {
 }
 
 // ---------------------------------------------------------------------------
-// Workspace (Agent) avatars — ADE
+// Workspace (Agent) avatars — Roster
 // ---------------------------------------------------------------------------
 
 export function ensureWorkspaceIconsDir(): void {

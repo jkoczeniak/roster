@@ -13,7 +13,7 @@ import {
 } from "../utils/db-helpers";
 
 /**
- * ADE: create an Agent (a `workspaces` row) with its OWN standalone git repo.
+ * Roster: create an Agent (a `workspaces` row) with its OWN standalone git repo.
  *
  * Unlike the shared-repo `create` procedure (`git worktree add` off the
  * project's mainRepoPath), an Agent owns a repo at <agent-home>/worktree. The

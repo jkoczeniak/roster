@@ -7,6 +7,12 @@ export interface PendingTerminalSetup {
 	workspaceId: string;
 	projectId: string;
 	initialCommands: string[] | null;
+	/**
+	 * Setup commands that exist but were withheld from auto-run by the main
+	 * process because the repo root isn't trusted. Non-null only for an untrusted
+	 * root; drives the trust prompt (review + opt-in). Never auto-run.
+	 */
+	untrustedSetupCommands?: string[] | null;
 	/** When undefined, signals that presets haven't been fetched yet and should be loaded from the backend */
 	defaultPresets?: TerminalPreset[];
 	/** Agent command to run in a separate pane from the setup script */

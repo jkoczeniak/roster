@@ -22,6 +22,7 @@ export function useOpenWorktree(
 	const setTabAutoTitle = useTabsStore((state) => state.setTabAutoTitle);
 	const createOrAttach = useCreateOrAttachWithTheme();
 	const writeToTerminal = electronTrpc.terminal.write.useMutation();
+	const setTrust = electronTrpc.trust.setTrust.useMutation();
 
 	return electronTrpc.workspaces.openWorktree.useMutation({
 		...options,
@@ -35,6 +36,7 @@ export function useOpenWorktree(
 				setTabAutoTitle,
 				createOrAttach: (input) => createOrAttach.mutateAsync(input),
 				writeToTerminal: (input) => writeToTerminal.mutateAsync(input),
+				setTrust: (input) => setTrust.mutateAsync(input),
 			});
 			if (bootstrapError === "create_or_attach_failed") {
 				toast.error("Agent opened, but terminal failed to start.");

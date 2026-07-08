@@ -22,7 +22,7 @@ export const projects = sqliteTable(
 		id: text("id")
 			.primaryKey()
 			.$defaultFn(() => uuidv4()),
-		// ADE: a Category is a pure grouping with no shared repo. It stays
+		// Roster: a Category is a pure grouping with no shared repo. It stays
 		// NOT NULL (empty string "" = no repo) so the ~90 existing readers keep
 		// their `string` type; every guard already treats "" as falsy like a
 		// repo-less category. The B3 per-agent-repo rework can widen this to
@@ -133,9 +133,9 @@ export const workspaces = sqliteTable(
 		// laptop/folder glyph when null. Used by the agent-fleet "Space" model
 		// where each workspace is an agent.
 		iconUrl: text("icon_url"),
-		// ADE: which CLI drives this agent (claude/codex). Maps to
+		// Roster: which CLI drives this agent (claude/codex). Maps to
 		// AGENT_PRESET_COMMANDS in @roster/shared. Defaults to "claude" at the
-		// insert site; null on pre-ADE rows.
+		// insert site; null on pre-Roster rows.
 		runtime: text("runtime").$type<AgentRuntime>(),
 	},
 	(table) => [
@@ -369,7 +369,7 @@ export type SelectBrowserHistory = typeof browserHistory.$inferSelect;
 
 /**
  * Agent messages table - the persistent "agent feed": research/findings that
- * agents stream into ADE via POST /agent/message. Grouped by conversation
+ * agents stream into Roster via POST /agent/message. Grouped by conversation
  * (a feed channel, e.g. a Space slug like "youtube") so the feed pane can show
  * a live, persistent channel of what the fleet is surfacing.
  */
@@ -383,7 +383,7 @@ export const agentMessages = sqliteTable(
 		// to "main" so a bare post still lands somewhere visible.
 		conversationId: text("conversation_id").notNull().default("main"),
 		agentName: text("agent_name").notNull(),
-		// Optional link back to the agent's ADE workspace (for avatar/role lookup).
+		// Optional link back to the agent's Roster workspace (for avatar/role lookup).
 		workspaceId: text("workspace_id"),
 		content: text("content").notNull(),
 		// "assistant" = agent finding (default), "user" = a note Pat typed in.

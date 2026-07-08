@@ -1,6 +1,7 @@
 import { cpSync, existsSync, readFileSync } from "node:fs";
 import { homedir } from "node:os";
-import { join } from "node:path";
+import { join, resolve } from "node:path";
+import { isTrusted } from "main/lib/workspace-trust";
 import {
 	CONFIG_FILE_NAME,
 	PROJECT_ROSTER_DIR_NAME,
@@ -112,4 +113,77 @@ export function loadSetupConfig({
 		);
 	}
 	return config;
+}
+
+export interface ResolvedSetupCommands {
+	/**
+	 * Setup commands the caller may auto-run in a PTY. Populated ONLY when the
+	 * repo root is trusted — `null` otherwise. This is the security guarantee:
+	 * an untrusted repo's setup commands never reach any renderer path that
+	 * auto-runs `initialCommands`.
+	 */
+	initialCommands: string[] | null;
+	/**
+	 * Setup commands that exist but were withheld from auto-run because the repo
+	 * root is not trusted. The renderer surfaces these in the trust prompt so the
+	 * user can review them before opting in. `null` when trusted or absent.
+	 */
+	untrustedSetupCommands: string[] | null;
+	/** Resolved (normalized) repo root — the workspace-trust allow-list key. */
+	mainRepoRoot: string;
+	/** Whether `mainRepoRoot` is on the trusted-roots allow-list right now. */
+	trusted: boolean;
+}
+
+/**
+ * Resolve a workspace's `.roster` setup commands AND the workspace-trust
+ * decision in one place, in the MAIN process, so no renderer path can bypass
+ * the gate.
+ *
+ * Invariant: `initialCommands` (the auto-run list) is non-null ONLY for trusted
+ * roots. For an untrusted root the commands move to `untrustedSetupCommands`
+ * (review-only) and `initialCommands` is `null`. At most one of the two is ever
+ * populated.
+ */
+export function resolveSetupCommands({
+	mainRepoPath,
+	worktreePath,
+	projectId,
+}: {
+	mainRepoPath: string;
+	worktreePath?: string;
+	projectId?: string;
+}): ResolvedSetupCommands {
+	const setupConfig = loadSetupConfig({ mainRepoPath, worktreePath, projectId });
+	const setup = setupConfig?.setup ?? null;
+	// Match workspace-trust.ts normalization (resolve()) so the returned key is
+	// the exact string the renderer hands back to setTrust / getTrust.
+	const mainRepoRoot = resolve(mainRepoPath);
+	const trusted = isTrusted(mainRepoRoot);
+
+	const hasSetup = Array.isArray(setup) && setup.length > 0;
+	if (!hasSetup) {
+		return {
+			initialCommands: null,
+			untrustedSetupCommands: null,
+			mainRepoRoot,
+			trusted,
+		};
+	}
+
+	if (trusted) {
+		return {
+			initialCommands: setup,
+			untrustedSetupCommands: null,
+			mainRepoRoot,
+			trusted,
+		};
+	}
+
+	return {
+		initialCommands: null,
+		untrustedSetupCommands: setup,
+		mainRepoRoot,
+		trusted,
+	};
 }

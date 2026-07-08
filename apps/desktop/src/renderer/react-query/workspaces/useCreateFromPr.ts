@@ -19,7 +19,11 @@ export function useCreateFromPr(options?: MutationOptions) {
 	return electronTrpc.workspaces.createFromPr.useMutation({
 		...options,
 		onSuccess: async (data, ...rest) => {
-			if (!data.wasExisting && data.initialCommands) {
+			const hasSetup = Boolean(
+				data.initialCommands || data.untrustedSetupCommands,
+			);
+
+			if (!data.wasExisting && hasSetup) {
 				const optimisticProgress: WorkspaceInitProgress = {
 					workspaceId: data.workspace.id,
 					projectId: data.projectId,
@@ -29,11 +33,14 @@ export function useCreateFromPr(options?: MutationOptions) {
 				updateProgress(optimisticProgress);
 			}
 
-			if (data.initialCommands) {
+			if (hasSetup) {
 				addPendingTerminalSetup({
 					workspaceId: data.workspace.id,
 					projectId: data.projectId,
 					initialCommands: data.initialCommands,
+					untrustedSetupCommands: data.untrustedSetupCommands,
+					mainRepoRoot: data.mainRepoRoot,
+					trusted: data.trusted,
 				});
 			}
 

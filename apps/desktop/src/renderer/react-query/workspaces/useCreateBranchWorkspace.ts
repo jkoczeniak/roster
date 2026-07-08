@@ -38,6 +38,7 @@ export function useCreateBranchWorkspace(
 					workspaceId: data.workspace.id,
 					projectId: data.projectId,
 					initialCommands: setupData?.initialCommands ?? null,
+					untrustedSetupCommands: setupData?.untrustedSetupCommands,
 					defaultPresets: setupData?.defaultPresets ?? [],
 					mainRepoRoot: setupData?.mainRepoRoot,
 					trusted: setupData?.trusted,

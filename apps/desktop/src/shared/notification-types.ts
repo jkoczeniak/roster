@@ -47,7 +47,7 @@ export interface AgentInvokeEvent extends NotificationIds {
 /**
  * Emitted when an agent streams a finding into the feed (POST /agent/message).
  * The message is persisted to the `agent_messages` table and broadcast to the
- * renderer so the feed pane updates live — ADE's local "Convex".
+ * renderer so the feed pane updates live — Roster's local "Convex".
  */
 export interface AgentMessageEvent extends NotificationIds {
 	id: string;

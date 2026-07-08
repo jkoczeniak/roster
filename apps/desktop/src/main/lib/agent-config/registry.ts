@@ -4,7 +4,7 @@ import { join } from "node:path";
 
 /**
  * Registry mapping an agent name → its folder (cwd, where the agent runtime
- * reads CLAUDE.md + .claude/skills + MCP config), the ADE workspace that
+ * reads CLAUDE.md + .claude/skills + MCP config), the Roster workspace that
  * surfaces its session, and a stable per-agent session id (so the
  * thread/memory accumulates across invocations).
  *
@@ -13,7 +13,7 @@ import { join } from "node:path";
 export interface AgentRegistryEntry {
 	/** Absolute path to the agent's folder (its CLAUDE.md / skills / mcp). */
 	cwd: string;
-	/** The ADE workspace id that surfaces this agent's session. */
+	/** The Roster workspace id that surfaces this agent's session. */
 	workspaceId: string;
 	/** Stable session id for this agent (persistent thread). */
 	sessionId: string;
@@ -42,7 +42,7 @@ export function getAgentEntry(name: string): AgentRegistryEntry | undefined {
 }
 
 /**
- * Reverse lookup: find the agent whose ADE workspace matches `workspaceId`.
+ * Reverse lookup: find the agent whose Roster workspace matches `workspaceId`.
  * Used by the feed so "talking" in an agent's workspace routes to that agent.
  */
 export function getAgentByWorkspaceId(

@@ -6,10 +6,10 @@ import {
 } from "@roster/shared/agent-binaries";
 import { BIN_DIR } from "./paths";
 
-export const WRAPPER_MARKER = "# ADE agent-wrapper v2";
+export const WRAPPER_MARKER = "# Roster agent-wrapper v2";
 
 /**
- * Marker substring present in every agent-wrapper header (ADE's own wrappers and
+ * Marker substring present in every agent-wrapper header (Roster's own wrappers and
  * the user's Damon install both use "... agent-wrapper ..."). find_real_binary
  * skips any candidate whose header contains it, so a wrapper never resolves to
  * another wrapper.
@@ -65,7 +65,7 @@ function buildRealBinaryResolver(): string {
     esac
     local candidate="$dir/$name"
     if [ -x "$candidate" ] && [ ! -d "$candidate" ]; then
-      # Skip other agent-wrapper shims (another ADE wrapper on PATH, or the
+      # Skip other agent-wrapper shims (another Roster wrapper on PATH, or the
       # user's Damon install) so we resolve the real binary directly. Chaining
       # wrappers ping-pongs and keeps prepending --settings, which breaks the
       # CLI's interactive TUI.
@@ -88,9 +88,9 @@ function getMissingBinaryMessage(name: string): string {
 	// commands and URLs contain none).
 	const info = BINARY_INSTALL[name as AgentBinary];
 	if (info) {
-		return `ADE: ${name} not found on PATH. Install ${info.label}: ${info.command} — ${info.url}`;
+		return `Roster: ${name} not found on PATH. Install ${info.label}: ${info.command} — ${info.url}`;
 	}
-	return `ADE: ${name} not found in PATH. Install it and ensure it is on PATH, then retry.`;
+	return `Roster: ${name} not found in PATH. Install it and ensure it is on PATH, then retry.`;
 }
 
 export function getWrapperPath(binaryName: string): string {
@@ -103,7 +103,7 @@ export function buildWrapperScript(
 ): string {
 	return `#!/bin/bash
 ${WRAPPER_MARKER}
-# ADE wrapper for ${binaryName}
+# Roster wrapper for ${binaryName}
 
 ${buildRealBinaryResolver()}
 REAL_BIN="$(find_real_binary "${binaryName}")"

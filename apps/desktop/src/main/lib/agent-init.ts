@@ -10,7 +10,7 @@ import { resolveAgentWorktreePath } from "./agent-worktree";
 import { getUserName } from "./user-profile";
 
 /**
- * ADE agent creation runs as a background job so a slow clone never blocks the
+ * Roster agent creation runs as a background job so a slow clone never blocks the
  * modal. createAgent inserts the DB rows immediately (worktree.gitStatus=null,
  * so the content view shows the checklist), then calls beginAgentInit(), which
  * builds the repo + memory scaffold while streaming progress through the shared
@@ -50,7 +50,7 @@ export function beginAgentInit(
 }
 
 /**
- * Retry a failed/interrupted agent init. Returns false if this is not an ADE
+ * Retry a failed/interrupted agent init. Returns false if this is not an Roster
  * agent we can retry (caller should fall back to the legacy path).
  */
 export function retryAgentInit(agentId: string): boolean {

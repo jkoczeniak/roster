@@ -17,7 +17,7 @@ import { getUserName } from "./user-profile";
  * enabled by default we bring those agents up to spec at app launch.
  *
  * Conservative + idempotent by construction:
- * - Only touches ADE agents (workspaces.runtime set) whose repo is already set
+ * - Only touches Roster agents (workspaces.runtime set) whose repo is already set
  *   up (worktree/.git exists). A still-initializing or failed agent is left to
  *   its own init job.
  * - Skips any agent whose memory/ dir already holds a non-empty *.md file, so a
@@ -60,7 +60,7 @@ export function backfillAgentMemory(): void {
 				agent.worktreeId,
 			);
 			// Repo must already exist and be a git repo; this guard also filters
-			// out any non-ADE workspace that happens to carry a runtime value.
+			// out any non-Roster workspace that happens to carry a runtime value.
 			if (!existsSync(join(worktreePath, ".git"))) continue;
 
 			if (!memoryDirIsEmpty(getAgentMemoryDir(agent.id))) continue;

@@ -11,9 +11,9 @@ export function RosterLogo({ className }: RosterLogoProps) {
 				"text-foreground font-mono font-bold tracking-[0.25em] text-4xl uppercase select-none",
 				className,
 			)}
-			aria-label="ADE"
+			aria-label="Roster"
 		>
-			ADE
+			Roster
 		</span>
 	);
 }

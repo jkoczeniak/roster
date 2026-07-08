@@ -43,7 +43,7 @@ export function findRealBinary(name: string): string | null {
 			: findBinaryPathsUnix(name);
 
 		const homedir = os.homedir();
-		// Filter out wrapper scripts from all ADE directories:
+		// Filter out wrapper scripts from all Roster directories:
 		// - ~/.roster/bin
 		// - ~/.roster-*/bin (workspace-specific instances)
 		const rosterBinDir = path.join(homedir, ".roster", "bin");

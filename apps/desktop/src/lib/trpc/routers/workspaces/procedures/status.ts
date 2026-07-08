@@ -100,7 +100,7 @@ export const createStatusProcedures = () => {
 				return { success: true };
 			}),
 
-		// ADE: set an agent's avatar (circular rail bust) from a base64 data URL,
+		// Roster: set an agent's avatar (circular rail bust) from a base64 data URL,
 		// or clear it with null. Mirrors projects.setProjectIcon.
 		setWorkspaceIcon: publicProcedure
 			.input(z.object({ id: z.string(), icon: z.string().nullable() }))
@@ -136,7 +136,7 @@ export const createStatusProcedures = () => {
 				return { iconUrl };
 			}),
 
-		// ADE: set which CLI drives this agent (claude/codex).
+		// Roster: set which CLI drives this agent (claude/codex).
 		setRuntime: publicProcedure
 			.input(z.object({ id: z.string(), runtime: z.enum(AGENT_RUNTIMES) }))
 			.mutation(({ input }) => {

@@ -40,6 +40,12 @@ describe("assertSafeCloneUrl", () => {
 		).not.toThrow();
 	});
 
+	it("rejects an scp-like source whose host starts with a dash (ssh option injection)", () => {
+		expect(() =>
+			assertSafeCloneUrl("git@-oProxyCommand=x:path"),
+		).toThrow();
+	});
+
 	it("allows an absolute local path to an existing directory", () => {
 		const dir = mkdtempSync(join(tmpdir(), "roster-clone-src-"));
 		expect(() => assertSafeCloneUrl(dir)).not.toThrow();

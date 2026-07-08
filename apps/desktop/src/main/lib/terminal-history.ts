@@ -163,7 +163,7 @@ export class HistoryWriter {
 		await fs.mkdir(this.dir, { recursive: true, mode: HISTORY_DIR_MODE });
 
 		// Preserve claudeSessionId from existing meta.json across session reinit.
-		// Otherwise ADE restarts would wipe the captured ID and break auto-resume.
+		// Otherwise Roster restarts would wipe the captured ID and break auto-resume.
 		try {
 			const existing = await fs.readFile(this.metaPath, "utf8");
 			const prev = JSON.parse(existing) as Partial<SessionMetadata>;

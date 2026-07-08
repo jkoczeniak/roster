@@ -42,6 +42,9 @@ export function useCreateWorkspace(options?: UseCreateWorkspaceOptions) {
 					initialCommands: options?.resolveInitialCommands
 						? options.resolveInitialCommands(data.initialCommands)
 						: data.initialCommands,
+					untrustedSetupCommands: data.untrustedSetupCommands,
+					mainRepoRoot: data.mainRepoRoot,
+					trusted: data.trusted,
 				});
 			}
 

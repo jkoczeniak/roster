@@ -105,7 +105,7 @@ try {
 	const message = error instanceof Error ? error.message : String(error);
 	if (app?.isReady?.() !== undefined) {
 		const detail = [
-			"ADE could not initialize its local database.",
+			"Roster could not initialize its local database.",
 			"",
 			`Database: ${DB_PATH}`,
 			`Migrations: ${migrationsFolder}`,
@@ -115,7 +115,7 @@ try {
 		const showFatal = () => {
 			// showErrorBox is modal + safe before "ready"; app.exit bypasses the
 			// before-quit confirmation dialog (which itself reads the now-broken DB).
-			dialog.showErrorBox("ADE failed to start", detail);
+			dialog.showErrorBox("Roster failed to start", detail);
 			app.exit(1);
 		};
 		if (app.isReady()) {
