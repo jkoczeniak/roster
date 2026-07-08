@@ -1,4 +1,16 @@
-import type { Terminal } from "@xterm/xterm";
+/**
+ * Structural view of xterm's parser API (this workaround is xterm-only;
+ * ghostty's core answers/absorbs these queries itself and has no parser
+ * hooks).
+ */
+interface CsiParserHost {
+	parser: {
+		registerCsiHandler(
+			id: { prefix?: string; intermediates?: string; final: string },
+			callback: () => boolean,
+		): { dispose: () => void };
+	};
+}
 
 /**
  * Registers parser hooks to suppress terminal query responses from being displayed.
@@ -20,7 +32,7 @@ import type { Terminal } from "@xterm/xterm";
  * @param terminal - The xterm.js Terminal instance
  * @returns Cleanup function to dispose all registered handlers
  */
-export function suppressQueryResponses(terminal: Terminal): () => void {
+export function suppressQueryResponses(terminal: CsiParserHost): () => void {
 	const disposables: { dispose: () => void }[] = [];
 	const parser = terminal.parser;
 

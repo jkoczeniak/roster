@@ -1,4 +1,8 @@
-import type { ILink, ILinkProvider, Terminal } from "@xterm/xterm";
+import type {
+	TerminalInstance,
+	TerminalLink,
+	TerminalLinkProvider,
+} from "../engine";
 
 export interface LinkMatch {
 	text: string;
@@ -31,8 +35,8 @@ interface MatchRangeContext {
  * up to 3 wrapped lines (previous + current + next). Links spanning 4+ wrapped
  * lines will be truncated.
  */
-export abstract class MultiLineLinkProvider implements ILinkProvider {
-	constructor(protected readonly terminal: Terminal) {}
+export abstract class MultiLineLinkProvider implements TerminalLinkProvider {
+	constructor(protected readonly terminal: TerminalInstance) {}
 
 	protected abstract getPattern(): RegExp;
 	protected abstract shouldSkipMatch(match: LinkMatch): boolean;
@@ -54,7 +58,7 @@ export abstract class MultiLineLinkProvider implements ILinkProvider {
 		matchIndex: number,
 		matchEnd: number,
 		context: MatchRangeContext,
-	): ILink["range"][] {
+	): TerminalLink["range"][] {
 		return [this.calculateLinkRange(matchIndex, matchEnd, context.lines)];
 	}
 
@@ -100,7 +104,7 @@ export abstract class MultiLineLinkProvider implements ILinkProvider {
 
 	provideLinks(
 		bufferLineNumber: number,
-		callback: (links: ILink[] | undefined) => void,
+		callback: (links: TerminalLink[] | undefined) => void,
 	): void {
 		const lineIndex = bufferLineNumber - 1;
 		const contextLines = this.buildContextLines(lineIndex);
@@ -132,7 +136,7 @@ export abstract class MultiLineLinkProvider implements ILinkProvider {
 
 		const combinedText = linesWithOffsets.map((line) => line.text).join("");
 
-		const links: ILink[] = [];
+		const links: TerminalLink[] = [];
 		const regex = this.getPattern();
 
 		for (const match of combinedText.matchAll(regex)) {
@@ -222,7 +226,7 @@ export abstract class MultiLineLinkProvider implements ILinkProvider {
 		matchIndex: number,
 		matchEnd: number,
 		lines: ContextLineWithOffsets[],
-	): ILink["range"] {
+	): TerminalLink["range"] {
 		const start = this.offsetToPosition(matchIndex, lines, false);
 		const end = this.offsetToPosition(matchEnd, lines, true);
 

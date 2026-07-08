@@ -1,5 +1,7 @@
+import { toast } from "@roster/ui/sonner";
 import { useEffect, useRef, useState } from "react";
 import type { MosaicBranch } from "react-mosaic-component";
+import { electronTrpc } from "renderer/lib/electron-trpc";
 import { StatusIndicator } from "renderer/screens/main/components/StatusIndicator";
 import { useRenamePaneStore } from "renderer/stores/rename-pane-store";
 import {
@@ -56,6 +58,8 @@ export function TabPane({
 	onMoveToNewTab,
 }: TabPaneProps) {
 	const paneName = useTabsStore((s) => s.panes[paneId]?.name);
+	const paneCwd = useTabsStore((s) => s.panes[paneId]?.cwd);
+	const paneInitialCwd = useTabsStore((s) => s.panes[paneId]?.initialCwd);
 	const paneUserTitle = useTabsStore((s) => s.panes[paneId]?.userTitle);
 	const paneStatus = useTabsStore((s) => s.panes[paneId]?.status);
 	const setPaneUserTitle = useTabsStore((s) => s.setPaneUserTitle);
@@ -113,6 +117,29 @@ export function TabPane({
 		getScrollToBottomCallback(paneId)?.();
 	};
 
+	// "Open in Ghostty" external-app action: prefer the pane's live cwd
+	// (OSC-7 tracked), then its initial cwd, then the workspace worktree path.
+	const { data: workspaceCwd } = electronTrpc.terminal.getWorkspaceCwd.useQuery(
+		workspaceId,
+		{ staleTime: 30_000 },
+	);
+	const openInGhostty = electronTrpc.external.openInGhostty.useMutation();
+	const ghosttyCwd = paneCwd || paneInitialCwd || workspaceCwd || null;
+	const handleOpenInGhostty = ghosttyCwd
+		? () => {
+				openInGhostty.mutate(
+					{ cwd: ghosttyCwd },
+					{
+						onError: (error) => {
+							toast.error("Failed to open in Ghostty", {
+								description: `${error.message} — is Ghostty installed?`,
+							});
+						},
+					},
+				);
+			}
+		: undefined;
+
 	return (
 		<BasePaneWindow
 			paneId={paneId}
@@ -165,6 +192,7 @@ export function TabPane({
 				onClosePane={() => removePane(paneId)}
 				onClearTerminal={handleClearTerminal}
 				onScrollToBottom={handleScrollToBottom}
+				onOpenInGhostty={handleOpenInGhostty}
 				getSelection={() => getGetSelectionCallback(paneId)?.() ?? ""}
 				onPaste={(text) => getPasteCallback(paneId)?.(text)}
 				currentTabId={tabId}

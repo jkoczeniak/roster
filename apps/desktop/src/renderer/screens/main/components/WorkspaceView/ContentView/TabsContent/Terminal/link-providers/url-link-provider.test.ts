@@ -1,21 +1,25 @@
 import { describe, expect, it, mock } from "bun:test";
-import type { IBufferLine, ILink, Terminal } from "@xterm/xterm";
+import type {
+	TerminalBufferLine,
+	TerminalInstance,
+	TerminalLink,
+} from "../engine";
 import { UrlLinkProvider } from "./url-link-provider";
 
-function createMockLine(text: string, isWrapped = false): IBufferLine {
+function createMockLine(text: string, isWrapped = false): TerminalBufferLine {
 	return {
 		translateToString: () => text,
 		isWrapped,
 		length: text.length,
 		getCell: mock(() => null),
 		getCells: mock(() => []),
-	} as unknown as IBufferLine;
+	} as unknown as TerminalBufferLine;
 }
 
 function createMockTerminal(
 	lines: Array<{ text: string; isWrapped?: boolean }>,
 	cols = 80,
-): Terminal {
+): TerminalInstance {
 	const mockLines = lines.map((l) =>
 		createMockLine(l.text, l.isWrapped ?? false),
 	);
@@ -30,13 +34,13 @@ function createMockTerminal(
 			style: { cursor: "" },
 		},
 		cols,
-	} as unknown as Terminal;
+	} as unknown as TerminalInstance;
 }
 
 function getLinks(
 	provider: UrlLinkProvider,
 	lineNumber: number,
-): Promise<ILink[]> {
+): Promise<TerminalLink[]> {
 	return new Promise((resolve) => {
 		provider.provideLinks(lineNumber, (links) => {
 			resolve(links ?? []);

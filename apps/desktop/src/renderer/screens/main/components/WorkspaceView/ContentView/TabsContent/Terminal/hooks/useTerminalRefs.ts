@@ -1,7 +1,7 @@
-import type { ITheme } from "@xterm/xterm";
 import type { MutableRefObject } from "react";
 import { useRef } from "react";
 import { useTerminalCallbacksStore } from "renderer/stores/tabs/terminal-callbacks";
+import type { TerminalTheme } from "../engine";
 
 type RegisterCallback = (paneId: string, callback: () => void) => void;
 type RegisterGetSelectionCallback = (
@@ -18,7 +18,7 @@ export interface UseTerminalRefsOptions {
 	paneId: string;
 	tabId: string;
 	focusedPaneId: string | undefined;
-	terminalTheme: ITheme | null;
+	terminalTheme: TerminalTheme | null;
 	paneInitialCwd?: string;
 	clearPaneInitialData: (paneId: string) => void;
 	workspaceCwd: string | null | undefined;
@@ -30,7 +30,7 @@ export interface UseTerminalRefsOptions {
 export interface UseTerminalRefsReturn {
 	isFocused: boolean;
 	isFocusedRef: MutableRefObject<boolean>;
-	initialThemeRef: MutableRefObject<ITheme | null>;
+	initialThemeRef: MutableRefObject<TerminalTheme | null>;
 	paneInitialCwdRef: MutableRefObject<string | undefined>;
 	clearPaneInitialDataRef: MutableRefObject<(paneId: string) => void>;
 	workspaceCwdRef: MutableRefObject<string | null>;

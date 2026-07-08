@@ -11,8 +11,13 @@ import {
 import { persistentHistory } from "./lib/persistent-hash-history";
 import { electronQueryClient } from "./providers/ElectronTRPCProvider";
 import { routeTree } from "./routeTree.gen";
+import { ensureGhosttyReady } from "./screens/main/components/WorkspaceView/ContentView/TabsContent/Terminal/engine";
 
 import "./globals.css";
+
+// Kick off ghostty-web's WASM init as early as possible so the default
+// terminal engine is ready before the first terminal pane opens.
+void ensureGhosttyReady();
 
 const rootElement = document.querySelector("app");
 initBootErrorHandling(rootElement);

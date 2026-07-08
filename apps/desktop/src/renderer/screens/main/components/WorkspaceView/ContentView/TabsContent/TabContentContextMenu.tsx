@@ -22,6 +22,7 @@ import {
 	LuRows2,
 	LuX,
 } from "react-icons/lu";
+import ghosttyIcon from "renderer/assets/app-icons/ghostty.svg";
 import { useHotkeyText } from "renderer/stores/hotkeys";
 import type { Tab } from "renderer/stores/tabs/types";
 
@@ -37,6 +38,7 @@ interface TabContentContextMenuProps {
 	onClosePane: () => void;
 	onClearTerminal?: () => void;
 	onScrollToBottom?: () => void;
+	onOpenInGhostty?: () => void;
 	getSelection?: () => string;
 	onPaste?: (text: string) => void;
 	currentTabId: string;
@@ -53,6 +55,7 @@ export function TabContentContextMenu({
 	onClosePane,
 	onClearTerminal,
 	onScrollToBottom,
+	onOpenInGhostty,
 	getSelection,
 	onPaste,
 	currentTabId,
@@ -68,7 +71,8 @@ export function TabContentContextMenu({
 	const scrollToBottomShortcut = useHotkeyText("SCROLL_TO_BOTTOM");
 	const showScrollToBottomShortcut = scrollToBottomShortcut !== "Unassigned";
 	const modKey = getModifierKeyLabel();
-	const hasTerminalActions = !!onClearTerminal || !!onScrollToBottom;
+	const hasTerminalActions =
+		!!onClearTerminal || !!onScrollToBottom || !!onOpenInGhostty;
 
 	const [hasSelection, setHasSelection] = useState(false);
 	const [hasClipboard, setHasClipboard] = useState(false);
@@ -145,6 +149,12 @@ export function TabContentContextMenu({
 								{scrollToBottomShortcut}
 							</ContextMenuShortcut>
 						)}
+					</ContextMenuItem>
+				)}
+				{onOpenInGhostty && (
+					<ContextMenuItem onSelect={onOpenInGhostty}>
+						<img src={ghosttyIcon} alt="" className="size-4" />
+						Open in Ghostty
 					</ContextMenuItem>
 				)}
 				{hasTerminalActions && <ContextMenuSeparator />}

@@ -1,3 +1,5 @@
+import { stat } from "node:fs/promises";
+import { isAbsolute } from "node:path";
 import {
 	EXTERNAL_APPS,
 	NON_EDITOR_APPS,
@@ -143,6 +145,58 @@ export const createExternalRouter = () => {
 		copyPath: publicProcedure.input(z.string()).mutation(async ({ input }) => {
 			clipboard.writeText(input);
 		}),
+
+		openInGhostty: publicProcedure
+			.input(z.object({ cwd: z.string() }))
+			.mutation(async ({ input }) => {
+				const { cwd } = input;
+
+				if (!isAbsolute(cwd)) {
+					throw new TRPCError({
+						code: "BAD_REQUEST",
+						message: `Working directory must be an absolute path: ${cwd}`,
+					});
+				}
+
+				let stats: Awaited<ReturnType<typeof stat>>;
+				try {
+					stats = await stat(cwd);
+				} catch {
+					throw new TRPCError({
+						code: "BAD_REQUEST",
+						message: `Working directory does not exist: ${cwd}`,
+					});
+				}
+				if (!stats.isDirectory()) {
+					throw new TRPCError({
+						code: "BAD_REQUEST",
+						message: `Working directory is not a directory: ${cwd}`,
+					});
+				}
+
+				try {
+					// -n opens a new Ghostty instance so the requested cwd always
+					// applies (an already-running instance would ignore --args).
+					await spawnAsync("open", [
+						"-na",
+						"Ghostty",
+						"--args",
+						`--working-directory=${cwd}`,
+					]);
+				} catch (error) {
+					const errorMessage =
+						error instanceof Error ? error.message : "Unknown error";
+					console.error(
+						"[external/openInGhostty] Failed to launch Ghostty:",
+						cwd,
+						error,
+					);
+					throw new TRPCError({
+						code: "INTERNAL_SERVER_ERROR",
+						message: errorMessage,
+					});
+				}
+			}),
 
 		openFileInEditor: publicProcedure
 			.input(

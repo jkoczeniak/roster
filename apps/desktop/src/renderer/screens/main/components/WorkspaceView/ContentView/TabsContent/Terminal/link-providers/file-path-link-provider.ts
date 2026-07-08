@@ -7,7 +7,11 @@ import {
 	type IParsedLink,
 	removeLinkSuffix,
 } from "@roster/shared/terminal-link-parsing";
-import type { ILink, ILinkProvider, Terminal } from "@xterm/xterm";
+import type {
+	TerminalInstance,
+	TerminalLink,
+	TerminalLinkProvider,
+} from "../engine";
 
 /**
  * A link provider that detects file paths in terminal output using VSCode's
@@ -23,9 +27,9 @@ import type { ILink, ILinkProvider, Terminal } from "@xterm/xterm";
  *
  * Also handles multi-line wrapped paths spanning up to 3 terminal lines.
  */
-export class FilePathLinkProvider implements ILinkProvider {
+export class FilePathLinkProvider implements TerminalLinkProvider {
 	constructor(
-		private readonly terminal: Terminal,
+		private readonly terminal: TerminalInstance,
 		private readonly onOpen: (
 			event: MouseEvent,
 			path: string,
@@ -38,7 +42,7 @@ export class FilePathLinkProvider implements ILinkProvider {
 
 	provideLinks(
 		bufferLineNumber: number,
-		callback: (links: ILink[] | undefined) => void,
+		callback: (links: TerminalLink[] | undefined) => void,
 	): void {
 		const lineIndex = bufferLineNumber - 1;
 		const line = this.terminal.buffer.active.getLine(lineIndex);
@@ -72,7 +76,7 @@ export class FilePathLinkProvider implements ILinkProvider {
 		const os = getCurrentOS();
 		const detectedLinks = detectLinks(combinedText, os);
 
-		const links: ILink[] = [];
+		const links: TerminalLink[] = [];
 
 		for (let parsedLink of detectedLinks) {
 			// Strip trailing punctuation from paths without suffixes
@@ -335,7 +339,7 @@ export class FilePathLinkProvider implements ILinkProvider {
 		bufferLineNumber: number,
 		isCurrentLineWrapped: boolean,
 		nextLineIsWrapped: boolean,
-	): ILink["range"] {
+	): TerminalLink["range"] {
 		const currentLineStart = prevLineLength;
 		const currentLineEnd = prevLineLength + lineLength;
 

@@ -1,13 +1,14 @@
 import { Tooltip, TooltipContent, TooltipTrigger } from "@roster/ui/tooltip";
 import { cn } from "@roster/ui/utils";
-import type { Terminal } from "@xterm/xterm";
 import { useCallback, useEffect, useState } from "react";
 import { HiArrowDown } from "react-icons/hi2";
 import { useHotkeyText } from "renderer/stores/hotkeys";
+import type { TerminalInstance } from "../engine";
+import { isScrolledToBottom } from "../engine";
 import { scrollToBottom } from "../utils";
 
 interface ScrollToBottomButtonProps {
-	terminal: Terminal | null;
+	terminal: TerminalInstance | null;
 }
 
 export function ScrollToBottomButton({ terminal }: ScrollToBottomButtonProps) {
@@ -17,9 +18,7 @@ export function ScrollToBottomButton({ terminal }: ScrollToBottomButtonProps) {
 
 	const checkScrollPosition = useCallback(() => {
 		if (!terminal) return;
-		const buffer = terminal.buffer.active;
-		const isAtBottom = buffer.viewportY >= buffer.baseY;
-		setIsVisible(!isAtBottom);
+		setIsVisible(!isScrolledToBottom(terminal));
 	}, [terminal]);
 
 	useEffect(() => {
@@ -27,7 +26,10 @@ export function ScrollToBottomButton({ terminal }: ScrollToBottomButtonProps) {
 
 		checkScrollPosition();
 
-		const writeDisposable = terminal.onWriteParsed(checkScrollPosition);
+		// onWriteParsed is xterm-only; ghostty's onRender covers output updates.
+		const writeDisposable = terminal.onWriteParsed
+			? terminal.onWriteParsed(checkScrollPosition)
+			: terminal.onRender(checkScrollPosition);
 		const scrollDisposable = terminal.onScroll(checkScrollPosition);
 
 		return () => {

@@ -1,8 +1,7 @@
-import type { FitAddon } from "@xterm/addon-fit";
-import type { Terminal as XTerm } from "@xterm/xterm";
 import { useCallback, useRef, useState } from "react";
 import { electronTrpcClient as trpcClient } from "renderer/lib/trpc-client";
 import { consumeSyncedPane } from "renderer/stores/tabs/syncedPaneRegistry";
+import type { FitHandle, TerminalInstance } from "../engine";
 import { coldRestoreState } from "../state";
 import type {
 	CreateOrAttachMutate,
@@ -15,8 +14,8 @@ export interface UseTerminalColdRestoreOptions {
 	paneId: string;
 	tabId: string;
 	workspaceId: string;
-	xtermRef: React.MutableRefObject<XTerm | null>;
-	fitAddonRef: React.MutableRefObject<FitAddon | null>;
+	xtermRef: React.MutableRefObject<TerminalInstance | null>;
+	fitAddonRef: React.MutableRefObject<FitHandle | null>;
 	isStreamReadyRef: React.MutableRefObject<boolean>;
 	isExitedRef: React.MutableRefObject<boolean>;
 	wasKilledByUserRef: React.MutableRefObject<boolean>;

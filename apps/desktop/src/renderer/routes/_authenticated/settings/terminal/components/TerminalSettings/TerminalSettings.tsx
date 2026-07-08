@@ -4,6 +4,7 @@ import {
 	SETTING_ITEM_ID,
 	type SettingItemId,
 } from "../../../utils/settings-search";
+import { EngineSetting } from "./components/EngineSetting";
 import { LinkBehaviorSetting } from "./components/LinkBehaviorSetting";
 import { PresetsSection } from "./components/PresetsSection";
 import { SessionsSection } from "./components/SessionsSection";
@@ -40,6 +41,10 @@ export function TerminalSettings({
 	editingPresetId,
 	onEditingPresetIdChange,
 }: TerminalSettingsProps) {
+	const showEngine = isItemVisible(
+		SETTING_ITEM_ID.TERMINAL_ENGINE,
+		visibleItems,
+	);
 	const showPresets = isItemVisible(
 		SETTING_ITEM_ID.TERMINAL_PRESETS,
 		visibleItems,
@@ -67,6 +72,7 @@ export function TerminalSettings({
 			</div>
 
 			<SectionList>
+				{showEngine && <EngineSetting key="engine" />}
 				{(showPresets || showQuickAdd) && (
 					<PresetsSection
 						key="presets"

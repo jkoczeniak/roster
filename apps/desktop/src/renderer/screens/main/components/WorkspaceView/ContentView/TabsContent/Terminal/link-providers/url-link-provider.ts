@@ -1,4 +1,4 @@
-import type { Terminal } from "@xterm/xterm";
+import type { TerminalInstance } from "../engine";
 import {
 	type ContextLine,
 	type LinkMatch,
@@ -311,7 +311,7 @@ export class UrlLinkProvider extends MultiLineLinkProvider {
 	}
 
 	constructor(
-		terminal: Terminal,
+		terminal: TerminalInstance,
 		private readonly onOpen: (event: MouseEvent, uri: string) => void,
 	) {
 		super(terminal);

@@ -32,6 +32,7 @@ export const SETTING_ITEM_ID = {
 	BEHAVIOR_OPEN_LINKS_IN_APP: "behavior-open-links-in-app",
 	BEHAVIOR_AGENT_AUTONOMY: "behavior-agent-autonomy",
 
+	TERMINAL_ENGINE: "terminal-engine",
 	TERMINAL_PRESETS: "terminal-presets",
 	TERMINAL_QUICK_ADD: "terminal-quick-add",
 	TERMINAL_SESSIONS: "terminal-sessions",
@@ -532,6 +533,23 @@ export const SETTINGS_ITEMS: SettingsItem[] = [
 			"codex",
 			"ai",
 			"assistant",
+		],
+	},
+	{
+		id: SETTING_ITEM_ID.TERMINAL_ENGINE,
+		section: "terminal",
+		title: "Engine",
+		description: "Terminal emulator engine for new terminals",
+		keywords: [
+			"terminal",
+			"engine",
+			"ghostty",
+			"xterm",
+			"renderer",
+			"emulator",
+			"wasm",
+			"canvas",
+			"webgl",
 		],
 	},
 	{

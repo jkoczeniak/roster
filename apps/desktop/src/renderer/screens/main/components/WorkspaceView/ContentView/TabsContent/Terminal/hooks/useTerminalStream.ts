@@ -1,13 +1,13 @@
 import { toast } from "@roster/ui/sonner";
-import type { Terminal as XTerm } from "@xterm/xterm";
 import { useCallback, useRef } from "react";
 import { useTabsStore } from "renderer/stores/tabs/store";
 import { DEBUG_TERMINAL } from "../config";
+import type { TerminalInstance } from "../engine";
 import type { TerminalExitReason, TerminalStreamEvent } from "../types";
 
 export interface UseTerminalStreamOptions {
 	paneId: string;
-	xtermRef: React.MutableRefObject<XTerm | null>;
+	xtermRef: React.MutableRefObject<TerminalInstance | null>;
 	isStreamReadyRef: React.MutableRefObject<boolean>;
 	isExitedRef: React.MutableRefObject<boolean>;
 	wasKilledByUserRef: React.MutableRefObject<boolean>;
@@ -21,12 +21,12 @@ export interface UseTerminalStreamOptions {
 export interface UseTerminalStreamReturn {
 	handleTerminalExit: (
 		exitCode: number,
-		xterm: XTerm,
+		xterm: TerminalInstance,
 		reason?: TerminalExitReason,
 	) => void;
 	handleStreamError: (
 		event: Extract<TerminalStreamEvent, { type: "error" }>,
-		xterm: XTerm,
+		xterm: TerminalInstance,
 	) => void;
 	handleStreamData: (event: TerminalStreamEvent) => void;
 }
@@ -53,7 +53,11 @@ export function useTerminalStream({
 	updateCwdRef.current = updateCwdFromData;
 
 	const handleTerminalExit = useCallback(
-		(exitCode: number, xterm: XTerm, reason?: TerminalExitReason) => {
+		(
+			exitCode: number,
+			xterm: TerminalInstance,
+			reason?: TerminalExitReason,
+		) => {
 			isExitedRef.current = true;
 			isStreamReadyRef.current = false;
 
@@ -89,7 +93,10 @@ export function useTerminalStream({
 	);
 
 	const handleStreamError = useCallback(
-		(event: Extract<TerminalStreamEvent, { type: "error" }>, xterm: XTerm) => {
+		(
+			event: Extract<TerminalStreamEvent, { type: "error" }>,
+			xterm: TerminalInstance,
+		) => {
 			const message = event.code
 				? `${event.code}: ${event.error}`
 				: event.error;

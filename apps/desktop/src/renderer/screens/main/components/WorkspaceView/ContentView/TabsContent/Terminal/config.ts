@@ -1,7 +1,7 @@
-import type { ITerminalOptions } from "@xterm/xterm";
+import type { XtermTerminalOptions } from "./engine";
 
 // Use user's theme
-export const TERMINAL_THEME: ITerminalOptions["theme"] = undefined;
+export const TERMINAL_THEME: XtermTerminalOptions["theme"] = undefined;
 
 // Fallback timeout for first render (in case xterm doesn't emit onRender)
 export const FIRST_RENDER_RESTORE_FALLBACK_MS = 250;
@@ -33,7 +33,7 @@ export const DEFAULT_TERMINAL_FONT_FAMILY = [
 
 export const DEFAULT_TERMINAL_FONT_SIZE = 14;
 
-export const TERMINAL_OPTIONS: ITerminalOptions = {
+export const TERMINAL_OPTIONS: XtermTerminalOptions = {
 	cursorBlink: true,
 	fontSize: DEFAULT_TERMINAL_FONT_SIZE,
 	fontFamily: DEFAULT_TERMINAL_FONT_FAMILY,

@@ -1,7 +1,6 @@
-import type { FitAddon } from "@xterm/addon-fit";
-import type { Terminal as XTerm } from "@xterm/xterm";
 import { useCallback, useRef } from "react";
 import { DEBUG_TERMINAL } from "../config";
+import type { FitHandle, TerminalInstance } from "../engine";
 import type {
 	CreateOrAttachResult,
 	TerminalExitReason,
@@ -11,8 +10,8 @@ import { scrollToBottom } from "../utils";
 
 export interface UseTerminalRestoreOptions {
 	paneId: string;
-	xtermRef: React.MutableRefObject<XTerm | null>;
-	fitAddonRef: React.MutableRefObject<FitAddon | null>;
+	xtermRef: React.MutableRefObject<TerminalInstance | null>;
+	fitAddonRef: React.MutableRefObject<FitHandle | null>;
 	pendingEventsRef: React.MutableRefObject<TerminalStreamEvent[]>;
 	isAlternateScreenRef: React.MutableRefObject<boolean>;
 	isBracketedPasteRef: React.MutableRefObject<boolean>;
@@ -21,12 +20,12 @@ export interface UseTerminalRestoreOptions {
 	updateModesFromData: (data: string) => void;
 	onExitEvent: (
 		exitCode: number,
-		xterm: XTerm,
+		xterm: TerminalInstance,
 		reason?: TerminalExitReason,
 	) => void;
 	onErrorEvent: (
 		event: Extract<TerminalStreamEvent, { type: "error" }>,
-		xterm: XTerm,
+		xterm: TerminalInstance,
 	) => void;
 	onDisconnectEvent: (reason: string | undefined) => void;
 }

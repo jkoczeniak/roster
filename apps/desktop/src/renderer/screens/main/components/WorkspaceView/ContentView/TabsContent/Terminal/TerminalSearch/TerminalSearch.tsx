@@ -1,16 +1,20 @@
 import { Tooltip, TooltipContent, TooltipTrigger } from "@roster/ui/tooltip";
-import type { ISearchOptions, SearchAddon } from "@xterm/addon-search";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { HiChevronDown, HiChevronUp, HiMiniXMark } from "react-icons/hi2";
 import { PiTextAa } from "react-icons/pi";
+import type {
+	SearchHandle,
+	SearchResultsSummary,
+	TerminalSearchOptions,
+} from "../engine";
 
 interface TerminalSearchProps {
-	searchAddon: SearchAddon | null;
+	search: SearchHandle | null;
 	isOpen: boolean;
 	onClose: () => void;
 }
 
-const SEARCH_DECORATIONS: ISearchOptions["decorations"] = {
+const SEARCH_DECORATIONS: TerminalSearchOptions["decorations"] = {
 	matchBackground: "#515c6a",
 	matchBorder: "#74879f",
 	matchOverviewRuler: "#d186167e",
@@ -20,16 +24,17 @@ const SEARCH_DECORATIONS: ISearchOptions["decorations"] = {
 };
 
 export function TerminalSearch({
-	searchAddon,
+	search,
 	isOpen,
 	onClose,
 }: TerminalSearchProps) {
 	const inputRef = useRef<HTMLInputElement>(null);
 	const [query, setQuery] = useState("");
 	const [matchCount, setMatchCount] = useState<number | null>(null);
+	const [results, setResults] = useState<SearchResultsSummary | null>(null);
 	const [caseSensitive, setCaseSensitive] = useState(false);
 
-	const searchOptions: ISearchOptions = useMemo(
+	const searchOptions: TerminalSearchOptions = useMemo(
 		() => ({
 			caseSensitive,
 			regex: false,
@@ -48,37 +53,47 @@ export function TerminalSearch({
 
 	// Clear search highlighting when closing
 	useEffect(() => {
-		if (!isOpen && searchAddon) {
-			searchAddon.clearDecorations();
+		if (!isOpen && search) {
+			search.clearDecorations();
+			setResults(null);
 		}
-	}, [isOpen, searchAddon]);
+	}, [isOpen, search]);
+
+	// Track match counts (exact counts on ghostty; xterm reports them when
+	// decorations are enabled).
+	useEffect(() => {
+		if (!search) return;
+		const disposable = search.onDidChangeResults((event) => {
+			setResults(event.resultCount > 0 ? event : null);
+		});
+		return () => disposable.dispose();
+	}, [search]);
 
 	const handleSearch = useCallback(
 		(direction: "next" | "previous") => {
-			if (!searchAddon || !query) return;
+			if (!search || !query) return;
 
 			const found =
 				direction === "next"
-					? searchAddon.findNext(query, searchOptions)
-					: searchAddon.findPrevious(query, searchOptions);
+					? search.findNext(query, searchOptions)
+					: search.findPrevious(query, searchOptions);
 
-			// xterm search addon doesn't provide match count directly
-			// We just indicate if there are matches or not
 			setMatchCount(found ? 1 : 0);
 		},
-		[searchAddon, query, searchOptions],
+		[search, query, searchOptions],
 	);
 
 	const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 		const newQuery = e.target.value;
 		setQuery(newQuery);
 
-		if (searchAddon && newQuery) {
-			const found = searchAddon.findNext(newQuery, searchOptions);
+		if (search && newQuery) {
+			const found = search.findNext(newQuery, searchOptions);
 			setMatchCount(found ? 1 : 0);
 		} else {
 			setMatchCount(null);
-			searchAddon?.clearDecorations();
+			setResults(null);
+			search?.clearDecorations();
 		}
 	};
 
@@ -88,11 +103,11 @@ export function TerminalSearch({
 
 	// Re-run search when case sensitivity changes
 	useEffect(() => {
-		if (searchAddon && query) {
-			const found = searchAddon.findNext(query, searchOptions);
+		if (search && query) {
+			const found = search.findNext(query, searchOptions);
 			setMatchCount(found ? 1 : 0);
 		}
-	}, [searchAddon, query, searchOptions]);
+	}, [search, query, searchOptions]);
 
 	const handleKeyDown = (e: React.KeyboardEvent) => {
 		if (e.key === "Escape") {
@@ -111,6 +126,7 @@ export function TerminalSearch({
 	const handleClose = () => {
 		setQuery("");
 		setMatchCount(null);
+		setResults(null);
 		onClose();
 	};
 
@@ -130,6 +146,13 @@ export function TerminalSearch({
 			{matchCount === 0 && query && (
 				<span className="text-xs text-muted-foreground whitespace-nowrap px-1">
 					No results
+				</span>
+			)}
+			{matchCount !== 0 && query && results && (
+				<span className="text-xs text-muted-foreground whitespace-nowrap px-1">
+					{results.resultIndex >= 0
+						? `${results.resultIndex + 1} of ${results.resultCount}`
+						: `${results.resultCount}`}
 				</span>
 			)}
 			<div className="flex items-center shrink-0">

@@ -1,12 +1,12 @@
-import type { Terminal as XTerm } from "@xterm/xterm";
 import type { Dispatch, MutableRefObject, SetStateAction } from "react";
 import { useEffect, useState } from "react";
 import { useAppHotkey } from "renderer/stores/hotkeys";
+import type { TerminalInstance } from "../engine";
 import { scrollToBottom } from "../utils";
 
 export interface UseTerminalHotkeysOptions {
 	isFocused: boolean;
-	xtermRef: MutableRefObject<XTerm | null>;
+	xtermRef: MutableRefObject<TerminalInstance | null>;
 }
 
 export interface UseTerminalHotkeysReturn {

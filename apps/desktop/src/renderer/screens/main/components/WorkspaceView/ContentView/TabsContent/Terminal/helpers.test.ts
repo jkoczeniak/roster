@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, mock } from "bun:test";
-import type { Terminal as XTerm } from "@xterm/xterm";
+import type { TerminalInstance } from "./engine";
 
 // Mock localStorage for Node.js test environment
 const mockStorage = new Map<string, string>();
@@ -138,7 +138,7 @@ describe("setupKeyboardHandler", () => {
 		};
 
 		const onWrite = mock(() => {});
-		setupKeyboardHandler(xterm as unknown as XTerm, { onWrite });
+		setupKeyboardHandler(xterm as unknown as TerminalInstance, { onWrite });
 
 		captured.handler?.({
 			type: "keydown",
@@ -177,7 +177,7 @@ describe("setupKeyboardHandler", () => {
 		};
 
 		const onWrite = mock(() => {});
-		setupKeyboardHandler(xterm as unknown as XTerm, { onWrite });
+		setupKeyboardHandler(xterm as unknown as TerminalInstance, { onWrite });
 
 		captured.handler?.({
 			type: "keydown",
@@ -221,7 +221,7 @@ describe("setupCopyHandler", () => {
 		const xterm = {
 			element,
 			getSelection: mock(() => selection),
-		} as unknown as XTerm;
+		} as unknown as TerminalInstance;
 		return { xterm, listeners };
 	}
 
@@ -326,7 +326,7 @@ describe("setupPasteHandler", () => {
 		const xterm = {
 			textarea,
 			paste,
-		} as unknown as XTerm;
+		} as unknown as TerminalInstance;
 		return { xterm, listeners, paste };
 	}
 

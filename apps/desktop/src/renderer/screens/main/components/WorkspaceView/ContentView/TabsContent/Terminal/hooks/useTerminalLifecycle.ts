@@ -1,15 +1,20 @@
-import type { FitAddon } from "@xterm/addon-fit";
-import { SearchAddon } from "@xterm/addon-search";
-import type { IDisposable, ITheme, Terminal as XTerm } from "@xterm/xterm";
 import type { MutableRefObject, RefObject } from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { electronTrpcClient as trpcClient } from "renderer/lib/trpc-client";
 import { useTabsStore } from "renderer/stores/tabs/store";
-import { killTerminalForPane } from "renderer/stores/tabs/utils/terminal-cleanup";
 import { consumeSyncedPane } from "renderer/stores/tabs/syncedPaneRegistry";
+import { killTerminalForPane } from "renderer/stores/tabs/utils/terminal-cleanup";
 import { scheduleTerminalAttach } from "../attach-scheduler";
 import { sanitizeForTitle } from "../commandBuffer";
 import { DEBUG_TERMINAL, FIRST_RENDER_RESTORE_FALLBACK_MS } from "../config";
+import type {
+	FitHandle,
+	SearchHandle,
+	TerminalDisposable,
+	TerminalInstance,
+	TerminalTheme,
+} from "../engine";
+import { isScrolledToBottom } from "../engine";
 import {
 	createTerminalInstance,
 	setupClickToMoveCursor,
@@ -84,9 +89,9 @@ export interface UseTerminalLifecycleOptions {
 	tabIdRef: MutableRefObject<string>;
 	workspaceId: string;
 	terminalRef: RefObject<HTMLDivElement | null>;
-	xtermRef: MutableRefObject<XTerm | null>;
-	fitAddonRef: MutableRefObject<FitAddon | null>;
-	searchAddonRef: MutableRefObject<SearchAddon | null>;
+	xtermRef: MutableRefObject<TerminalInstance | null>;
+	fitAddonRef: MutableRefObject<FitHandle | null>;
+	searchRef: MutableRefObject<SearchHandle | null>;
 	rendererRef: MutableRefObject<TerminalRendererRef | null>;
 	isExitedRef: MutableRefObject<boolean>;
 	wasKilledByUserRef: MutableRefObject<boolean>;
@@ -94,7 +99,7 @@ export interface UseTerminalLifecycleOptions {
 	isFocusedRef: MutableRefObject<boolean>;
 	isRestoredModeRef: MutableRefObject<boolean>;
 	connectionErrorRef: MutableRefObject<string | null>;
-	initialThemeRef: MutableRefObject<ITheme | null>;
+	initialThemeRef: MutableRefObject<TerminalTheme | null>;
 	workspaceCwdRef: MutableRefObject<string | null>;
 	handleFileLinkClickRef: MutableRefObject<
 		(path: string, line?: number, column?: number) => void
@@ -137,7 +142,7 @@ export interface UseTerminalLifecycleOptions {
 }
 
 export interface UseTerminalLifecycleReturn {
-	xtermInstance: XTerm | null;
+	xtermInstance: TerminalInstance | null;
 	restartTerminal: () => void;
 }
 
@@ -148,7 +153,7 @@ export function useTerminalLifecycle({
 	terminalRef,
 	xtermRef,
 	fitAddonRef,
-	searchAddonRef,
+	searchRef,
 	rendererRef,
 	isExitedRef,
 	wasKilledByUserRef,
@@ -191,7 +196,9 @@ export function useTerminalLifecycle({
 	registerPasteCallbackRef,
 	unregisterPasteCallbackRef,
 }: UseTerminalLifecycleOptions): UseTerminalLifecycleReturn {
-	const [xtermInstance, setXtermInstance] = useState<XTerm | null>(null);
+	const [xtermInstance, setXtermInstance] = useState<TerminalInstance | null>(
+		null,
+	);
 	const restartTerminalRef = useRef<() => void>(() => {});
 	const restartTerminal = useCallback(() => restartTerminalRef.current(), []);
 
@@ -218,10 +225,11 @@ export function useTerminalLifecycle({
 		let cancelAttachWait: (() => void) | null = null;
 
 		const {
-			xterm,
+			terminal: xterm,
 			fitAddon,
+			search,
 			renderer,
-			cleanup: cleanupQuerySuppression,
+			cleanup: cleanupTerminal,
 		} = createTerminalInstance(container, {
 			cwd: workspaceCwdRef.current ?? undefined,
 			initialTheme: initialThemeRef.current,
@@ -250,14 +258,10 @@ export function useTerminalLifecycle({
 			xterm.focus();
 		}
 
-		if (!isUnmounted) {
-			const searchAddon = new SearchAddon();
-			xterm.loadAddon(searchAddon);
-			searchAddonRef.current = searchAddon;
-		}
+		searchRef.current = search;
 
 		// Wait for first render before applying restoration
-		let renderDisposable: IDisposable | null = null;
+		let renderDisposable: TerminalDisposable | null = null;
 		let firstRenderFallback: ReturnType<typeof setTimeout> | null = null;
 
 		renderDisposable = xterm.onRender(() => {
@@ -310,8 +314,8 @@ export function useTerminalLifecycle({
 						// Auto-resume Claude Code session if detected from meta.json
 						if (result.claudeSessionId) {
 							const sessionId = result.claudeSessionId;
-								// Synced-from-peer panes stage the command without pressing Enter.
-								const stagedNewline = consumeSyncedPane(paneId) ? "" : "\n";
+							// Synced-from-peer panes stage the command without pressing Enter.
+							const stagedNewline = consumeSyncedPane(paneId) ? "" : "\n";
 							setTimeout(() => {
 								trpcClient.terminal.write
 									.mutate({
@@ -488,8 +492,8 @@ export function useTerminalLifecycle({
 								//   - It's a new shell (isNew) — avoids typing into warm-attached sessions
 								if (result.isNew && result.claudeSessionId) {
 									const sessionId = result.claudeSessionId;
-								// Synced-from-peer panes stage the command without pressing Enter.
-								const stagedNewline = consumeSyncedPane(paneId) ? "" : "\n";
+									// Synced-from-peer panes stage the command without pressing Enter.
+									const stagedNewline = consumeSyncedPane(paneId) ? "" : "\n";
 									setTimeout(() => {
 										trpcClient.terminal.write
 											.mutate({
@@ -623,14 +627,14 @@ export function useTerminalLifecycle({
 
 			const prevCols = xterm.cols;
 			const prevRows = xterm.rows;
-			const wasAtBottom =
-				xterm.buffer.active.viewportY >= xterm.buffer.active.baseY;
+			const wasAtBottom = isScrolledToBottom(xterm);
 
 			// Rebuild stale WebGL glyph cache after occlusion and force a paint pass.
 			rendererRef.current?.current.clearTextureAtlas?.();
 
 			fitAddon.fit();
-			xterm.refresh(0, Math.max(0, xterm.rows - 1));
+			// ghostty repaints itself; refresh() is an xterm-only surface.
+			xterm.refresh?.(0, Math.max(0, xterm.rows - 1));
 
 			if (forceResize || xterm.cols !== prevCols || xterm.rows !== prevRows) {
 				resizeRef.current({ paneId, cols: xterm.cols, rows: xterm.rows });
@@ -712,7 +716,7 @@ export function useTerminalLifecycle({
 			cleanupResize();
 			cleanupPaste();
 			cleanupCopy();
-			cleanupQuerySuppression();
+			cleanupTerminal();
 			unregisterClearCallbackRef.current(paneId);
 			unregisterScrollToBottomCallbackRef.current(paneId);
 			unregisterGetSelectionCallbackRef.current(paneId);
@@ -741,7 +745,7 @@ export function useTerminalLifecycle({
 			setTimeout(() => xterm.dispose(), 0);
 
 			xtermRef.current = null;
-			searchAddonRef.current = null;
+			searchRef.current = null;
 			rendererRef.current = null;
 			setXtermInstance(null);
 		};

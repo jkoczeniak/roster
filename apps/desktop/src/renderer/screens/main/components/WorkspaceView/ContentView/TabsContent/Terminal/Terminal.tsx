@@ -1,6 +1,3 @@
-import type { FitAddon } from "@xterm/addon-fit";
-import type { SearchAddon } from "@xterm/addon-search";
-import type { Terminal as XTerm } from "@xterm/xterm";
 import "@xterm/xterm/css/xterm.css";
 import { useEffect, useRef, useState } from "react";
 import { electronTrpc } from "renderer/lib/electron-trpc";
@@ -12,6 +9,8 @@ import {
 	DEFAULT_TERMINAL_FONT_FAMILY,
 	DEFAULT_TERMINAL_FONT_SIZE,
 } from "./config";
+import type { FitHandle, SearchHandle, TerminalInstance } from "./engine";
+import { setTerminalTheme } from "./engine";
 import { getDefaultTerminalBg, type TerminalRendererRef } from "./helpers";
 import {
 	useFileLinkClick,
@@ -68,9 +67,9 @@ export const Terminal = ({ paneId, tabId, workspaceId }: TerminalProps) => {
 		}
 	};
 	const terminalRef = useRef<HTMLDivElement>(null);
-	const xtermRef = useRef<XTerm | null>(null);
-	const fitAddonRef = useRef<FitAddon | null>(null);
-	const searchAddonRef = useRef<SearchAddon | null>(null);
+	const xtermRef = useRef<TerminalInstance | null>(null);
+	const fitAddonRef = useRef<FitHandle | null>(null);
+	const searchRef = useRef<SearchHandle | null>(null);
 	const rendererRef = useRef<TerminalRendererRef | null>(null);
 	const isExitedRef = useRef(false);
 	const [exitStatus, setExitStatus] = useState<"killed" | "exited" | null>(
@@ -149,12 +148,16 @@ export const Terminal = ({ paneId, tabId, workspaceId }: TerminalProps) => {
 	// Refs for stream event handlers (populated after useTerminalStream)
 	// These allow flushPendingEvents to call the handlers via refs
 	const handleTerminalExitRef = useRef<
-		(exitCode: number, xterm: XTerm, reason?: TerminalExitReason) => void
+		(
+			exitCode: number,
+			xterm: TerminalInstance,
+			reason?: TerminalExitReason,
+		) => void
 	>(() => {});
 	const handleStreamErrorRef = useRef<
 		(
 			event: Extract<TerminalStreamEvent, { type: "error" }>,
-			xterm: XTerm,
+			xterm: TerminalInstance,
 		) => void
 	>(() => {});
 
@@ -325,7 +328,7 @@ export const Terminal = ({ paneId, tabId, workspaceId }: TerminalProps) => {
 		terminalRef,
 		xtermRef,
 		fitAddonRef,
-		searchAddonRef,
+		searchRef,
 		rendererRef,
 		isExitedRef,
 		wasKilledByUserRef,
@@ -372,7 +375,7 @@ export const Terminal = ({ paneId, tabId, workspaceId }: TerminalProps) => {
 	useEffect(() => {
 		const xterm = xtermRef.current;
 		if (!xterm || !terminalTheme) return;
-		xterm.options.theme = terminalTheme;
+		setTerminalTheme(xterm, terminalTheme);
 	}, [terminalTheme]);
 
 	const { data: fontSettings } = electronTrpc.settings.getFontSettings.useQuery(
@@ -428,7 +431,7 @@ export const Terminal = ({ paneId, tabId, workspaceId }: TerminalProps) => {
 			onDrop={handleDrop}
 		>
 			<TerminalSearch
-				searchAddon={searchAddonRef.current}
+				search={searchRef.current}
 				isOpen={isSearchOpen}
 				onClose={() => setIsSearchOpen(false)}
 			/>

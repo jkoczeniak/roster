@@ -1,4 +1,4 @@
-import type { ITheme } from "@xterm/xterm";
+import type { TerminalTheme as ITheme } from "renderer/screens/main/components/WorkspaceView/ContentView/TabsContent/Terminal/engine";
 import {
 	builtInThemes,
 	DEFAULT_THEME_ID,
