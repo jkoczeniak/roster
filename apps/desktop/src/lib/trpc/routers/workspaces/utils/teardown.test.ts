@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, test } from "bun:test";
+import { afterEach, beforeEach, describe, expect, mock, test } from "bun:test";
 import {
 	existsSync,
 	mkdirSync,
@@ -9,6 +9,17 @@ import {
 import { homedir, tmpdir } from "node:os";
 import { join } from "node:path";
 import { PROJECTS_DIR_NAME, ROSTER_DIR_NAME } from "shared/constants";
+
+// Teardown commands run only for trusted repo roots. These tests exercise the
+// execution path, so the root is trusted; a dedicated test below covers the
+// untrusted-skip behavior.
+let repoTrusted = true;
+mock.module("main/lib/workspace-trust", () => ({
+	isTrusted: () => repoTrusted,
+	trust: () => {},
+	listTrusted: () => [],
+}));
+
 import { runTeardown } from "./teardown";
 
 const TEST_DIR = join(tmpdir(), `roster-test-teardown-${process.pid}`);
@@ -245,5 +256,25 @@ describe("runTeardown", () => {
 		expect(result.success).toBe(true);
 		expect(existsSync(mainMarker)).toBe(true);
 		expect(readFileSync(mainMarker, "utf-8").trim()).toBe("main");
+	});
+
+	test("does NOT run teardown commands for an untrusted repo root", async () => {
+		repoTrusted = false;
+		const marker = join(WORKTREE, "should-not-exist.txt");
+		writeFileSync(
+			join(MAIN_REPO, ".roster", "config.json"),
+			JSON.stringify({ teardown: [`echo "x" > "${marker}"`] }),
+		);
+
+		const result = await runTeardown({
+			mainRepoPath: MAIN_REPO,
+			worktreePath: WORKTREE,
+			workspaceName: "test-workspace",
+		});
+
+		// Skipped silently (success) but the command must not have executed.
+		expect(result.success).toBe(true);
+		expect(existsSync(marker)).toBe(false);
+		repoTrusted = true;
 	});
 });

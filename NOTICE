@@ -1,18 +1,38 @@
-ADE
+Roster
 
-This product is a modified derivative of Superset (Copyright Superset, Inc.),
-distributed under the Elastic License 2.0. The full license terms are in
-LICENSE.md.
+This product is a modified derivative of ADE
+(https://github.com/per-simmons/damon-ade), which is itself a modified
+derivative of Superset (Copyright Superset, Inc.,
+https://github.com/superset-sh/superset). It is distributed under the
+Elastic License 2.0. The full license terms are in LICENSE.md.
 
-Modifications made in this derivative include, but are not limited to:
+Modifications made in this derivative (Roster), relative to ADE, include,
+but are not limited to:
 
-  - Renamed the product to ADE.
-  - Reworked the application around an agent-fleet model, with per-agent
-    repositories, per-agent runtimes, and Hermes-style persistent agent memory.
-  - Added a model picker for selecting the model backing each agent.
-  - Removed the hosted cloud and organization/multi-tenant features.
+  - Renamed the product to Roster.
+  - Removed the hosted cloud, authentication, Electric SQL sync, and
+    OpenRouter/bring-your-own-key integrations.
+  - Reduced the agent runtimes to Claude Code and Codex only, and replaced
+    the provider model bar with a per-runtime model-variant picker.
+  - Introduced guarded-by-default agent permission modes (native CLI
+    approvals/sandbox), with an explicit opt-in for full autonomy.
+  - Replaced the in-app terminal engine with ghostty-web (Ghostty's
+    terminal core, WASM), with the xterm.js engine retained as a fallback,
+    and added an "Open in Ghostty" external-launch action.
+  - Hardened the Hermes-style persistent agent memory: agent-authored
+    skills are loaded back into sessions, the write-back protocol is
+    imported on Claude Code, the user profile is shared across agents, and
+    the reflection stop-hook gained trivial-session skipping, a
+    concurrency lock, and memory size-budget enforcement.
+  - Security hardening: authenticated the local hook/notification server,
+    removed all telemetry (PostHog/Sentry), tightened the Content Security
+    Policy and Electron webPreferences, gated the CDP remote-debugging
+    port, validated git clone URLs, and added a workspace-trust gate for
+    repository-supplied setup commands.
 
+ADE's own modifications relative to Superset are recorded in that project.
 Use of this software remains subject to the Elastic License 2.0.
 
-Third-party components bundled with or adapted by this software are attributed
-in THIRD-PARTY-NOTICES.md.
+Third-party components bundled with or adapted by this software are
+attributed in THIRD-PARTY-NOTICES.md. The agent memory architecture is
+adapted from NousResearch/hermes-agent (MIT).

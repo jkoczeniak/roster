@@ -1,9 +1,11 @@
 import { spawn } from "node:child_process";
+import { resolve as resolvePath } from "node:path";
 import {
 	getCommandShellArgs,
 	getShellEnv,
 } from "main/lib/agent-setup/shell-wrappers";
 import { buildSafeEnv, sanitizeEnv } from "main/lib/terminal/env";
+import { isTrusted } from "main/lib/workspace-trust";
 import { removeWorktree } from "./git";
 import { loadSetupConfig } from "./setup";
 
@@ -31,6 +33,17 @@ export async function runTeardown({
 	if (!config?.teardown || config.teardown.length === 0) {
 		console.log(
 			`[teardown] No teardown commands found for "${workspaceName}" (config: ${config ? "found, no teardown field" : "not found"}, mainRepoPath: ${mainRepoPath})`,
+		);
+		return { success: true };
+	}
+
+	// Repo-supplied teardown commands run in a shell, so they are subject to the
+	// same trust gate as setup commands: only execute for a folder the user has
+	// explicitly trusted (see workspace-trust + resolveSetupCommands). An
+	// untrusted repo must not run arbitrary shell on workspace deletion.
+	if (!isTrusted(resolvePath(mainRepoPath))) {
+		console.log(
+			`[teardown] Skipping teardown for "${workspaceName}" — repo root is not trusted (${mainRepoPath}).`,
 		);
 		return { success: true };
 	}
