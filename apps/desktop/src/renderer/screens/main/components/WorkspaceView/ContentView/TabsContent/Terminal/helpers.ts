@@ -375,7 +375,7 @@ export function setupCopyHandler(xterm: XTerm): () => void {
  * which properly handles bracketed paste mode (wrapping pasted content with
  * \x1b[200~ and \x1b[201~ escape sequences when the shell has enabled it).
  *
- * This is required for TUI applications like opencode, vim, etc. that expect
+ * This is required for TUI applications like claude, vim, etc. that expect
  * bracketed paste mode to distinguish between typed and pasted content.
  *
  * Returns a cleanup function to remove the handler.

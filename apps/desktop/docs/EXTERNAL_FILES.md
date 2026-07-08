@@ -19,7 +19,6 @@ This separation prevents multiple instances from interfering with each other.
 |------|---------|
 | `claude` | Wrapper for Claude Code CLI that injects notification hooks |
 | `codex` | Wrapper for Codex CLI that injects notification hooks |
-| `opencode` | Wrapper for OpenCode CLI that sets `OPENCODE_CONFIG_DIR` |
 
 These wrappers are added to `PATH` via shell integration, allowing them to intercept
 agent commands and inject Superset-specific configuration.
@@ -30,7 +29,6 @@ agent commands and inject Superset-specific configuration.
 |------|---------|
 | `notify.sh` | Shell script called by agents when they complete or need input |
 | `claude-settings.json` | Claude Code settings file with hook configuration |
-| `opencode/plugin/superset-notify.js` | OpenCode plugin for lifecycle events |
 
 ### `zsh/` and `bash/` - Shell Integration
 
@@ -46,14 +44,14 @@ These cause dev/prod conflicts when both environments are running.
 
 ### Known Issues with Global Files
 
-Previously, the OpenCode plugin was written to `~/.config/opencode/plugin/superset-notify.js`.
+Previously, an agent-runtime plugin was written under `~/.config/`.
 This caused severe issues:
 1. Dev would overwrite prod's plugin with incompatible protocol
 2. Prod terminals would send events that dev's server couldn't handle
 3. Users received spam notifications for every agent message
 
-**Solution**: The global plugin is no longer written. On startup, any stale global plugin
-with our marker is deleted to prevent conflicts from older versions.
+**Solution**: No global plugin files are written anymore; everything stays under
+the environment-specific home directory.
 
 ## Shell RC File Modifications
 
@@ -95,5 +93,4 @@ If you suspect dev/prod cross-talk:
 
 1. Check logs for "Environment mismatch" warnings
 2. Verify `SUPERSET_ENV` and `SUPERSET_PORT` are set correctly in terminal
-3. Delete stale global files: `rm -rf ~/.config/opencode/plugin/superset-notify.js`
-4. Restart both dev and prod apps to regenerate hooks
+3. Restart both dev and prod apps to regenerate hooks

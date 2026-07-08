@@ -47,15 +47,13 @@ describe("shell-wrappers", () => {
 		expect(zshrc).toContain("_roster_prepend_bin()");
 		expect(zshrc).toContain(`claude() { "${TEST_BIN_DIR}/claude" "$@"; }`);
 		expect(zshrc).toContain(`codex() { "${TEST_BIN_DIR}/codex" "$@"; }`);
-		expect(zshrc).toContain(`opencode() { "${TEST_BIN_DIR}/opencode" "$@"; }`);
-		expect(zshrc).toContain(`copilot() { "${TEST_BIN_DIR}/copilot" "$@"; }`);
 		expect(zshrc).toContain("rehash 2>/dev/null || true");
 
 		expect(zlogin).toContain("if [[ -o interactive ]]; then");
 		expect(zlogin).toContain('source "$_roster_home/.zlogin"');
 		expect(zlogin).toContain("_roster_prepend_bin()");
 		expect(zlogin).toContain(`claude() { "${TEST_BIN_DIR}/claude" "$@"; }`);
-		expect(zlogin).toContain(`copilot() { "${TEST_BIN_DIR}/copilot" "$@"; }`);
+		expect(zlogin).toContain(`codex() { "${TEST_BIN_DIR}/codex" "$@"; }`);
 		expect(zlogin).toContain("rehash 2>/dev/null || true");
 	});
 
@@ -66,8 +64,6 @@ describe("shell-wrappers", () => {
 		expect(rcfile).toContain("_roster_prepend_bin()");
 		expect(rcfile).toContain(`claude() { "${TEST_BIN_DIR}/claude" "$@"; }`);
 		expect(rcfile).toContain(`codex() { "${TEST_BIN_DIR}/codex" "$@"; }`);
-		expect(rcfile).toContain(`opencode() { "${TEST_BIN_DIR}/opencode" "$@"; }`);
-		expect(rcfile).toContain(`copilot() { "${TEST_BIN_DIR}/copilot" "$@"; }`);
 		expect(rcfile).toContain("hash -r 2>/dev/null || true");
 	});
 

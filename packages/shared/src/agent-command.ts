@@ -1,53 +1,127 @@
-export const AGENT_TYPES = [
-	"claude",
-	"codex",
-	"gemini",
-	"opencode",
-	"copilot",
-	"cursor-agent",
-	"kimi",
-	"minimax",
-	"glm",
-] as const;
-
+export const AGENT_TYPES = ["claude", "codex"] as const;
 export type AgentType = (typeof AGENT_TYPES)[number];
 
 export const AGENT_LABELS: Record<AgentType, string> = {
 	claude: "Claude",
 	codex: "Codex",
-	gemini: "Gemini",
-	opencode: "OpenCode",
-	copilot: "Copilot",
-	"cursor-agent": "Cursor Agent",
-	kimi: "Kimi K2.7",
-	minimax: "MiniMax M3",
-	glm: "GLM 5.2",
 };
 
+/**
+ * Permission posture for a session. "guarded" keeps the CLI's native
+ * approval prompts and sandbox (recommended default). "auto" grants the
+ * CLI full autonomy — only for repos you fully trust.
+ */
+export const PERMISSION_MODES = ["guarded", "auto"] as const;
+export type PermissionMode = (typeof PERMISSION_MODES)[number];
+export const DEFAULT_PERMISSION_MODE: PermissionMode = "guarded";
+
+export interface BuildRuntimeCommandOptions {
+	runtime: AgentType;
+	mode?: PermissionMode;
+	/** --model value passed to the CLI; null/undefined = CLI's configured default */
+	model?: string | null;
+	/** Codex only */
+	reasoningEffort?: "medium" | "high";
+}
+
+export function buildRuntimeCommand({
+	runtime,
+	mode = DEFAULT_PERMISSION_MODE,
+	model,
+	reasoningEffort,
+}: BuildRuntimeCommandOptions): string {
+	if (runtime === "claude") {
+		const parts = ["claude"];
+		if (model) parts.push("--model", model);
+		if (mode === "auto") parts.push("--dangerously-skip-permissions");
+		return parts.join(" ");
+	}
+	const parts = ["codex", "--model", model ?? "gpt-5.5"];
+	parts.push(`-c model_reasoning_effort="${reasoningEffort ?? "high"}"`);
+	parts.push('-c model_reasoning_summary="detailed"');
+	parts.push("-c model_supports_reasoning_summaries=true");
+	if (mode === "auto") {
+		parts.push("--ask-for-approval never", "--sandbox danger-full-access");
+	}
+	return parts.join(" ");
+}
+
+/** Model variants launchable from the model bar. */
+export interface ModelVariant {
+	id: string;
+	runtime: AgentType;
+	/** Short label rendered next to the runtime icon in the model bar. */
+	label: string;
+	/** Tooltip / long name. */
+	description: string;
+	model: string | null;
+	reasoningEffort?: "medium" | "high";
+	isDefault?: boolean;
+}
+
+export const MODEL_VARIANTS: ModelVariant[] = [
+	{
+		id: "claude-default",
+		runtime: "claude",
+		label: "Claude",
+		description: "Claude Code — CLI default model",
+		model: null,
+		isDefault: true,
+	},
+	{
+		id: "claude-fable",
+		runtime: "claude",
+		label: "Fable",
+		description: "Claude Code — Fable 5",
+		model: "claude-fable-5",
+	},
+	{
+		id: "claude-opus",
+		runtime: "claude",
+		label: "Opus",
+		description: "Claude Code — Opus 4.8",
+		model: "claude-opus-4-8",
+	},
+	{
+		id: "claude-sonnet",
+		runtime: "claude",
+		label: "Sonnet",
+		description: "Claude Code — Sonnet 5",
+		model: "claude-sonnet-5",
+	},
+	{
+		id: "codex-high",
+		runtime: "codex",
+		label: "High",
+		description: "Codex — GPT-5.5, high reasoning",
+		model: "gpt-5.5",
+		reasoningEffort: "high",
+	},
+	{
+		id: "codex-medium",
+		runtime: "codex",
+		label: "Medium",
+		description: "Codex — GPT-5.5, medium reasoning",
+		model: "gpt-5.5",
+		reasoningEffort: "medium",
+	},
+];
+
+/** Preset commands per runtime; index 0 (guarded) is the launch default. */
 export const AGENT_PRESET_COMMANDS: Record<AgentType, string[]> = {
-	claude: ["claude --dangerously-skip-permissions"],
-	codex: [
-		'codex --model gpt-5.5 -c model_reasoning_effort="high" --ask-for-approval never --sandbox danger-full-access -c model_reasoning_summary="detailed" -c model_supports_reasoning_summaries=true',
+	claude: [
+		buildRuntimeCommand({ runtime: "claude", mode: "guarded" }),
+		buildRuntimeCommand({ runtime: "claude", mode: "auto" }),
 	],
-	gemini: ["gemini --yolo"],
-	opencode: ["opencode"],
-	copilot: ["copilot --allow-all"],
-	"cursor-agent": ["cursor-agent"],
-	kimi: ['ANTHROPIC_BASE_URL="https://openrouter.ai/api" ANTHROPIC_AUTH_TOKEN="$OPENROUTER_API_KEY" ANTHROPIC_API_KEY="" claude --model moonshotai/kimi-k2.7-code --dangerously-skip-permissions'],
-	minimax: ['ANTHROPIC_BASE_URL="https://openrouter.ai/api" ANTHROPIC_AUTH_TOKEN="$OPENROUTER_API_KEY" ANTHROPIC_API_KEY="" claude --model minimax/minimax-m3 --dangerously-skip-permissions'],
-	glm: ['ANTHROPIC_BASE_URL="https://openrouter.ai/api" ANTHROPIC_AUTH_TOKEN="$OPENROUTER_API_KEY" ANTHROPIC_API_KEY="" claude --model z-ai/glm-5.2 --dangerously-skip-permissions'],
+	codex: [
+		buildRuntimeCommand({ runtime: "codex", mode: "guarded" }),
+		buildRuntimeCommand({ runtime: "codex", mode: "auto" }),
+	],
 };
 
 export const AGENT_PRESET_DESCRIPTIONS: Record<AgentType, string> = {
-	claude: "Danger mode: All permissions auto-approved",
-	codex: "Danger mode: All permissions auto-approved",
-	gemini: "Danger mode: All permissions auto-approved",
-	opencode: "OpenCode: Open-source AI coding agent",
-	copilot: "Danger mode: All permissions auto-approved",
-	"cursor-agent": "Cursor AI agent for terminal-based coding assistance",
-	kimi: "Kimi K2.7 via Claude Code + OpenRouter",
-	minimax: "MiniMax M3 via Claude Code + OpenRouter",
-	glm: "GLM 5.2 via Claude Code + OpenRouter",
+	claude: "Claude Code — guarded permissions by default",
+	codex: "Codex — guarded approvals and sandbox by default",
 };
 
 export interface TaskInput {
@@ -111,28 +185,13 @@ const AGENT_COMMANDS: Record<
 	AgentType,
 	(prompt: string, delimiter: string) => string
 > = {
-	claude: (prompt, delimiter) =>
-		buildHeredoc(prompt, delimiter, "claude --dangerously-skip-permissions"),
+	claude: (prompt, delimiter) => buildHeredoc(prompt, delimiter, "claude"),
 	codex: (prompt, delimiter) =>
 		buildHeredoc(
 			prompt,
 			delimiter,
-			'codex --model gpt-5.5 -c model_reasoning_effort="high" --ask-for-approval never --sandbox danger-full-access --',
+			'codex --model gpt-5.5 -c model_reasoning_effort="high" --',
 		),
-	gemini: (prompt, delimiter) =>
-		buildHeredoc(prompt, delimiter, "gemini --yolo"),
-	opencode: (prompt, delimiter) =>
-		buildHeredoc(prompt, delimiter, "opencode --prompt"),
-	copilot: (prompt, delimiter) =>
-		buildHeredoc(prompt, delimiter, "copilot -i", "--yolo"),
-	"cursor-agent": (prompt, delimiter) =>
-		buildHeredoc(prompt, delimiter, "cursor-agent --yolo"),
-	kimi: (prompt, delimiter) =>
-		buildHeredoc(prompt, delimiter, 'ANTHROPIC_BASE_URL="https://openrouter.ai/api" ANTHROPIC_AUTH_TOKEN="$OPENROUTER_API_KEY" ANTHROPIC_API_KEY="" claude --model moonshotai/kimi-k2.7-code --dangerously-skip-permissions'),
-	minimax: (prompt, delimiter) =>
-		buildHeredoc(prompt, delimiter, 'ANTHROPIC_BASE_URL="https://openrouter.ai/api" ANTHROPIC_AUTH_TOKEN="$OPENROUTER_API_KEY" ANTHROPIC_API_KEY="" claude --model minimax/minimax-m3 --dangerously-skip-permissions'),
-	glm: (prompt, delimiter) =>
-		buildHeredoc(prompt, delimiter, 'ANTHROPIC_BASE_URL="https://openrouter.ai/api" ANTHROPIC_AUTH_TOKEN="$OPENROUTER_API_KEY" ANTHROPIC_API_KEY="" claude --model z-ai/glm-5.2 --dangerously-skip-permissions'),
 };
 
 export function buildAgentPromptCommand({

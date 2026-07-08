@@ -1,18 +1,6 @@
 import claudeIcon from "./claude.svg";
 import codexIcon from "./codex.svg";
 import codexWhiteIcon from "./codex-white.svg";
-import copilotIcon from "./copilot.svg";
-import copilotWhiteIcon from "./copilot-white.svg";
-import cursorAgentIcon from "./cursor.svg";
-import geminiIcon from "./gemini.svg";
-import glmIcon from "./glm.svg";
-import glmWhiteIcon from "./glm-white.svg";
-import kimiIcon from "./kimi.svg";
-import kimiWhiteIcon from "./kimi-white.svg";
-import minimaxIcon from "./minimax.svg";
-import minimaxWhiteIcon from "./minimax-white.svg";
-import opencodeIcon from "./opencode.svg";
-import opencodeWhiteIcon from "./opencode-white.svg";
 
 export interface PresetIconSet {
 	light: string;
@@ -22,13 +10,6 @@ export interface PresetIconSet {
 export const PRESET_ICONS: Record<string, PresetIconSet> = {
 	claude: { light: claudeIcon, dark: claudeIcon },
 	codex: { light: codexIcon, dark: codexWhiteIcon },
-	copilot: { light: copilotIcon, dark: copilotWhiteIcon },
-	gemini: { light: geminiIcon, dark: geminiIcon },
-	"cursor-agent": { light: cursorAgentIcon, dark: cursorAgentIcon },
-	opencode: { light: opencodeIcon, dark: opencodeWhiteIcon },
-	kimi: { light: kimiIcon, dark: kimiWhiteIcon },
-	minimax: { light: minimaxIcon, dark: minimaxWhiteIcon },
-	glm: { light: glmIcon, dark: glmWhiteIcon },
 };
 
 export function getPresetIcon(
@@ -41,20 +22,4 @@ export function getPresetIcon(
 	return isDark ? iconSet.dark : iconSet.light;
 }
 
-export {
-	claudeIcon,
-	codexIcon,
-	codexWhiteIcon,
-	copilotIcon,
-	copilotWhiteIcon,
-	cursorAgentIcon,
-	geminiIcon,
-	glmIcon,
-	glmWhiteIcon,
-	kimiIcon,
-	kimiWhiteIcon,
-	minimaxIcon,
-	minimaxWhiteIcon,
-	opencodeIcon,
-	opencodeWhiteIcon,
-};
+export { claudeIcon, codexIcon, codexWhiteIcon };

@@ -45,7 +45,7 @@ export interface ScaffoldParams {
 	role?: string;
 	/**
 	 * Absolute worktree path the per-runtime bridge files (CLAUDE.md,
-	 * .claude/, opencode.json, .git/info/exclude) are written into. Defaults to
+	 * .claude/, .git/info/exclude) are written into. Defaults to
 	 * the derived <agent-home>/worktree. The local-path creation flow stores an
 	 * EXTERNAL repo path on the workspace's worktrees row — for those agents the
 	 * caller must pass that path so bridges land in the real repo, not a
@@ -56,10 +56,7 @@ export interface ScaffoldParams {
 	worktreePath?: string;
 }
 
-function sub(
-	template: string,
-	vars: Record<string, string>,
-): string {
+function sub(template: string, vars: Record<string, string>): string {
 	return template.replace(/\{\{(\w+)\}\}/g, (_, k) => vars[k] ?? "");
 }
 
@@ -309,7 +306,7 @@ process.exit(0);
 }
 
 /** Bridge files written into the worktree (git-excluded, never committed). */
-const BRIDGE_EXCLUDES = ["CLAUDE.md", ".claude/", "opencode.json", "AGENTS.md"];
+const BRIDGE_EXCLUDES = ["CLAUDE.md", ".claude/", "AGENTS.md"];
 
 /**
  * Regenerate <agent-home>/.codex/AGENTS.md from the canonical memory files.
@@ -322,7 +319,12 @@ export function regenerateCodexAgentsMd(agentId: string): void {
 	mkdirSync(codexHome, { recursive: true });
 
 	const parts: string[] = [];
-	for (const file of ["AGENT.md", "USER.md", "MEMORY.md", ".writeback-protocol.md"]) {
+	for (const file of [
+		"AGENT.md",
+		"USER.md",
+		"MEMORY.md",
+		".writeback-protocol.md",
+	]) {
 		const p = join(memoryDir, file);
 		if (existsSync(p)) {
 			parts.push(readFileSync(p, "utf8"));
@@ -429,23 +431,6 @@ export function scaffoldAgentMemory({
 			2,
 		)}\n`,
 	);
-	writeIfEmpty(
-		join(worktreePath, "opencode.json"),
-		`${JSON.stringify(
-			{
-				$schema: "https://opencode.ai/config.json",
-				instructions: [
-					"../memory/AGENT.md",
-					"../memory/USER.md",
-					"../memory/MEMORY.md",
-					"../memory/.writeback-protocol.md",
-				],
-			},
-			null,
-			2,
-		)}\n`,
-	);
-
 	// Keep the generated bridge files out of the repo (local, per-worktree).
 	// Guard against a duplicate block when re-run by the backfill.
 	const excludePath = join(worktreePath, ".git", "info", "exclude");

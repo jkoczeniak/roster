@@ -11,18 +11,14 @@ import {
 import {
 	AGENT_PRESET_COMMANDS,
 	AGENT_PRESET_DESCRIPTIONS,
+	DEFAULT_PERMISSION_MODE,
+	PERMISSION_MODES,
 } from "@roster/shared/agent-command";
 import { TRPCError } from "@trpc/server";
 import { app } from "electron";
 import { quitWithoutConfirmation } from "main/index";
 import { hasCustomRingtone } from "main/lib/custom-ringtones";
 import { localDb } from "main/lib/local-db";
-import {
-	clearProviderKey,
-	getProviderKeyStatus,
-	PROVIDER_IDS,
-	setProviderKey,
-} from "main/lib/provider-keys";
 import {
 	DEFAULT_AUTO_APPLY_DEFAULT_PRESET,
 	DEFAULT_CONFIRM_ON_QUIT,
@@ -95,13 +91,7 @@ function saveTerminalPresets(
 		.run();
 }
 
-const DEFAULT_PRESET_AGENTS = [
-	"claude",
-	"codex",
-	"copilot",
-	"opencode",
-	"gemini",
-] as const;
+const DEFAULT_PRESET_AGENTS = ["claude", "codex"] as const;
 
 const DEFAULT_PRESETS: Omit<TerminalPreset, "id">[] = DEFAULT_PRESET_AGENTS.map(
 	(name) => ({
@@ -713,45 +703,27 @@ export const createSettingsRouter = () => {
 				return { success: true };
 			}),
 
-		// Provider API keys (OpenRouter today; designed for more). The renderer only
-		// ever learns presence — the key itself is never returned. Storage/encryption
-		// lives in main/lib/provider-keys (electron safeStorage + local sqlite).
-		providerKeys: router({
-			status: publicProcedure.query(() => getProviderKeyStatus()),
-
-			set: publicProcedure
-				.input(
-					z.object({
-						provider: z.enum(PROVIDER_IDS),
-						key: z
-							.string()
-							.refine((value) => value.trim().length > 0, {
-								message: "API key must not be empty",
-							}),
-					}),
-				)
-				.mutation(({ input }) => {
-					try {
-						setProviderKey(input.provider, input.key);
-					} catch (error) {
-						throw new TRPCError({
-							code: "INTERNAL_SERVER_ERROR",
-							message:
-								error instanceof Error
-									? error.message
-									: "Failed to store provider key",
-						});
-					}
-					return { success: true };
-				}),
-
-			clear: publicProcedure
-				.input(z.object({ provider: z.enum(PROVIDER_IDS) }))
-				.mutation(({ input }) => {
-					clearProviderKey(input.provider);
-					return { success: true };
-				}),
+		// Permission posture for newly launched agent sessions. "guarded" keeps
+		// each CLI's native approval prompts/sandbox; "auto" grants full autonomy.
+		getPermissionMode: publicProcedure.query(() => {
+			const row = getSettings();
+			return row.agentPermissionMode ?? DEFAULT_PERMISSION_MODE;
 		}),
+
+		setPermissionMode: publicProcedure
+			.input(z.object({ mode: z.enum(PERMISSION_MODES) }))
+			.mutation(({ input }) => {
+				localDb
+					.insert(settings)
+					.values({ id: 1, agentPermissionMode: input.mode })
+					.onConflictDoUpdate({
+						target: settings.id,
+						set: { agentPermissionMode: input.mode },
+					})
+					.run();
+
+				return { success: true };
+			}),
 
 		// TODO: remove telemetry procedures once telemetry_enabled column is dropped
 		getTelemetryEnabled: publicProcedure.query(() => {

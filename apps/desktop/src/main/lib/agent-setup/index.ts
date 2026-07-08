@@ -1,27 +1,7 @@
 import fs from "node:fs";
-import {
-	cleanupGlobalOpenCodePlugin,
-	createClaudeWrapper,
-	createCodexWrapper,
-	createCopilotHookScript,
-	createCopilotWrapper,
-	createCursorAgentWrapper,
-	createCursorHookScript,
-	createCursorHooksJson,
-	createGeminiHookScript,
-	createGeminiSettingsJson,
-	createGeminiWrapper,
-	createOpenCodePlugin,
-	createOpenCodeWrapper,
-} from "./agent-wrappers";
+import { createClaudeWrapper, createCodexWrapper } from "./agent-wrappers";
 import { createNotifyScript } from "./notify-hook";
-import {
-	BASH_DIR,
-	BIN_DIR,
-	HOOKS_DIR,
-	OPENCODE_PLUGIN_DIR,
-	ZSH_DIR,
-} from "./paths";
+import { BASH_DIR, BIN_DIR, HOOKS_DIR, ZSH_DIR } from "./paths";
 import {
 	createBashWrapper,
 	createZshWrapper,
@@ -37,23 +17,10 @@ export function setupAgentHooks(): void {
 	fs.mkdirSync(HOOKS_DIR, { recursive: true });
 	fs.mkdirSync(ZSH_DIR, { recursive: true });
 	fs.mkdirSync(BASH_DIR, { recursive: true });
-	fs.mkdirSync(OPENCODE_PLUGIN_DIR, { recursive: true });
-
-	cleanupGlobalOpenCodePlugin();
 
 	createNotifyScript();
 	createClaudeWrapper();
 	createCodexWrapper();
-	createOpenCodePlugin();
-	createOpenCodeWrapper();
-	createCursorHookScript();
-	createCursorAgentWrapper();
-	createCursorHooksJson();
-	createGeminiHookScript();
-	createGeminiWrapper();
-	createGeminiSettingsJson();
-	createCopilotHookScript();
-	createCopilotWrapper();
 
 	createZshWrapper();
 	createBashWrapper();

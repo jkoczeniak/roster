@@ -7,7 +7,7 @@ describe("sanitizeForTitle", () => {
 	});
 
 	it("should keep uppercase letters", () => {
-		expect(sanitizeForTitle("openCode")).toBe("openCode");
+		expect(sanitizeForTitle("openFile")).toBe("openFile");
 	});
 
 	it("should keep special characters", () => {

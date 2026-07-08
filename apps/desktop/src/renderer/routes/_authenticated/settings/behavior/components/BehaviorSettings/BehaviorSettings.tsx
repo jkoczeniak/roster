@@ -1,4 +1,5 @@
 import type { BranchPrefixMode, FileOpenMode } from "@roster/local-db";
+import type { PermissionMode } from "@roster/shared/agent-command";
 import { Input } from "@roster/ui/input";
 import { Label } from "@roster/ui/label";
 import {
@@ -58,6 +59,10 @@ export function BehaviorSettings({ visibleItems }: BehaviorSettingsProps) {
 	);
 	const showOpenLinksInApp = isItemVisible(
 		SETTING_ITEM_ID.BEHAVIOR_OPEN_LINKS_IN_APP,
+		visibleItems,
+	);
+	const showAgentAutonomy = isItemVisible(
+		SETTING_ITEM_ID.BEHAVIOR_AGENT_AUTONOMY,
 		visibleItems,
 	);
 
@@ -246,6 +251,27 @@ export function BehaviorSettings({ visibleItems }: BehaviorSettingsProps) {
 		});
 	const defaultWorktreePath = useDefaultWorktreePath();
 
+	const { data: permissionMode, isLoading: isPermissionModeLoading } =
+		electronTrpc.settings.getPermissionMode.useQuery();
+	const setPermissionMode = electronTrpc.settings.setPermissionMode.useMutation(
+		{
+			onMutate: async ({ mode }) => {
+				await utils.settings.getPermissionMode.cancel();
+				const previous = utils.settings.getPermissionMode.getData();
+				utils.settings.getPermissionMode.setData(undefined, mode);
+				return { previous };
+			},
+			onError: (_err, _vars, context) => {
+				if (context?.previous !== undefined) {
+					utils.settings.getPermissionMode.setData(undefined, context.previous);
+				}
+			},
+			onSettled: () => {
+				utils.settings.getPermissionMode.invalidate();
+			},
+		},
+	);
+
 	const { data: openLinksInApp, isLoading: isOpenLinksInAppLoading } =
 		electronTrpc.settings.getOpenLinksInApp.useQuery();
 	const setOpenLinksInApp = electronTrpc.settings.setOpenLinksInApp.useMutation(
@@ -319,8 +345,7 @@ export function BehaviorSettings({ visibleItems }: BehaviorSettingsProps) {
 								Delete local branch on agent removal
 							</Label>
 							<p className="text-xs text-muted-foreground">
-								Also delete the local git branch when deleting a worktree
-								agent
+								Also delete the local git branch when deleting a worktree agent
 							</p>
 						</div>
 						<Switch
@@ -454,6 +479,41 @@ export function BehaviorSettings({ visibleItems }: BehaviorSettingsProps) {
 							}
 							disabled={isOpenLinksInAppLoading || setOpenLinksInApp.isPending}
 						/>
+					</div>
+				)}
+
+				{showAgentAutonomy && (
+					<div className="flex items-center justify-between">
+						<div className="space-y-0.5">
+							<Label className="text-sm font-medium">Agent autonomy</Label>
+							<p className="text-xs text-muted-foreground">
+								Guarded (recommended): each CLI asks before risky actions. Full
+								autonomy passes{" "}
+								<code className="bg-muted px-1 py-0.5 rounded">
+									--dangerously-skip-permissions
+								</code>{" "}
+								/{" "}
+								<code className="bg-muted px-1 py-0.5 rounded">
+									--sandbox danger-full-access
+								</code>{" "}
+								to new sessions. Applies to newly launched sessions only.
+							</p>
+						</div>
+						<Select
+							value={permissionMode ?? "guarded"}
+							onValueChange={(value) =>
+								setPermissionMode.mutate({ mode: value as PermissionMode })
+							}
+							disabled={isPermissionModeLoading || setPermissionMode.isPending}
+						>
+							<SelectTrigger className="w-[180px]">
+								<SelectValue />
+							</SelectTrigger>
+							<SelectContent>
+								<SelectItem value="guarded">Guarded (recommended)</SelectItem>
+								<SelectItem value="auto">Full autonomy</SelectItem>
+							</SelectContent>
+						</Select>
 					</div>
 				)}
 

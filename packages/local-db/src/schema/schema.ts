@@ -133,7 +133,7 @@ export const workspaces = sqliteTable(
 		// laptop/folder glyph when null. Used by the agent-fleet "Space" model
 		// where each workspace is an agent.
 		iconUrl: text("icon_url"),
-		// ADE: which CLI drives this agent (claude/codex/opencode/...). Maps to
+		// ADE: which CLI drives this agent (claude/codex). Maps to
 		// AGENT_PRESET_COMMANDS in @roster/shared. Defaults to "claude" at the
 		// insert site; null on pre-ADE rows.
 		runtime: text("runtime").$type<AgentRuntime>(),
@@ -194,12 +194,13 @@ export const settings = sqliteTable("settings", {
 	worktreeBaseDir: text("worktree_base_dir"),
 	openLinksInApp: integer("open_links_in_app", { mode: "boolean" }),
 	defaultEditor: text("default_editor").$type<ExternalApp>(),
-	// Provider API keys, each encrypted with electron safeStorage and stored as a
-	// base64 blob keyed by provider id (e.g. "openrouter"). Never plaintext; the
-	// decrypted value is only ever read in the main process, never sent to the renderer.
-	providerApiKeys: text("provider_api_keys", { mode: "json" }).$type<
-		Record<string, string>
-	>(),
+	// Permission posture applied to newly launched agent sessions. "guarded"
+	// keeps each CLI's native approval prompts / sandbox; "auto" grants full
+	// autonomy (--dangerously-skip-permissions / --sandbox danger-full-access).
+	agentPermissionMode: text("agent_permission_mode")
+		.$type<"guarded" | "auto">()
+		.notNull()
+		.default("guarded"),
 });
 
 export type InsertSettings = typeof settings.$inferInsert;
