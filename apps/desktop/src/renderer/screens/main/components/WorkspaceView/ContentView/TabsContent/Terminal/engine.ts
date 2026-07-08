@@ -330,3 +330,22 @@ export function isScrolledToBottom(term: TerminalInstance): boolean {
 	const buffer = term.buffer.active;
 	return buffer.viewportY >= buffer.baseY;
 }
+
+/**
+ * Adapts an xterm-style custom key-event handler for ghostty-web.
+ *
+ * The two engines invert the meaning of the handler's return value:
+ * - xterm.js: return `true` to let the terminal PROCESS the key (send to the
+ *   PTY); `false` to swallow it (the app handled it, e.g. a hotkey).
+ * - ghostty-web: returns truthy => SWALLOW the key (preventDefault + return,
+ *   never firing onData); falsy => process it.
+ *
+ * Wiring an xterm-style handler onto ghostty unchanged makes every ordinary
+ * key return `true`, which ghostty reads as "swallow", leaving the terminal
+ * input-dead. Inverting the return value restores correct behavior.
+ */
+export function adaptKeyHandlerForGhostty(
+	handler: (event: KeyboardEvent) => boolean,
+): (event: KeyboardEvent) => boolean {
+	return (event: KeyboardEvent) => !handler(event);
+}

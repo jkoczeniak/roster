@@ -43,6 +43,7 @@ import type {
 	TerminalTheme,
 } from "./engine";
 import {
+	adaptKeyHandlerForGhostty,
 	getPreferredEngine,
 	isGhosttyReady,
 	isScrolledToBottom,
@@ -351,6 +352,16 @@ function createGhosttyTerminalInstance(
 	// goes through toGhosttyLinkProvider() below, which bridges exactly that
 	// difference.
 	const terminal = ghosttyTerm as unknown as TerminalInstance;
+
+	// ghostty-web's custom key handler has INVERTED semantics vs xterm.js
+	// (see adaptKeyHandlerForGhostty): wired unadapted, every keystroke is
+	// swallowed and the terminal is input-dead. Wrap the native method so an
+	// xterm-style handler's return value is inverted for ghostty.
+	const nativeAttachKeyHandler =
+		ghosttyTerm.attachCustomKeyEventHandler.bind(ghosttyTerm);
+	terminal.attachCustomKeyEventHandler = (
+		handler: (event: KeyboardEvent) => boolean,
+	) => nativeAttachKeyHandler(adaptKeyHandlerForGhostty(handler));
 
 	const { urlLinkProvider, filePathLinkProvider } = createLinkProviders(
 		terminal,
