@@ -88,19 +88,22 @@ async function runAgentInit(agentId: string): Promise<void> {
 			"creating_repo",
 			ctx.source.type === "clone"
 				? "Cloning repository..."
-				: "Creating repository...",
+				: ctx.source.type === "folder"
+					? "Creating folder..."
+					: "Creating repository...",
 		);
 
-		const { worktreePath, branch } = await setupAgentRepo({
+		const { worktreePath, branch, vcs } = await setupAgentRepo({
 			agentId,
 			source: ctx.source,
 		});
 		workspaceInitManager.markWorktreeCreated(agentId);
 
-		// Persist the resolved branch + path (a clone may not be on "main").
+		// Persist the resolved branch + path + vcs (a clone may not be on "main";
+		// a folder agent has branch="" and vcs="none").
 		localDb
 			.update(worktrees)
-			.set({ branch, path: worktreePath })
+			.set({ branch, path: worktreePath, vcs })
 			.where(eq(worktrees.id, ctx.worktreeId))
 			.run();
 		localDb

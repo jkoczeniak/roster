@@ -34,7 +34,26 @@ export const createBranchesRouter = () => {
 
 					const git = simpleGit(input.worktreePath);
 
-					const branchSummary = await git.branch(["-a"]);
+					// A "Folder (no git)" agent has no repo here. Return an empty
+					// branch set rather than throwing, so any UI path that forgets to
+					// gate degrades gracefully instead of spamming errors.
+					let branchSummary: Awaited<ReturnType<typeof git.branch>>;
+					try {
+						branchSummary = await git.branch(["-a"]);
+					} catch (error) {
+						const message =
+							error instanceof Error ? error.message.toLowerCase() : "";
+						if (message.includes("not a git repository")) {
+							return {
+								local: [],
+								remote: [],
+								defaultBranch: "main",
+								checkedOutBranches: {},
+								worktreeBaseBranch: null,
+							};
+						}
+						throw error;
+					}
 					const currentBranch = await getCurrentBranch(input.worktreePath);
 					const { baseBranch: configuredBaseBranch } = currentBranch
 						? await getBranchBaseConfig({

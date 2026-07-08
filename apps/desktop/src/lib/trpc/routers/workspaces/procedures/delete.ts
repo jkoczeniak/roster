@@ -1,5 +1,6 @@
 import { existsSync } from "node:fs";
 import type { SelectWorktree } from "@roster/local-db";
+import { getAgentHome } from "main/lib/agent-home";
 import { workspaceInitManager } from "main/lib/workspace-init-manager";
 import { getWorkspaceRuntimeRegistry } from "main/lib/workspace-runtime";
 import { z } from "zod";
@@ -21,7 +22,11 @@ import {
 	hasUnpushedCommits,
 	worktreeExists,
 } from "../utils/git";
-import { removeWorktreeFromDisk, runTeardown } from "../utils/teardown";
+import {
+	removeAgentWorktreeFromDisk,
+	removeWorktreeFromDisk,
+	runTeardown,
+} from "../utils/teardown";
 
 export const createDeleteProcedures = () => {
 	return router({
@@ -89,6 +94,20 @@ export const createDeleteProcedures = () => {
 					? getWorktree(workspace.worktreeId)
 					: null;
 				const project = getProject(workspace.projectId);
+
+				// Folder agents (vcs="none") aren't git worktrees — there's nothing to
+				// check with `git worktree`, and they're always safe to delete.
+				if (worktree?.vcs === "none") {
+					return {
+						canDelete: true,
+						reason: null,
+						workspace,
+						warning: null,
+						activeTerminalCount,
+						hasChanges: false,
+						hasUnpushedCommits: false,
+					};
+				}
 
 				if (worktree && project) {
 					try {
@@ -247,11 +266,27 @@ export const createDeleteProcedures = () => {
 					}
 				}
 
-				if (worktree && project) {
+				if (worktree?.vcs === "none") {
+					// Folder agent: not a git worktree of any repo, so skip the project
+					// lock + git plumbing entirely and remove the agent's home tree
+					// directly. There's also no branch to delete.
+					const removeResult = await removeAgentWorktreeFromDisk({
+						vcs: "none",
+						agentHome: getAgentHome(input.id),
+						mainRepoPath: "",
+						worktreePath: worktree.path,
+					});
+					if (!removeResult.success) {
+						clearWorkspaceDeletingStatus(input.id);
+						return removeResult;
+					}
+				} else if (worktree && project) {
 					await workspaceInitManager.acquireProjectLock(project.id);
 
 					try {
-						const removeResult = await removeWorktreeFromDisk({
+						const removeResult = await removeAgentWorktreeFromDisk({
+							vcs: worktree.vcs,
+							agentHome: getAgentHome(input.id),
 							mainRepoPath: project.mainRepoPath,
 							worktreePath: worktree.path,
 						});

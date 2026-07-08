@@ -281,6 +281,13 @@
       "when": 1783513235535,
       "tag": "0039_runtime-trim-permission-mode",
       "breakpoints": true
+    },
+    {
+      "idx": 40,
+      "version": "6",
+      "when": 1783528795500,
+      "tag": "0040_faulty_shinobi_shaw",
+      "breakpoints": true
     }
   ]
 }

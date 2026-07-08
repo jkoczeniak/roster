@@ -38,7 +38,7 @@ import {
 	usePreSelectedProjectId,
 } from "renderer/stores/new-workspace-modal";
 
-type RepoMode = "init" | "clone" | "local";
+type RepoMode = "init" | "folder" | "clone" | "local";
 
 /** Runtimes offered in the New Agent picker. */
 const RUNTIME_CHOICES = ["claude", "codex"] as const;
@@ -100,16 +100,19 @@ export function NewAgentModal() {
 
 	// Building the agent's repo (init OR clone) shells to git, which a fresh Mac
 	// lacks until the Command Line Tools are installed. Block create until it's
-	// present rather than letting agent-repo fail with a generic error.
+	// present rather than letting agent-repo fail with a generic error. A folder
+	// agent runs no git at all, so it stays creatable even without git.
 	const gitMissing = !isAvailable("git");
+	const gitRequired = repoMode !== "folder";
 	const runtimeBinary = RUNTIME_BINARY[runtime];
 	const runtimeMissing = !isAvailable(runtimeBinary as CheckedBinary);
 
 	const canCreate =
 		!!categoryId &&
 		name.trim().length > 0 &&
-		!gitMissing &&
+		!(gitRequired && gitMissing) &&
 		(repoMode === "init" ||
+			repoMode === "folder" ||
 			(repoMode === "clone" && cloneUrl.trim().length > 0) ||
 			(repoMode === "local" && localPath.trim().length > 0)) &&
 		!createAgent.isPending;
@@ -127,7 +130,9 @@ export function NewAgentModal() {
 						? { type: "clone", url: cloneUrl.trim() }
 						: repoMode === "local"
 							? { type: "clone", url: localPath.trim() }
-							: { type: "init" },
+							: repoMode === "folder"
+								? { type: "folder" }
+								: { type: "init" },
 			});
 			if (photoDataUrl) {
 				await setWorkspaceIcon.mutateAsync({
@@ -267,6 +272,20 @@ export function NewAgentModal() {
 									New empty repo
 								</Label>
 							</div>
+							<div className="flex flex-col gap-1">
+								<div className="flex items-center gap-2">
+									<RadioGroupItem value="folder" id="repo-folder" />
+									<Label htmlFor="repo-folder" className="font-normal">
+										Folder (no git)
+									</Label>
+								</div>
+								{repoMode === "folder" && (
+									<p className="pl-6 text-xs text-muted-foreground">
+										A plain folder on your Mac — memory, skills, and sessions,
+										with no version control.
+									</p>
+								)}
+							</div>
 							<div className="flex items-center gap-2">
 								<RadioGroupItem value="clone" id="repo-clone" />
 								<Label htmlFor="repo-clone" className="font-normal">
@@ -297,7 +316,7 @@ export function NewAgentModal() {
 					</div>
 				</div>
 
-				{gitMissing && (
+				{gitMissing && gitRequired && (
 					<div className="flex flex-col gap-2 rounded-md border border-amber-500/40 bg-amber-500/10 px-3 py-2.5 text-xs">
 						<p className="font-medium text-foreground">Git is required</p>
 						<p className="text-muted-foreground">

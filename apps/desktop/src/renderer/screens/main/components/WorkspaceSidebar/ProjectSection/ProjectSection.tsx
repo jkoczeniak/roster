@@ -16,6 +16,7 @@ interface Workspace {
 	id: string;
 	projectId: string;
 	worktreePath: string;
+	isRepo: boolean;
 	type: "worktree" | "branch";
 	branch: string;
 	name: string;
@@ -174,6 +175,7 @@ export function ProjectSection({
 										name={workspace.name}
 										branch={workspace.branch}
 										type={workspace.type}
+										isRepo={workspace.isRepo}
 										isUnread={workspace.isUnread}
 										iconUrl={workspace.iconUrl}
 										tintColor={getSpaceTint(

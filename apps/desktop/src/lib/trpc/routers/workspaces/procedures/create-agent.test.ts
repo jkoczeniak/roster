@@ -40,3 +40,38 @@ describe("createAgentInput role", () => {
 		).toThrow();
 	});
 });
+
+/**
+ * Repo source discriminated-union — the "Folder (no git)" option must be
+ * accepted alongside the existing init/clone members.
+ */
+describe("createAgentInput repo source", () => {
+	const base = { projectId: "cat-1", name: "Scout" };
+
+	it("defaults to a fresh git repo when repo is omitted", () => {
+		const parsed = createAgentInput.parse(base);
+		expect(parsed.repo).toEqual({ type: "init" });
+	});
+
+	it("accepts the folder (no git) source", () => {
+		const parsed = createAgentInput.parse({ ...base, repo: { type: "folder" } });
+		expect(parsed.repo).toEqual({ type: "folder" });
+	});
+
+	it("accepts a safe clone URL", () => {
+		const parsed = createAgentInput.parse({
+			...base,
+			repo: { type: "clone", url: "https://github.com/jkoczeniak/roster.git" },
+		});
+		expect(parsed.repo).toEqual({
+			type: "clone",
+			url: "https://github.com/jkoczeniak/roster.git",
+		});
+	});
+
+	it("rejects an unknown repo source type", () => {
+		expect(() =>
+			createAgentInput.parse({ ...base, repo: { type: "bogus" } }),
+		).toThrow();
+	});
+});

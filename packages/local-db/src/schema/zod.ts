@@ -107,6 +107,18 @@ export const agentRuntimeSchema = z.enum(AGENT_RUNTIMES);
 export type AgentRuntime = z.infer<typeof agentRuntimeSchema>;
 
 /**
+ * Version-control kind of an agent's worktree.
+ * - "git":  a real git repo (the default + legacy — "New empty repo" / "Clone").
+ * - "none": a plain "Folder (no git)" agent — memory/skills/sessions, no VCS.
+ * A null `vcs` column (pre-folder rows) is treated as "git".
+ */
+export const VCS_KINDS = ["git", "none"] as const;
+
+export const vcsKindSchema = z.enum(VCS_KINDS);
+
+export type VcsKind = (typeof VCS_KINDS)[number];
+
+/**
  * External apps that can be opened
  */
 export const EXTERNAL_APPS = [

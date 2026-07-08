@@ -25,6 +25,7 @@ export const createAgentInput = z.object({
 	repo: z
 		.discriminatedUnion("type", [
 			z.object({ type: z.literal("init") }),
+			z.object({ type: z.literal("folder") }),
 			z.object({
 				type: z.literal("clone"),
 				url: z

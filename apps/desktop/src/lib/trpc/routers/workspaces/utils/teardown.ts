@@ -1,5 +1,7 @@
 import { spawn } from "node:child_process";
+import { rm } from "node:fs/promises";
 import { resolve as resolvePath } from "node:path";
+import type { VcsKind } from "@roster/local-db";
 import {
 	getCommandShellArgs,
 	getShellEnv,
@@ -140,6 +142,43 @@ export async function runTeardown({
 			output: errorMessage,
 		};
 	}
+}
+
+/**
+ * Removes an agent's on-disk repo/folder, branching on version-control kind.
+ *
+ * - vcs "none" (folder agent): a plain directory that is NOT a git worktree of
+ *   anything, so we must NOT run `git worktree` plumbing (which would target the
+ *   category's — empty — main repo). Remove the agent's home tree directly with
+ *   fs. `agentHome` contains `worktree/`, so this also clears the worktree.
+ * - vcs "git"/null (init/clone agent): existing behavior — hand off to
+ *   removeWorktreeFromDisk / removeWorktree.
+ */
+export async function removeAgentWorktreeFromDisk({
+	vcs,
+	agentHome,
+	mainRepoPath,
+	worktreePath,
+}: {
+	vcs: VcsKind | null;
+	agentHome: string;
+	mainRepoPath: string;
+	worktreePath: string;
+}): Promise<{ success: true } | { success: false; error: string }> {
+	if (vcs === "none") {
+		try {
+			await rm(agentHome, { recursive: true, force: true });
+			return { success: true };
+		} catch (error) {
+			const msg = error instanceof Error ? error.message : String(error);
+			console.error("Failed to remove folder agent directory:", msg);
+			return {
+				success: false,
+				error: `Failed to remove folder agent directory: ${msg}`,
+			};
+		}
+	}
+	return removeWorktreeFromDisk({ mainRepoPath, worktreePath });
 }
 
 export async function removeWorktreeFromDisk({

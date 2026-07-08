@@ -10,6 +10,7 @@ import type {
 	GitStatus,
 	TerminalLinkBehavior,
 	TerminalPreset,
+	VcsKind,
 	WorkspaceType,
 } from "./zod";
 
@@ -76,6 +77,10 @@ export const worktrees = sqliteTable(
 		path: text("path").notNull(),
 		branch: text("branch").notNull(),
 		baseBranch: text("base_branch"), // The branch this worktree was created from
+		// Version-control kind of the worktree. null/"git" = a real git repo
+		// (existing + default); "none" = a "Folder (no git)" agent (plain dir, no
+		// VCS). Folder agents store branch="" and skip all git plumbing.
+		vcs: text("vcs").$type<VcsKind>(),
 		createdAt: integer("created_at")
 			.notNull()
 			.$defaultFn(() => Date.now()),

@@ -147,10 +147,13 @@ export const createGitStatusProcedures = () => {
 
 				const worktreeName = worktree.path.split("/").pop() ?? worktree.branch;
 				const branchName = worktree.branch;
+				// Folder agents (vcs="none") have no branch/VCS block to show.
+				const isRepo = worktree.vcs !== "none";
 
 				return {
 					worktreeName,
 					branchName,
+					isRepo,
 					createdAt: worktree.createdAt,
 					gitStatus: worktree.gitStatus ?? null,
 					githubStatus: worktree.githubStatus ?? null,

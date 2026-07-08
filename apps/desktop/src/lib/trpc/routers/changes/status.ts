@@ -1,4 +1,3 @@
-import { TRPCError } from "@trpc/server";
 import type { ChangedFile, GitChangesStatus } from "shared/changes-types";
 import type { StatusResult } from "simple-git";
 import simpleGit from "simple-git";
@@ -32,11 +31,24 @@ export const createStatusRouter = () => {
 				try {
 					status = await getStatusNoLock(input.worktreePath);
 				} catch (error) {
+					// A "Folder (no git)" agent has no repo here. Return an empty,
+					// clean status rather than throwing, so any UI path that forgets
+					// to gate degrades gracefully instead of spamming errors.
 					if (error instanceof NotGitRepoError) {
-						throw new TRPCError({
-							code: "BAD_REQUEST",
-							message: error.message,
-						});
+						return {
+							branch: "",
+							defaultBranch,
+							againstBase: [],
+							commits: [],
+							staged: [],
+							unstaged: [],
+							untracked: [],
+							ahead: 0,
+							behind: 0,
+							pushCount: 0,
+							pullCount: 0,
+							hasUpstream: false,
+						};
 					}
 					throw error;
 				}

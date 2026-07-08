@@ -72,6 +72,8 @@ interface WorkspaceListItemProps {
 	name: string;
 	branch: string;
 	type: "worktree" | "branch";
+	/** false for a "Folder (no git)" agent — suppresses all git-only affordances. */
+	isRepo?: boolean;
 	isUnread?: boolean;
 	iconUrl?: string | null;
 	tintColor?: string | null;
@@ -88,6 +90,7 @@ export function WorkspaceListItem({
 	name,
 	branch,
 	type,
+	isRepo = true,
 	isUnread = false,
 	iconUrl,
 	tintColor,
@@ -160,14 +163,16 @@ export function WorkspaceListItem({
 		electronTrpc.workspaces.getGitHubStatus.useQuery(
 			{ workspaceId: id },
 			{
-				enabled: hasHovered && type === "worktree",
+				// PR status is a git-only affordance — never fetch it (nor render the
+				// PR badge below) for a folder agent.
+				enabled: hasHovered && type === "worktree" && isRepo,
 				staleTime: GITHUB_STATUS_STALE_TIME,
 			},
 		);
 
 	const { status: localChanges } = useGitChangesStatus({
 		worktreePath,
-		enabled: hasHovered && !!worktreePath,
+		enabled: hasHovered && !!worktreePath && isRepo,
 		staleTime: GITHUB_STATUS_STALE_TIME,
 	});
 

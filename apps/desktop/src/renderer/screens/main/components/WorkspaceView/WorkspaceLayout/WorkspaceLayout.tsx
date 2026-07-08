@@ -1,3 +1,5 @@
+import { useParams } from "@tanstack/react-router";
+import { electronTrpc } from "renderer/lib/electron-trpc";
 import {
 	MAX_SIDEBAR_WIDTH,
 	MIN_SIDEBAR_WIDTH,
@@ -21,7 +23,17 @@ export function WorkspaceLayout() {
 		currentMode,
 	} = useSidebarStore();
 
-	const isExpanded = currentMode === SidebarMode.Changes;
+	// A folder agent (vcs="none") has no diff/Changes view. Never mount
+	// ChangesContent for it, even if the sidebar mode was persisted as Changes
+	// from a previous git agent.
+	const { workspaceId } = useParams({ strict: false });
+	const { data: workspace } = electronTrpc.workspaces.get.useQuery(
+		{ id: workspaceId ?? "" },
+		{ enabled: !!workspaceId },
+	);
+	const isRepo = workspace?.isRepo ?? true;
+
+	const isExpanded = isRepo && currentMode === SidebarMode.Changes;
 
 	return (
 		<ScrollProvider>

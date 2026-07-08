@@ -1,6 +1,7 @@
 import { Button } from "@roster/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@roster/ui/tooltip";
 import { cn } from "@roster/ui/utils";
+import { useParams } from "@tanstack/react-router";
 import { useState } from "react";
 import { LuBrain, LuExpand, LuFile, LuShrink, LuX } from "react-icons/lu";
 import { HotkeyTooltipContent } from "renderer/components/HotkeyTooltipContent";
@@ -71,6 +72,15 @@ export function RightSidebar() {
 	const isExpanded = currentMode === SidebarMode.Changes;
 	const [panelTab, setPanelTab] = useState<PanelTab>("all-files");
 
+	// A folder agent (vcs="none") has no diff view, so hide the expand-to-Changes
+	// toggle entirely. "All files" still works — it's a plain file tree.
+	const { workspaceId } = useParams({ strict: false });
+	const { data: workspace } = electronTrpc.workspaces.get.useQuery(
+		{ id: workspaceId ?? "" },
+		{ enabled: !!workspaceId },
+	);
+	const isRepo = workspace?.isRepo ?? true;
+
 	// Agent Files is staged off pending the video's Stage 2 reveal; hide the tab
 	// entirely until the memory scaffold flag is on.
 	const { data: featureFlags } = electronTrpc.config.featureFlags.useQuery();
@@ -101,28 +111,30 @@ export function RightSidebar() {
 					)}
 				</div>
 				<div className="flex items-center h-10 shrink-0 pl-1 pr-2 gap-1 border-l border-border/60">
-					<Tooltip>
-						<TooltipTrigger asChild>
-							<Button
-								variant="ghost"
-								size="icon"
-								onClick={handleExpandToggle}
-								className="size-6 p-0"
-							>
-								{isExpanded ? (
-									<LuShrink className="size-3.5" />
-								) : (
-									<LuExpand className="size-3.5" />
-								)}
-							</Button>
-						</TooltipTrigger>
-						<TooltipContent side="bottom" showArrow={false}>
-							<HotkeyTooltipContent
-								label={isExpanded ? "Collapse sidebar" : "Expand sidebar"}
-								hotkeyId="TOGGLE_EXPAND_SIDEBAR"
-							/>
-						</TooltipContent>
-					</Tooltip>
+					{isRepo && (
+						<Tooltip>
+							<TooltipTrigger asChild>
+								<Button
+									variant="ghost"
+									size="icon"
+									onClick={handleExpandToggle}
+									className="size-6 p-0"
+								>
+									{isExpanded ? (
+										<LuShrink className="size-3.5" />
+									) : (
+										<LuExpand className="size-3.5" />
+									)}
+								</Button>
+							</TooltipTrigger>
+							<TooltipContent side="bottom" showArrow={false}>
+								<HotkeyTooltipContent
+									label={isExpanded ? "Collapse sidebar" : "Expand sidebar"}
+									hotkeyId="TOGGLE_EXPAND_SIDEBAR"
+								/>
+							</TooltipContent>
+						</Tooltip>
+					)}
 					<Tooltip>
 						<TooltipTrigger asChild>
 							<Button

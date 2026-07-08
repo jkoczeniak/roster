@@ -1,5 +1,6 @@
 import { existsSync, mkdirSync, rmSync, statSync } from "node:fs";
 import { join } from "node:path";
+import type { VcsKind } from "@roster/local-db";
 import simpleGit from "simple-git";
 import {
 	getAgentHome,
@@ -81,18 +82,22 @@ export function assertSafeCloneUrl(url: string): void {
 
 /**
  * How an agent's repo is populated at creation time.
- * - init:  a fresh empty git repo (`git init` + empty initial commit)
- * - clone: clone a remote URL or a local path into the worktree
+ * - init:   a fresh empty git repo (`git init` + empty initial commit)
+ * - clone:  clone a remote URL or a local path into the worktree
+ * - folder: a plain directory with NO git repo ("Folder (no git)")
  */
 export type AgentRepoSource =
 	| { type: "init" }
-	| { type: "clone"; url: string };
+	| { type: "clone"; url: string }
+	| { type: "folder" };
 
 export interface AgentRepoResult {
 	agentHome: string;
 	worktreePath: string;
 	memoryDir: string;
 	branch: string;
+	/** "git" for init/clone, "none" for a folder agent. */
+	vcs: VcsKind;
 }
 
 /**
@@ -116,8 +121,17 @@ export async function setupAgentRepo({
 	const memoryDir = getAgentMemoryDir(agentId);
 
 	// Create the memory dir (this also creates <agent-home>). worktree/ is
-	// created below by init/clone.
+	// created below by init/clone/folder.
 	mkdirSync(memoryDir, { recursive: true });
+
+	// Folder agent ("Folder (no git)"): a plain directory with NO git repo. We
+	// skip every simpleGit call — no init, no revparse, no retry-guard reading
+	// `.git` — and hand back an empty branch + vcs:"none". mkdirSync is
+	// idempotent, so this is safe to re-run on a retry.
+	if (source.type === "folder") {
+		mkdirSync(worktreePath, { recursive: true });
+		return { agentHome, worktreePath, memoryDir, branch: "", vcs: "none" };
+	}
 
 	// Retry-safety: if a valid repo already exists (previous attempt got this
 	// far), reuse it. If a partial/non-repo dir exists, clear it so init/clone
@@ -129,7 +143,7 @@ export async function setupAgentRepo({
 					.revparse(["--abbrev-ref", "HEAD"])
 					.catch(() => "main")
 			).trim() || "main";
-		return { agentHome, worktreePath, memoryDir, branch };
+		return { agentHome, worktreePath, memoryDir, branch, vcs: "git" };
 	}
 	if (existsSync(worktreePath)) {
 		rmSync(worktreePath, { recursive: true, force: true });
@@ -166,5 +180,5 @@ export async function setupAgentRepo({
 		branch = branch.trim();
 	}
 
-	return { agentHome, worktreePath, memoryDir, branch };
+	return { agentHome, worktreePath, memoryDir, branch, vcs: "git" };
 }

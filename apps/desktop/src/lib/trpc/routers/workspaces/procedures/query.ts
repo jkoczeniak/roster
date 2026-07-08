@@ -204,10 +204,14 @@ export const createQueryProcedures = () => {
 					: null;
 
 				const resolvedWorktreePath = getWorkspacePath(workspace) ?? "";
+				// A folder agent's worktree carries vcs="none"; everything else
+				// (git agents, branch workspaces with no worktree row) is a repo.
+				const isRepo = worktree ? worktree.vcs !== "none" : true;
 				return {
 					...workspace,
 					type: workspace.type as "worktree" | "branch",
 					worktreePath: resolvedWorktreePath,
+					isRepo,
 					role: readAgentRole(resolvedWorktreePath),
 					project: project
 						? {
@@ -248,6 +252,9 @@ export const createQueryProcedures = () => {
 			const worktreePathMap: WorktreePathMap = new Map(
 				allWorktrees.map((wt) => [wt.id, wt.path]),
 			);
+			// Folder agents (vcs="none") get isRepo=false so the rail can skip all
+			// git-only affordances (diff polling, branch UI).
+			const worktreeVcsMap = new Map(allWorktrees.map((wt) => [wt.id, wt.vcs]));
 
 			const groupsMap = new Map<
 				string,
@@ -267,6 +274,7 @@ export const createQueryProcedures = () => {
 						projectId: string;
 						worktreeId: string | null;
 						worktreePath: string;
+						isRepo: boolean;
 						type: "worktree" | "branch";
 						branch: string;
 						name: string;
@@ -311,8 +319,10 @@ export const createQueryProcedures = () => {
 				const group = groupsMap.get(workspace.projectId);
 				if (group) {
 					let worktreePath = "";
+					let isRepo = true;
 					if (workspace.type === "worktree" && workspace.worktreeId) {
 						worktreePath = worktreePathMap.get(workspace.worktreeId) ?? "";
+						isRepo = worktreeVcsMap.get(workspace.worktreeId) !== "none";
 					} else if (workspace.type === "branch") {
 						worktreePath = group.project.mainRepoPath;
 					}
@@ -321,6 +331,7 @@ export const createQueryProcedures = () => {
 						...workspace,
 						type: workspace.type as "worktree" | "branch",
 						worktreePath,
+						isRepo,
 						isUnread: workspace.isUnread ?? false,
 						isUnnamed: workspace.isUnnamed ?? false,
 						iconUrl: workspace.iconUrl ?? null,
