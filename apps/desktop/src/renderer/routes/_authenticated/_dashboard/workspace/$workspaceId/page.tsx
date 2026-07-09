@@ -1,6 +1,7 @@
 import { toast } from "@roster/ui/sonner";
 import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { BinaryInstallDialog } from "renderer/components/BinaryInstallDialog/BinaryInstallDialog";
 import { useFileOpenMode } from "renderer/hooks/useFileOpenMode";
 import { electronTrpc } from "renderer/lib/electron-trpc";
 import { electronTrpcClient as trpcClient } from "renderer/lib/trpc-client";
@@ -131,7 +132,13 @@ function WorkspacePage() {
 		splitPaneHorizontal,
 		openPreset,
 	} = useTabsWithPresets();
-	const { spawnAgentSession } = useAgentSession();
+	const {
+		spawnAgentSession,
+		missingBinary,
+		dismissMissingBinary,
+		recheckAvailability,
+		isRecheckingAvailability,
+	} = useAgentSession();
 	const reopenClosedTab = useTabsStore((s) => s.reopenClosedTab);
 	const addBrowserTab = useTabsStore((s) => s.addBrowserTab);
 	const setActiveTab = useTabsStore((s) => s.setActiveTab);
@@ -679,6 +686,12 @@ function WorkspacePage() {
 				isLoading={keywordSearch.isFetching}
 				searchResults={keywordSearch.searchResults}
 				onSelectMatch={keywordSearch.selectMatch}
+			/>
+			<BinaryInstallDialog
+				binary={missingBinary}
+				onOpenChange={(open) => !open && dismissMissingBinary()}
+				onRecheck={recheckAvailability}
+				isRechecking={isRecheckingAvailability}
 			/>
 		</div>
 	);

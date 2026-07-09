@@ -1,11 +1,14 @@
 import type { AgentRuntime, TerminalPreset } from "@roster/local-db";
+import type { AgentBinary, CheckedBinary } from "@roster/shared/agent-binaries";
+import { RUNTIME_BINARY } from "@roster/shared/agent-binaries";
 import {
 	AGENT_LABELS,
 	buildRuntimeCommand,
 	DEFAULT_PERMISSION_MODE,
 } from "@roster/shared/agent-command";
-import { useCallback } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { electronTrpc } from "renderer/lib/electron-trpc";
+import { useRuntimeAvailability } from "renderer/stores/model-bar/useRuntimeAvailability";
 import { useTabsWithPresets } from "./useTabsWithPresets";
 
 /** Minimal shape needed to spawn an agent's runtime CLI session. */
@@ -32,6 +35,13 @@ export interface AgentSessionVariant {
  * (via buildRuntimeCommand, honoring the global permission mode and an optional
  * model variant) in the agent's worktree and open it as a new tab. When the
  * agent has no runtime we fall back to a plain shell tab.
+ *
+ * Spawning is gated on the runtime's binary being installed: when it's missing,
+ * spawnAgentSession returns null and sets `missingBinary` instead of opening a
+ * terminal that would just print a wrapper error. Callers render
+ * BinaryInstallDialog from the returned dialog fields. While availability is
+ * still unknown (probe in flight) we assume available so a slow probe never
+ * blocks spawning.
  */
 export function useAgentSession() {
 	const { openPreset, addTab } = useTabsWithPresets();
@@ -41,6 +51,16 @@ export function useAgentSession() {
 		electronTrpc.settings.getPermissionMode.useQuery();
 	const mode = permissionMode ?? DEFAULT_PERMISSION_MODE;
 
+	const { availability, recheck, isFetching } = useRuntimeAvailability();
+	const [missingBinary, setMissingBinary] = useState<AgentBinary | null>(null);
+
+	// Close the install dialog once a re-check confirms the tool is now present.
+	useEffect(() => {
+		if (missingBinary && (availability?.[missingBinary as CheckedBinary] ?? true)) {
+			setMissingBinary(null);
+		}
+	}, [missingBinary, availability]);
+
 	const spawnAgentSession = useCallback(
 		(workspace: AgentSessionWorkspace, variant?: AgentSessionVariant) => {
 			const { id, runtime, worktreePath } = workspace;
@@ -49,6 +69,14 @@ export function useAgentSession() {
 			if (!runtime) {
 				// No runtime configured — open a plain shell in the worktree.
 				return addTab(id, { initialCwd: cwd });
+			}
+
+			// Availability gate: the runtime's binary must be present before
+			// spawning. Unknown (probe unresolved) counts as available.
+			const binary = RUNTIME_BINARY[runtime];
+			if (!(availability?.[binary as CheckedBinary] ?? true)) {
+				setMissingBinary(binary);
+				return null;
 			}
 
 			const command = buildRuntimeCommand({
@@ -72,8 +100,18 @@ export function useAgentSession() {
 
 			return openPreset(id, preset, { target: "new-tab" });
 		},
-		[openPreset, addTab, mode],
+		[openPreset, addTab, mode, availability],
 	);
 
-	return { spawnAgentSession };
+	const dismissMissingBinary = useCallback(() => setMissingBinary(null), []);
+
+	return {
+		spawnAgentSession,
+		/** Binary that blocked the last spawn (drives BinaryInstallDialog). */
+		missingBinary,
+		dismissMissingBinary,
+		/** Re-probe availability; wire to BinaryInstallDialog's onRecheck. */
+		recheckAvailability: recheck,
+		isRecheckingAvailability: isFetching,
+	};
 }
