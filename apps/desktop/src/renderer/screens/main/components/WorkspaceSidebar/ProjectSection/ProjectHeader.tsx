@@ -116,7 +116,7 @@ export function ProjectHeader({
 			}
 		},
 		onError: (error) => {
-			toast.error(`Failed to close category: ${error.message}`);
+			toast.error(`Failed to close team: ${error.message}`);
 		},
 	});
 
@@ -363,7 +363,7 @@ export function ProjectHeader({
 					</ContextMenuItem>
 					<ContextMenuItem onSelect={handleOpenSettings}>
 						<LuSettings className="size-4 mr-2" strokeWidth={STROKE_WIDTH} />
-						Project Settings
+						Team Settings
 					</ContextMenuItem>
 					{colorPickerSubmenu}
 					<ContextMenuItem onSelect={handleToggleImage}>

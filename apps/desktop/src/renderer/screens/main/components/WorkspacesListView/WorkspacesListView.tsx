@@ -267,14 +267,22 @@ export function WorkspacesListView() {
 				))}
 
 				{filteredItems.length === 0 && (
-					<div className="flex items-center justify-center h-32 text-foreground/50 text-sm">
-						{searchQuery
-							? "No agents match your search"
-							: filterMode === "active"
-								? "No active agents"
-								: filterMode === "closed"
-									? "No closed agents"
-									: "No agents yet"}
+					<div className="flex flex-col items-center justify-center gap-1 h-32 text-foreground/50 text-sm">
+						{searchQuery ? (
+							"No agents match your search"
+						) : filterMode === "active" ? (
+							"No active agents"
+						) : filterMode === "closed" ? (
+							"No closed agents"
+						) : (
+							<>
+								<span>No agents yet</span>
+								<span className="text-xs text-foreground/40">
+									Hover a team in the left rail and click + — give the agent a
+									name and a role, and it takes it from there.
+								</span>
+							</>
+						)}
 					</div>
 				)}
 			</div>

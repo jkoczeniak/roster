@@ -114,9 +114,9 @@ export function WorkspaceRow({
 						</>
 					) : (
 						<>
-							<p className="text-xs font-medium">Worktree agent</p>
+							<p className="text-xs font-medium">Agent</p>
 							<p className="text-xs text-muted-foreground">
-								Isolated copy for parallel development
+								Has its own workspace, memory, and skills
 							</p>
 						</>
 					)}

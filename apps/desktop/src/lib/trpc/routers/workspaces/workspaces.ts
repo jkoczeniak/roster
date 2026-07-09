@@ -1,6 +1,7 @@
 import { mergeRouters } from "../..";
-import { createAgentProcedures } from "./procedures/create-agent";
+import { createConnectorProcedures } from "./procedures/connectors";
 import { createCreateProcedures } from "./procedures/create";
+import { createAgentProcedures } from "./procedures/create-agent";
 import { createDeleteProcedures } from "./procedures/delete";
 import { createGitStatusProcedures } from "./procedures/git-status";
 import { createInitProcedures } from "./procedures/init";
@@ -22,6 +23,7 @@ export const createWorkspacesRouter = () => {
 	return mergeRouters(
 		createCreateProcedures(),
 		createAgentProcedures(),
+		createConnectorProcedures(),
 		createDeleteProcedures(),
 		createQueryProcedures(),
 		createGitStatusProcedures(),

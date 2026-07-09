@@ -48,13 +48,21 @@ describe("createAgentInput role", () => {
 describe("createAgentInput repo source", () => {
 	const base = { projectId: "cat-1", name: "Scout" };
 
-	it("defaults to a fresh git repo when repo is omitted", () => {
+	it("defaults to a plain folder (no git) when repo is omitted", () => {
 		const parsed = createAgentInput.parse(base);
+		expect(parsed.repo).toEqual({ type: "folder" });
+	});
+
+	it("accepts the init (fresh git repo) source", () => {
+		const parsed = createAgentInput.parse({ ...base, repo: { type: "init" } });
 		expect(parsed.repo).toEqual({ type: "init" });
 	});
 
 	it("accepts the folder (no git) source", () => {
-		const parsed = createAgentInput.parse({ ...base, repo: { type: "folder" } });
+		const parsed = createAgentInput.parse({
+			...base,
+			repo: { type: "folder" },
+		});
 		expect(parsed.repo).toEqual({ type: "folder" });
 	});
 

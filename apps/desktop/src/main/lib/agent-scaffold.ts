@@ -292,6 +292,32 @@ dependency stance.
 A single command or check that proves the skill worked.
 `;
 
+/**
+ * Scaffold a new, user-initiated skill from the authoring template. Returns
+ * the absolute path of the created SKILL.md. Used by the Agent panel's
+ * "New skill" action — the agent itself writes skills directly to disk.
+ */
+export function createAgentSkill(agentId: string, name: string): string {
+	const slug = name
+		.trim()
+		.toLowerCase()
+		.replace(/[^a-z0-9]+/g, "-")
+		.replace(/^-+|-+$/g, "");
+	if (!slug) throw new Error("Skill names need at least one letter or number");
+	const skillDir = join(getAgentHome(agentId), "skills", slug);
+	const skillPath = join(skillDir, "SKILL.md");
+	if (existsSync(skillPath)) {
+		throw new Error(`A skill named "${slug}" already exists`);
+	}
+	mkdirSync(skillDir, { recursive: true });
+	const body = SKILL_TEMPLATE.replace(
+		"name: my-skill",
+		`name: ${slug}`,
+	).replace("# Skill Title", `# ${name.trim()}`);
+	writeFileSync(skillPath, body, "utf8");
+	return skillPath;
+}
+
 const CLAUDE_BRIDGE = `@{{agent_home}}/memory/AGENT.md
 @{{shared_user_md}}
 @{{agent_home}}/memory/.writeback-protocol.md
@@ -384,8 +410,12 @@ process.exit(0);
 `;
 }
 
-/** Bridge files written into the worktree (git-excluded, never committed). */
-const BRIDGE_EXCLUDES = ["CLAUDE.md", ".claude/", "AGENTS.md"];
+/**
+ * Bridge files written into the worktree (git-excluded, never committed).
+ * .mcp.json is the agent's personal connector config (see agent-connectors.ts)
+ * — personal wiring, not project code, so it stays out of the repo too.
+ */
+const BRIDGE_EXCLUDES = ["CLAUDE.md", ".claude/", "AGENTS.md", ".mcp.json"];
 
 /** One row of the Codex skills index. */
 interface SkillIndexEntry {

@@ -1,16 +1,20 @@
 import { workspaces, worktrees } from "@roster/local-db";
-import { beginAgentInit } from "main/lib/agent-init";
+import { TRPCError } from "@trpc/server";
 import { getAgentWorktreePath } from "main/lib/agent-home";
+import { beginAgentInit } from "main/lib/agent-init";
+import { createAgentSkill } from "main/lib/agent-scaffold";
 import { localDb } from "main/lib/local-db";
 import { v4 as uuidv4 } from "uuid";
+import { z } from "zod";
 import { publicProcedure, router } from "../../..";
-import { createAgentInput } from "./create-agent-input";
 import {
 	activateProject,
 	getMaxWorkspaceTabOrder,
 	getProject,
+	getWorkspace,
 	setLastActiveWorkspace,
 } from "../utils/db-helpers";
+import { createAgentInput } from "./create-agent-input";
 
 /**
  * Roster: create an Agent (a `workspaces` row) with its OWN standalone git repo.
@@ -89,6 +93,35 @@ export const createAgentProcedures = () => {
 					worktreeId: worktree.id,
 					isInitializing: true,
 				};
+			}),
+
+		/**
+		 * Scaffold a new skill for an agent from the authoring template (the
+		 * Agent panel's "New skill" action). Returns the SKILL.md path so the
+		 * UI can open it in a viewer tab for editing.
+		 */
+		createSkill: publicProcedure
+			.input(
+				z.object({ workspaceId: z.string(), name: z.string().trim().min(1) }),
+			)
+			.mutation(({ input }) => {
+				const workspace = getWorkspace(input.workspaceId);
+				if (!workspace) {
+					throw new TRPCError({
+						code: "NOT_FOUND",
+						message: `Workspace ${input.workspaceId} not found`,
+					});
+				}
+				try {
+					const skillPath = createAgentSkill(input.workspaceId, input.name);
+					return { skillPath };
+				} catch (error) {
+					throw new TRPCError({
+						code: "BAD_REQUEST",
+						message:
+							error instanceof Error ? error.message : "Failed to create skill",
+					});
+				}
 			}),
 	});
 };

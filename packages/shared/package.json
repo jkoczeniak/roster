@@ -31,6 +31,10 @@
 		"./claude-command": {
 			"types": "./src/claude-command.ts",
 			"default": "./src/claude-command.ts"
+		},
+		"./connector-catalog": {
+			"types": "./src/connector-catalog.ts",
+			"default": "./src/connector-catalog.ts"
 		}
 	},
 	"scripts": {

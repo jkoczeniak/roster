@@ -3,14 +3,22 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@roster/ui/tooltip";
 import { cn } from "@roster/ui/utils";
 import { useParams } from "@tanstack/react-router";
 import { useState } from "react";
-import { LuBrain, LuExpand, LuFile, LuShrink, LuX } from "react-icons/lu";
+import {
+	LuBrain,
+	LuExpand,
+	LuFile,
+	LuPlug,
+	LuShrink,
+	LuX,
+} from "react-icons/lu";
 import { HotkeyTooltipContent } from "renderer/components/HotkeyTooltipContent";
 import { electronTrpc } from "renderer/lib/electron-trpc";
 import { SidebarMode, useSidebarStore } from "renderer/stores/sidebar-state";
 import { AgentFilesView } from "./AgentFilesView";
+import { ConnectorsView } from "./ConnectorsView";
 import { FilesView } from "./FilesView";
 
-type PanelTab = "all-files" | "agent-files";
+type PanelTab = "all-files" | "agent-files" | "connectors";
 
 function TabButton({
 	isActive,
@@ -85,7 +93,8 @@ export function RightSidebar() {
 	// entirely until the memory scaffold flag is on.
 	const { data: featureFlags } = electronTrpc.config.featureFlags.useQuery();
 	const showAgentFiles = featureFlags?.memoryScaffold ?? false;
-	const activeTab: PanelTab = showAgentFiles ? panelTab : "all-files";
+	const activeTab: PanelTab =
+		panelTab === "agent-files" && !showAgentFiles ? "all-files" : panelTab;
 
 	const handleExpandToggle = () => {
 		setMode(isExpanded ? SidebarMode.Tabs : SidebarMode.Changes);
@@ -106,9 +115,15 @@ export function RightSidebar() {
 							isActive={activeTab === "agent-files"}
 							onClick={() => setPanelTab("agent-files")}
 							icon={<LuBrain className="size-3.5" />}
-							label="Agent Files"
+							label="Agent"
 						/>
 					)}
+					<TabButton
+						isActive={activeTab === "connectors"}
+						onClick={() => setPanelTab("connectors")}
+						icon={<LuPlug className="size-3.5" />}
+						label="Connectors"
+					/>
 				</div>
 				<div className="flex items-center h-10 shrink-0 pl-1 pr-2 gap-1 border-l border-border/60">
 					{isRepo && (
@@ -156,7 +171,13 @@ export function RightSidebar() {
 				</div>
 			</div>
 			<div className="flex-1 min-h-0 flex flex-col overflow-hidden">
-				{activeTab === "all-files" ? <FilesView /> : <AgentFilesView />}
+				{activeTab === "all-files" ? (
+					<FilesView />
+				) : activeTab === "connectors" ? (
+					<ConnectorsView />
+				) : (
+					<AgentFilesView />
+				)}
 			</div>
 		</aside>
 	);

@@ -44,10 +44,12 @@ type RepoMode = "init" | "folder" | "clone" | "local";
 const RUNTIME_CHOICES = ["claude", "codex"] as const;
 
 /**
- * Create an Agent inside a Category. Roster agents own a standalone repo, so this
- * asks for name + runtime + repo source (empty or clone) + optional avatar and
- * calls workspaces.createAgent (which builds the repo and scaffolds memory).
- * Reuses the new-workspace-modal store (preSelectedProjectId = the category).
+ * Create an Agent inside a Team. Persona-first: name + role seed the agent's
+ * identity (AGENT.md); the workspace defaults to a plain folder — no git — with
+ * repo/clone options tucked behind a version-control disclosure for the
+ * minority of agents that work in a codebase. Calls workspaces.createAgent
+ * (which builds the workspace and scaffolds memory + skills).
+ * Reuses the new-workspace-modal store (preSelectedProjectId = the team).
  */
 export function NewAgentModal() {
 	const navigate = useNavigate();
@@ -61,7 +63,8 @@ export function NewAgentModal() {
 	const [role, setRole] = useState("");
 	const [runtime, setRuntime] =
 		useState<(typeof AGENT_RUNTIMES)[number]>("claude");
-	const [repoMode, setRepoMode] = useState<RepoMode>("init");
+	const [repoMode, setRepoMode] = useState<RepoMode>("folder");
+	const [showGitOptions, setShowGitOptions] = useState(false);
 	const [cloneUrl, setCloneUrl] = useState("");
 	const [localPath, setLocalPath] = useState("");
 	const [photoDataUrl, setPhotoDataUrl] = useState<string | null>(null);
@@ -79,7 +82,8 @@ export function NewAgentModal() {
 		setName("");
 		setRole("");
 		setRuntime("claude");
-		setRepoMode("init");
+		setRepoMode("folder");
+		setShowGitOptions(false);
 		setCloneUrl("");
 		setLocalPath("");
 		setPhotoDataUrl(null);
@@ -208,9 +212,13 @@ export function NewAgentModal() {
 							onChange={(e) => setRole(e.target.value)}
 							rows={2}
 							maxLength={280}
-							placeholder="What is this agent? (optional — you can also just talk with the agent and shape it together)"
+							placeholder={`What should this agent do? e.g. "Review the ticket queue each morning and draft updates"`}
 							className="resize-none"
 						/>
+						<p className="text-xs text-muted-foreground">
+							Optional — this seeds the agent's identity. It keeps its own
+							memory and refines itself as you work together.
+						</p>
 					</div>
 
 					<div className="flex flex-col gap-1.5">
@@ -260,45 +268,50 @@ export function NewAgentModal() {
 					</div>
 
 					<div className="flex flex-col gap-1.5">
-						<Label>Repository</Label>
-						<RadioGroup
-							value={repoMode}
-							onValueChange={(v) => setRepoMode(v as RepoMode)}
-							className="flex flex-col gap-2"
-						>
-							<div className="flex items-center gap-2">
-								<RadioGroupItem value="init" id="repo-init" />
-								<Label htmlFor="repo-init" className="font-normal">
-									New empty repo
-								</Label>
-							</div>
-							<div className="flex flex-col gap-1">
+						<Label>Workspace</Label>
+						<p className="text-xs text-muted-foreground">
+							Every agent gets its own folder for files, memory, and skills.
+						</p>
+						{!showGitOptions ? (
+							<button
+								type="button"
+								className="w-fit text-xs text-muted-foreground underline underline-offset-2 hover:text-foreground"
+								onClick={() => setShowGitOptions(true)}
+							>
+								Working in a codebase? Use git version control…
+							</button>
+						) : (
+							<RadioGroup
+								value={repoMode}
+								onValueChange={(v) => setRepoMode(v as RepoMode)}
+								className="flex flex-col gap-2"
+							>
 								<div className="flex items-center gap-2">
 									<RadioGroupItem value="folder" id="repo-folder" />
 									<Label htmlFor="repo-folder" className="font-normal">
-										Folder (no git)
+										Plain folder — no git
 									</Label>
 								</div>
-								{repoMode === "folder" && (
-									<p className="pl-6 text-xs text-muted-foreground">
-										A plain folder on your Mac — memory, skills, and sessions,
-										with no version control.
-									</p>
-								)}
-							</div>
-							<div className="flex items-center gap-2">
-								<RadioGroupItem value="clone" id="repo-clone" />
-								<Label htmlFor="repo-clone" className="font-normal">
-									Clone from URL
-								</Label>
-							</div>
-							<div className="flex items-center gap-2">
-								<RadioGroupItem value="local" id="repo-local" />
-								<Label htmlFor="repo-local" className="font-normal">
-									Clone from local path
-								</Label>
-							</div>
-						</RadioGroup>
+								<div className="flex items-center gap-2">
+									<RadioGroupItem value="init" id="repo-init" />
+									<Label htmlFor="repo-init" className="font-normal">
+										New empty git repo
+									</Label>
+								</div>
+								<div className="flex items-center gap-2">
+									<RadioGroupItem value="clone" id="repo-clone" />
+									<Label htmlFor="repo-clone" className="font-normal">
+										Clone from URL
+									</Label>
+								</div>
+								<div className="flex items-center gap-2">
+									<RadioGroupItem value="local" id="repo-local" />
+									<Label htmlFor="repo-local" className="font-normal">
+										Clone from local path
+									</Label>
+								</div>
+							</RadioGroup>
+						)}
 						{repoMode === "clone" && (
 							<Input
 								value={cloneUrl}
@@ -320,8 +333,9 @@ export function NewAgentModal() {
 					<div className="flex flex-col gap-2 rounded-md border border-amber-500/40 bg-amber-500/10 px-3 py-2.5 text-xs">
 						<p className="font-medium text-foreground">Git is required</p>
 						<p className="text-muted-foreground">
-							Creating an agent sets up a git repository, and Git isn't
-							installed. Install Apple's Command Line Tools, then re-check:
+							The workspace option you picked sets up a git repository, and Git
+							isn't installed. Install Apple's Command Line Tools, then re-check
+							— or switch back to a plain folder:
 						</p>
 						<code className="select-all rounded bg-background/60 px-2 py-1 font-mono">
 							xcode-select --install

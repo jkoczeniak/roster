@@ -44,5 +44,7 @@ export const createAgentInput = z.object({
 					),
 			}),
 		])
-		.default({ type: "init" }),
+		// Folder is the default workspace: most agents are personas working with
+		// connectors and local files, not codebases. Git is the opt-in minority.
+		.default({ type: "folder" }),
 });

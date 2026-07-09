@@ -76,11 +76,9 @@ export function NewCategoryModal() {
 			// /welcome before the new category is in cache); /workspaces renders
 			// the rail unconditionally.
 			navigate({ to: "/workspaces" });
-			toast.success(`Category "${name.trim()}" created`);
+			toast.success(`Team "${name.trim()}" created`);
 		} catch (err) {
-			toast.error(
-				err instanceof Error ? err.message : "Failed to create category",
-			);
+			toast.error(err instanceof Error ? err.message : "Failed to create team");
 		}
 	};
 
@@ -98,7 +96,11 @@ export function NewCategoryModal() {
 						className="size-12 shrink-0 rounded overflow-hidden bg-muted flex items-center justify-center text-xs text-muted-foreground border border-border"
 					>
 						{photoDataUrl ? (
-							<img src={photoDataUrl} alt="" className="size-full object-cover" />
+							<img
+								src={photoDataUrl}
+								alt=""
+								className="size-full object-cover"
+							/>
 						) : (
 							"Photo"
 						)}

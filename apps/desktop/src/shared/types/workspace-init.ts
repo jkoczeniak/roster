@@ -28,7 +28,7 @@ export interface WorkspaceInitProgress {
 
 export const INIT_STEP_MESSAGES: Record<WorkspaceInitStep, string> = {
 	pending: "Preparing...",
-	creating_repo: "Creating repository...",
+	creating_repo: "Setting up workspace...",
 	scaffolding_memory: "Initializing memory files...",
 	syncing: "Syncing with remote...",
 	verifying: "Verifying base branch...",

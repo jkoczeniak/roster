@@ -2,21 +2,22 @@ import { projects, workspaces, worktrees } from "@roster/local-db";
 import { TRPCError } from "@trpc/server";
 import { observable } from "@trpc/server/observable";
 import { eq } from "drizzle-orm";
+import { syncCodexConnectors } from "main/lib/agent-connectors";
 import {
 	ensureClaudeSkillsLink,
 	regenerateCodexAgentsMd,
 } from "main/lib/agent-scaffold";
+import { appState } from "main/lib/app-state";
 import { requestAppleEventsAccessOnce } from "main/lib/apple-events-permission";
 import { MEMORY_SCAFFOLD_ENABLED } from "main/lib/feature-flags";
-import { appState } from "main/lib/app-state";
 import { localDb } from "main/lib/local-db";
 import { restartDaemon as restartDaemonShared } from "main/lib/terminal";
 import {
 	TERMINAL_SESSION_KILLED_MESSAGE,
 	TerminalKilledError,
 } from "main/lib/terminal/errors";
-import { getTerminalHostClient } from "main/lib/terminal-host/client";
 import { writeClaudeSessionIdToHistory } from "main/lib/terminal-history";
+import { getTerminalHostClient } from "main/lib/terminal-host/client";
 import { getWorkspaceRuntimeRegistry } from "main/lib/workspace-runtime";
 import { z } from "zod";
 import { publicProcedure, router } from "../..";
@@ -143,6 +144,9 @@ export const createTerminalRouter = () => {
 				// also self-guarding: it no-ops when no canonical memory exists.
 				if (workspace?.runtime === "codex" && MEMORY_SCAFFOLD_ENABLED) {
 					regenerateCodexAgentsMd(workspaceId);
+					// Mirror .mcp.json connectors into the agent's CODEX_HOME config
+					// so hand edits to .mcp.json reach Codex sessions too. Best-effort.
+					syncCodexConnectors(workspaceId, workspacePath);
 				}
 
 				// Claude Code loads skills from <worktree>/.claude/skills; the agent

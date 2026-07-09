@@ -1,10 +1,12 @@
 # Roster
 
-An agentic development environment for macOS. Roster is a local-first, single-user desktop app where you build a roster of persistent coding agents and work alongside them in the terminal. Every agent is a durable identity — its own name, photo, git repository, runtime CLI, and long-lived memory — not a throwaway chat session. You come back to the same agent tomorrow and it remembers what it learned today.
+A studio for building local agents, on macOS. Roster is a local-first, single-user desktop app where you create agents with a **persona**, a **long-lived memory**, **skills** they write for themselves, and **connectors** to the systems they work with — then sit alongside them in a real terminal. Every agent is a durable identity — its own name, photo, role, workspace, and accumulated knowledge — not a throwaway chat session. You come back to the same agent tomorrow and it remembers what it learned today.
 
-The interface is a two-level left rail. **Teams** group your work (a name and a square photo); inside each team live **Agents** (a name and a circular photo). Selecting an agent opens its workspace: a strip of **session** tabs, each a real terminal running the agent's coding CLI inside that agent's own git worktree. A **model bar** under the tabs lets you spawn a session on a different model without leaving the agent. On the right, the **Agent Files** panel shows the agent's memory growing as it works.
+Think of an agent as a skill with a personality and a learning loop: a ticket reviewer that knows your Jira conventions, a research assistant that remembers what you've already read, an ops runner that has written down every quirk of your setup. An agent works in a plain folder by default — no git, no repo, nothing developer-shaped required. Agents that work in a codebase can opt into git (init or clone) and get diffs, branches, and PRs; that's the minority case, and the UI stays out of the way otherwise.
 
-Roster runs two CLI coding agents you install yourself: **Claude Code** and **OpenAI Codex**. Nothing here is a hosted service — no accounts, no telemetry, no cloud. Your code, your CLIs' own logins, and your agents' memory all stay on your machine. The in-app terminal is [Ghostty](https://github.com/ghostty-org/ghostty)'s own terminal core, compiled to WebAssembly.
+The interface is a two-level left rail. **Teams** group your agents (a name and a square photo); inside each team live **Agents** (a name and a circular photo). Selecting an agent opens its workspace: a strip of **session** tabs, each a real terminal running the agent's CLI. A **model bar** under the tabs lets you spawn a session on a different model without leaving the agent. On the right, the agent's panel shows its **persona, memory, and skills** growing as it works, and the **connectors** wiring it to Jira, Confluence, Linear, Notion, or your company's internal MCP endpoints.
+
+Roster runs two CLI agents you install yourself: **Claude Code** and **OpenAI Codex** — the terminal UI means you always have each CLI's newest features the day they ship. Nothing here is a hosted service — no accounts, no telemetry, no cloud. Your files, your CLIs' own logins, and your agents' memory all stay on your machine. The in-app terminal is [Ghostty](https://github.com/ghostty-org/ghostty)'s own terminal core, compiled to WebAssembly.
 
 > Roster is a personal, local-only rebuild of [ADE](https://github.com/per-simmons/damon-ade) (itself derived from [Superset](https://github.com/superset-sh/superset)), stripped to Claude Code + Codex, moved onto a Ghostty terminal, and hardened for security. See [NOTICE](NOTICE) for the full modification list. Distributed under the Elastic License 2.0.
 
@@ -37,9 +39,9 @@ Signed DMGs, when published, are on the [releases page](https://github.com/jkocz
 
 ## Prerequisites
 
-Roster orchestrates coding CLIs; it does not bundle them. You need:
+Roster orchestrates agent CLIs; it does not bundle them. You need:
 
-- **Git** — required. Each agent gets its own repository or worktree. Install Apple's command line tools with `xcode-select --install`.
+- **Git** — only for agents that opt into version control (repo/clone options). A folder agent needs no git. Install Apple's command line tools with `xcode-select --install`.
 - **At least one agent CLI:**
 
   ```bash
@@ -59,24 +61,23 @@ Roster orchestrates coding CLIs; it does not bundle them. You need:
 
 **3. Create an agent.** Hover the team's header in the rail and click the **+** button ("New agent"). In the New Agent dialog:
    - **Name** — required (for example, `Scout`).
-   - **Role** — optional. A sentence describing what this agent is for. Leave it blank if you'd rather shape the agent by talking to it — Roster seeds the agent's identity file either way, and it refines itself over time.
-   - **Runtime** — the coding CLI this agent runs: **Claude** or **Codex**. Claude is the default.
-   - **Repository** — pick how the agent's workspace is set up:
-     - **New empty repo** — a fresh git repo (`git init`).
-     - **Folder (no git)** — just a plain folder on your Mac, no version control. The agent still gets all the same things — its own rules, memory, skills, sessions, and model switching. Choose this if you don't use git/GitHub and just want an agent to work with.
-     - **Clone from URL** / **Clone from local path** — for an existing repo.
+   - **Role** — optional. A sentence describing what this agent does (for example, *"Review the ticket queue each morning and draft updates"*). It seeds the agent's identity file, and the agent refines itself over time — you can also leave it blank and shape the agent by talking to it.
+   - **Runtime** — the CLI this agent runs: **Claude** or **Codex**. Claude is the default.
+   - **Workspace** — every agent gets its own plain folder for files, memory, and skills; that's the default and needs no git. Agents that work in a codebase can expand **"Working in a codebase? Use git version control…"** and pick a fresh repo (`git init`) or a clone (URL / local path) instead.
 
-   Roster creates the agent, gives it its own workspace, and scaffolds its memory in the background. Git is only required for the repo/clone options — a **Folder** agent needs no git at all.
+   Roster creates the agent, gives it its own workspace, and scaffolds its memory in the background.
 
 **4. Add profile photos.** Right-click any agent in the rail and choose **Change Photo** (or **Remove Photo**) to give it a circular avatar. Team photos are set the same way from the team's header menu. Photos are optional but make a busy rail readable.
 
-**5. Sessions start automatically.** Opening an agent that has no sessions yet automatically spawns one — a terminal tab running the agent's runtime CLI in its worktree. That's the agent, live. Open more session tabs whenever you want parallel threads of work.
+**5. Sessions start automatically.** Opening an agent that has no sessions yet automatically spawns one — a terminal tab running the agent's CLI in its workspace. That's the agent, live. Open more session tabs whenever you want parallel threads of work.
 
-**6. Switch models from the model bar.** Below the session tabs is a quiet row of model variants: **Claude** (default), **Fable**, **Opus**, **Sonnet** for the Claude runtime, and **High** / **Medium** reasoning for Codex (GPT-5.5). Click any to open a new session in the current agent's worktree running that model — the same code, a different model, no context switch.
+**6. Switch models from the model bar.** Below the session tabs is a quiet row of model variants: **Claude** (default), **Fable**, **Opus**, **Sonnet** for the Claude runtime, and **High** / **Medium** reasoning for Codex (GPT-5.5). Click any to open a new session in the current agent's workspace running that model — the same code, a different model, no context switch.
 
-**7. Choose your autonomy.** Sessions launch in **Guarded** mode by default — each CLI keeps its own approval prompts and sandbox. If you fully trust a repo, switch to **Full autonomy** in Settings → Features to launch new sessions with the CLI's skip-permissions / full-access flags.
+**7. Connect its tools.** Open the right sidebar's **Connectors** tab to wire the agent to the systems it works with — one click for Jira & Confluence, Linear, Notion, Sentry, and friends, or a custom entry for a company-internal MCP endpoint (a ServiceNow bridge, an O365 gateway) or a local command. Connectors are per-agent: the ticket reviewer gets Jira, the finance agent gets Stripe, and neither can touch the other's tools. Remote connectors sign in from the agent's own session (`/mcp` in Claude Code) — Roster never stores credentials.
 
-**8. Watch the memory grow.** The **Agent Files** panel on the right lists the agent's memory surface, grouped into **Memory**, **Skills**, and **Worktree**. It starts nearly empty and fills in as the agent learns — its identity, your shared profile, its notes, and any skills it writes for itself. Click a file to open it in a viewer tab.
+**8. Choose your autonomy.** Sessions launch in **Guarded** mode by default — each CLI keeps its own approval prompts and sandbox. If you fully trust an agent's workspace, switch it to **Full autonomy** from the model bar (or change the default in Settings → Features).
+
+**9. Watch the memory grow.** The **Agent** panel on the right lists the agent's identity surface, grouped into **Memory**, **Skills**, and **Bridge files**. It starts nearly empty and fills in as the agent learns — its persona, your shared profile, its notes, and any skills it writes for itself. Click a file to read or edit it, or hit **New skill** to scaffold a procedure for the agent to follow.
 
 ## How memory works
 

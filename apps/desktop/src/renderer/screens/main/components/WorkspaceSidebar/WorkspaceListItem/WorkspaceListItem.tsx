@@ -138,10 +138,12 @@ export function WorkspaceListItem({
 
 	// Agent avatar (circular rail bust) photo upload.
 	const photoInputRef = useRef<HTMLInputElement>(null);
-	const setWorkspaceIcon = electronTrpc.workspaces.setWorkspaceIcon.useMutation({
-		onSuccess: () => utils.workspaces.getAllGrouped.invalidate(),
-		onError: (error) => toast.error(`Failed to set photo: ${error.message}`),
-	});
+	const setWorkspaceIcon = electronTrpc.workspaces.setWorkspaceIcon.useMutation(
+		{
+			onSuccess: () => utils.workspaces.getAllGrouped.invalidate(),
+			onError: (error) => toast.error(`Failed to set photo: ${error.message}`),
+		},
+	);
 	const handlePhotoFileChange = async (
 		e: React.ChangeEvent<HTMLInputElement>,
 	) => {
@@ -377,10 +379,10 @@ export function WorkspaceListItem({
 					<div
 						className={cn(
 							"relative shrink-0 flex items-center justify-center mr-2.5",
-								// Photo avatars get a larger slot; glyph icons keep the compact
-								// one. The slot must match the img size or the reset's max-width
-								// squeezes the circle into an oval.
-								iconUrl ? "size-8" : "size-5",
+							// Photo avatars get a larger slot; glyph icons keep the compact
+							// one. The slot must match the img size or the reset's max-width
+							// squeezes the circle into an oval.
+							iconUrl ? "size-8" : "size-5",
 							hasSubtitle && "mt-0.5",
 						)}
 					>
@@ -405,9 +407,9 @@ export function WorkspaceListItem({
 						</>
 					) : (
 						<>
-							<p className="text-xs font-medium">Worktree agent</p>
+							<p className="text-xs font-medium">Agent</p>
 							<p className="text-xs text-muted-foreground">
-								Isolated copy for parallel development
+								Has its own workspace, memory, and skills
 							</p>
 						</>
 					)}
@@ -579,9 +581,7 @@ export function WorkspaceListItem({
 							<LuPencil className="size-4 mr-2" strokeWidth={STROKE_WIDTH} />
 							Rename
 						</ContextMenuItem>
-						<ContextMenuItem
-							onSelect={() => photoInputRef.current?.click()}
-						>
+						<ContextMenuItem onSelect={() => photoInputRef.current?.click()}>
 							<LuImage className="size-4 mr-2" strokeWidth={STROKE_WIDTH} />
 							Change Photo
 						</ContextMenuItem>

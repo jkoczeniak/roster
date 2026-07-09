@@ -87,4 +87,4 @@ Bridge and canonical files are seeded write-if-**missing**: re-running the scaff
 
 ## Where to see it
 
-The **Agent Files** panel in an agent's workspace lists this whole surface — the Memory files (including the shared profile, labeled "USER.md (shared)"), the Skills, and the worktree bridge — and only shows files that exist, so it visibly grows as the agent learns. Click any file to open it in a viewer tab.
+The **Agent** panel in an agent's workspace (right sidebar) lists this whole surface — the Memory files (including the shared profile, labeled "USER.md (shared)"), the Skills, and the worktree bridge — and only shows files that exist, so it visibly grows as the agent learns. Click any file to open it in a viewer tab.

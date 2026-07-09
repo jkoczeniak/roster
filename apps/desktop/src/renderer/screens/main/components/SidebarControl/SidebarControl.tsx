@@ -1,10 +1,15 @@
 import { Button } from "@roster/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@roster/ui/tooltip";
 import { cn } from "@roster/ui/utils";
-import { LuDiff } from "react-icons/lu";
+import { LuPanelRight } from "react-icons/lu";
 import { HotkeyTooltipContent } from "renderer/components/HotkeyTooltipContent";
 import { useSidebarStore } from "renderer/stores";
 
+/**
+ * Toggles the right sidebar — the agent's panel (files, persona/memory/skills,
+ * connectors). Labeled "Agent", not "Code": the panel is the agent's identity
+ * surface first, and a file tree second.
+ */
 export function SidebarControl() {
 	const { isSidebarOpen, toggleSidebar } = useSidebarStore();
 
@@ -15,7 +20,9 @@ export function SidebarControl() {
 					variant="ghost"
 					size="sm"
 					onClick={toggleSidebar}
-					aria-label={isSidebarOpen ? "Hide Code Sidebar" : "Show Code Sidebar"}
+					aria-label={
+						isSidebarOpen ? "Hide Agent Sidebar" : "Show Agent Sidebar"
+					}
 					aria-pressed={isSidebarOpen}
 					className={cn(
 						"no-drag gap-1.5 h-6 px-1.5 rounded",
@@ -24,13 +31,13 @@ export function SidebarControl() {
 							: "text-muted-foreground hover:text-foreground",
 					)}
 				>
-					<LuDiff className="size-3" />
-					<span className="text-xs">Code</span>
+					<LuPanelRight className="size-3" />
+					<span className="text-xs">Agent</span>
 				</Button>
 			</TooltipTrigger>
 			<TooltipContent side="bottom" showArrow={false}>
 				<HotkeyTooltipContent
-					label="Open Code Sidebar"
+					label="Open Agent Sidebar"
 					hotkeyId="TOGGLE_SIDEBAR"
 				/>
 			</TooltipContent>

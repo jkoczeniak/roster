@@ -6,9 +6,10 @@ import { useOpenNewCategoryModal } from "renderer/stores/new-category-modal";
 import { PreflightCard } from "./PreflightCard";
 
 /**
- * First-run / empty onboarding. Roster groups agents under categories, so the
- * entry action is "Create a category"; agents (each with their own repo) are
- * added inside a category via the New Agent modal.
+ * First-run / empty onboarding. Roster is where you build agents with a
+ * persona and a memory that grows; teams are just the grouping, so the entry
+ * action is "Create a team", then agents are added inside it via the New
+ * Agent modal.
  */
 export function StartView() {
 	const openNewCategory = useOpenNewCategoryModal();
@@ -17,7 +18,11 @@ export function StartView() {
 		<div className="flex flex-col h-full w-full relative overflow-hidden bg-background">
 			<div className="relative flex flex-1 items-center justify-center">
 				<div className="flex flex-col items-center w-full max-w-md px-6">
-					<RosterLogo className={cn("h-8 w-auto mb-12 opacity-80")} />
+					<RosterLogo className={cn("h-8 w-auto mb-6 opacity-80")} />
+					<p className="text-sm text-muted-foreground text-center mb-8 max-w-sm">
+						Build a roster of agents — each with its own role, memory, skills,
+						and connectors. They learn as you work with them.
+					</p>
 
 					<div className="w-full flex flex-col items-center gap-4">
 						<button
@@ -37,7 +42,8 @@ export function StartView() {
 									</span>
 								</div>
 								<div className="text-sm pt-3 text-muted-foreground">
-									Teams group your agents. Add agents once you have one.
+									Teams group your agents — Home, Work, a project. Your first
+									agent comes next.
 								</div>
 							</div>
 						</button>
