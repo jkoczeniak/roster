@@ -327,6 +327,12 @@ export const createProjectsRouter = (getWindow: () => BrowserWindow | null) => {
 						throw new Error(`Project ${input.projectId} not found`);
 					}
 
+					// Repo-less teams (mainRepoPath "") have no branches; simpleGit("")
+					// would fall back to the Electron process cwd.
+					if (!project.mainRepoPath) {
+						return { branches: [], defaultBranch: "" };
+					}
+
 					const git = simpleGit(project.mainRepoPath);
 
 					let hasOrigin = false;
@@ -1036,8 +1042,7 @@ export const createProjectsRouter = (getWindow: () => BrowserWindow | null) => {
 					.where(eq(projects.id, input.id))
 					.get();
 
-				if (!project) {
-					console.log("[getGitHubAvatar] Project not found:", input.id);
+				if (!project || !project.mainRepoPath) {
 					return null;
 				}
 
@@ -1086,7 +1091,7 @@ export const createProjectsRouter = (getWindow: () => BrowserWindow | null) => {
 					.where(eq(projects.id, input.id))
 					.get();
 
-				if (!project) {
+				if (!project || !project.mainRepoPath) {
 					return null;
 				}
 

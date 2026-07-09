@@ -79,6 +79,13 @@ async function fileExists(path: string): Promise<boolean> {
 async function detectSetupDefaults(
 	mainRepoPath: string,
 ): Promise<SetupDetectionResult> {
+	// Repo-less teams/categories (mainRepoPath "") have no project files to
+	// scan — without this guard the checks below probe relative paths against
+	// the Electron process cwd.
+	if (!mainRepoPath) {
+		return { projectSummary: "", actions: [], setupTemplate: [], signals: {} };
+	}
+
 	const check = (name: string) => fileExists(join(mainRepoPath, name));
 
 	const [
@@ -369,6 +376,14 @@ function getConfigPath(mainRepoPath: string): string {
 }
 
 function ensureConfigExists(mainRepoPath: string): string {
+	// join("", ".roster") yields a relative path, so an unguarded call for a
+	// repo-less team would mkdir wherever the Electron process happens to be
+	// cwd'd — callers must filter the "" sentinel first.
+	if (!mainRepoPath) {
+		throw new Error(
+			"This team has no shared repository, so it has no .roster config",
+		);
+	}
 	const configPath = getConfigPath(mainRepoPath);
 	const rosterDir = join(mainRepoPath, ".roster");
 
@@ -412,6 +427,11 @@ export const createConfigRouter = () => {
 					return false;
 				}
 
+				// Repo-less teams have no repo to run setup scripts in
+				if (!project.mainRepoPath) {
+					return false;
+				}
+
 				// Don't show if already dismissed or if config has scripts
 				if (project.configToastDismissed) {
 					return false;
@@ -441,7 +461,7 @@ export const createConfigRouter = () => {
 					.from(projects)
 					.where(eq(projects.id, input.projectId))
 					.get();
-				if (!project) {
+				if (!project || !project.mainRepoPath) {
 					return null;
 				}
 				return ensureConfigExists(project.mainRepoPath);
@@ -456,7 +476,7 @@ export const createConfigRouter = () => {
 					.from(projects)
 					.where(eq(projects.id, input.projectId))
 					.get();
-				if (!project) {
+				if (!project || !project.mainRepoPath) {
 					return { content: null, exists: false };
 				}
 
