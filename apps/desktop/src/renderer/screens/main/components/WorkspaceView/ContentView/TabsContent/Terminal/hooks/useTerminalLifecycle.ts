@@ -362,6 +362,25 @@ export function useTerminalLifecycle({
 				restartTerminalSession();
 				return;
 			}
+			// Broadcast: mirror input to every other terminal pane in the tab.
+			// Hidden (zoomed-away) panes still receive writes — their PTY stays
+			// alive in the main process even while detached.
+			const tabsState = useTabsStore.getState();
+			if (tabsState.broadcastTabIds[tabIdRef.current]) {
+				for (const pane of Object.values(tabsState.panes)) {
+					if (
+						pane.id !== paneId &&
+						pane.tabId === tabIdRef.current &&
+						pane.type === "terminal"
+					) {
+						trpcClient.terminal.write
+							.mutate({ paneId: pane.id, data })
+							.catch(() => {
+								// Peer pane may have exited; keep typing in the source pane.
+							});
+					}
+				}
+			}
 			writeRef.current({ paneId, data });
 		};
 

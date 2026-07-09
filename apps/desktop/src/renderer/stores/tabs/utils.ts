@@ -540,6 +540,61 @@ export const getAdjacentPaneId = (
 };
 
 /**
+ * Result of toggling pane zoom on a tab. `layout` is the tab's next layout;
+ * zoom bookkeeping fields are explicitly present so callers can spread them
+ * onto the tab (undefined clears them).
+ */
+export interface PaneZoomUpdate {
+	layout: MosaicNode<string>;
+	zoomedPaneId: string | undefined;
+	preZoomLayout: MosaicNode<string> | undefined;
+	focusPaneId: string;
+}
+
+/**
+ * Computes the tab update for a tmux-style zoom toggle.
+ *
+ * - Zoom in: swap the layout for a single-pane leaf, stashing the full mosaic
+ *   in `preZoomLayout` (panes are untouched — hidden panes stay in the store).
+ * - Zoom out: restore the stashed mosaic, cleaned against `validPaneIds` in
+ *   case panes disappeared while zoomed.
+ *
+ * Returns null when there is nothing to do (unknown pane, single-pane tab).
+ */
+export const computePaneZoomToggle = (
+	tab: Pick<Tab, "layout" | "zoomedPaneId" | "preZoomLayout">,
+	paneId: string | undefined,
+	validPaneIds: Set<string>,
+): PaneZoomUpdate | null => {
+	if (tab.zoomedPaneId) {
+		const restored = tab.preZoomLayout
+			? cleanLayout(tab.preZoomLayout, validPaneIds)
+			: null;
+		const layout = restored ?? tab.layout;
+		return {
+			layout,
+			zoomedPaneId: undefined,
+			preZoomLayout: undefined,
+			focusPaneId: validPaneIds.has(tab.zoomedPaneId)
+				? tab.zoomedPaneId
+				: getFirstPaneId(layout),
+		};
+	}
+
+	if (!paneId || !validPaneIds.has(paneId)) return null;
+	// A single pane already fills the tab — nothing to zoom.
+	if (typeof tab.layout === "string") return null;
+	if (!extractPaneIdsFromLayout(tab.layout).includes(paneId)) return null;
+
+	return {
+		layout: paneId,
+		zoomedPaneId: paneId,
+		preZoomLayout: tab.layout,
+		focusPaneId: paneId,
+	};
+};
+
+/**
  * Finds the path to a specific pane ID in a mosaic layout
  * Returns the path as an array of MosaicBranch ("first" | "second"), or null if not found
  */

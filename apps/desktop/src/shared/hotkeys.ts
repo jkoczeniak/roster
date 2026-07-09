@@ -505,6 +505,13 @@ export const HOTKEYS = {
 		category: "Layout",
 		description: "Close the current pane",
 	}),
+	TOGGLE_PANE_ZOOM: defineHotkey({
+		keys: "meta+shift+enter",
+		label: "Zoom Pane",
+		category: "Layout",
+		description:
+			"Maximize the focused pane within its tab; press again to restore the layout",
+	}),
 
 	// Terminal
 	FIND_IN_TERMINAL: defineHotkey({
@@ -554,6 +561,13 @@ export const HOTKEYS = {
 		keys: "meta+k",
 		label: "Clear Terminal",
 		category: "Terminal",
+	}),
+	TOGGLE_BROADCAST: defineHotkey({
+		keys: "meta+alt+i",
+		label: "Broadcast Input",
+		category: "Terminal",
+		description:
+			"Mirror typed input to every terminal pane in the current tab; press again to disarm",
 	}),
 	SCROLL_TO_BOTTOM: defineHotkey({
 		keys: "meta+shift+down",
