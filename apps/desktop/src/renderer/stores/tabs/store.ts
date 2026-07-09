@@ -14,6 +14,7 @@ import type {
 } from "./types";
 import {
 	buildMultiPaneLayout,
+	computePaneZoomToggle,
 	type CreatePaneOptions,
 	createBrowserPane,
 	createBrowserTabWithPane,
@@ -22,6 +23,7 @@ import {
 	createPane,
 	createTabWithPane,
 	extractPaneIdsFromLayout,
+	findPanePath,
 	generateId,
 	generateTabName,
 	getAdjacentPaneId,
@@ -86,6 +88,22 @@ const findNextTab = (state: TabsState, tabIdToClose: string): string | null => {
 	return workspaceTabs[0]?.id || null;
 };
 
+/**
+ * Restores a tab's pre-zoom mosaic before any operation that edits its
+ * layout. Editing the single-pane zoom layout directly would orphan the
+ * hidden panes (they exist in `panes` but not in the layout tree).
+ */
+const unzoomTabIfNeeded = (
+	get: () => TabsStore,
+	tabId: string | null | undefined,
+): void => {
+	if (!tabId) return;
+	const tab = get().tabs.find((t) => t.id === tabId);
+	if (tab?.zoomedPaneId) {
+		get().togglePaneZoom(tabId);
+	}
+};
+
 const deriveTabName = (
 	panes: Record<string, { tabId: string; name: string }>,
 	tabId: string,
@@ -105,6 +123,7 @@ export const useTabsStore = create<TabsStore>()(
 				focusedPaneIds: {},
 				tabHistoryStacks: {},
 				closedTabsStack: [],
+				broadcastTabIds: {},
 
 				// Tab operations
 				addTab: (workspaceId, options?: CreatePaneOptions) => {
@@ -218,7 +237,13 @@ export const useTabsStore = create<TabsStore>()(
 						.map((id) => state.panes[id])
 						.filter(Boolean);
 					const closedEntry = {
-						tab: tabToRemove,
+						tab: {
+							...tabToRemove,
+							// Snapshot the full mosaic, not the transient zoom layout.
+							layout: tabToRemove.preZoomLayout ?? tabToRemove.layout,
+							zoomedPaneId: undefined,
+							preZoomLayout: undefined,
+						},
 						panes: closedPanes,
 						closedAt: Date.now(),
 					};
@@ -255,12 +280,16 @@ export const useTabsStore = create<TabsStore>()(
 					const newFocusedPaneIds = { ...state.focusedPaneIds };
 					delete newFocusedPaneIds[tabId];
 
+					const newBroadcastTabIds = { ...state.broadcastTabIds };
+					delete newBroadcastTabIds[tabId];
+
 					set({
 						tabs: newTabs,
 						panes: newPanes,
 						activeTabIds: newActiveTabIds,
 						focusedPaneIds: newFocusedPaneIds,
 						closedTabsStack,
+						broadcastTabIds: newBroadcastTabIds,
 						tabHistoryStacks: {
 							...state.tabHistoryStacks,
 							[workspaceId]: newHistoryStack,
@@ -405,6 +434,17 @@ export const useTabsStore = create<TabsStore>()(
 					const tab = state.tabs.find((t) => t.id === tabId);
 					if (!tab) return;
 
+					if (tab.zoomedPaneId) {
+						// While zoomed, Mosaic renders the single-pane layout; a change
+						// it reports (e.g. a cross-tab drop) can't be reconciled with
+						// the hidden mosaic — applying it via the diff below would kill
+						// every hidden pane. Restore the full layout and drop the change.
+						if (layout !== tab.layout) {
+							get().togglePaneZoom(tabId);
+						}
+						return;
+					}
+
 					const newPaneIds = new Set(extractPaneIdsFromLayout(layout));
 					const oldPaneIds = new Set(extractPaneIdsFromLayout(tab.layout));
 
@@ -450,6 +490,7 @@ export const useTabsStore = create<TabsStore>()(
 
 				// Pane operations
 				addPane: (tabId, options?: CreatePaneOptions) => {
+					unzoomTabIfNeeded(get, tabId);
 					const state = get();
 					const tab = state.tabs.find((t) => t.id === tabId);
 					if (!tab) return "";
@@ -484,6 +525,7 @@ export const useTabsStore = create<TabsStore>()(
 					tabId: string,
 					options: AddTabWithMultiplePanesOptions,
 				) => {
+					unzoomTabIfNeeded(get, tabId);
 					const state = get();
 					const tab = state.tabs.find((t) => t.id === tabId);
 					if (!tab) return [];
@@ -534,13 +576,16 @@ export const useTabsStore = create<TabsStore>()(
 						};
 					}
 
-					const state = get();
 					const resolvedActiveTabId = resolveActiveTabIdForWorkspace({
 						workspaceId,
-						tabs: state.tabs,
-						activeTabIds: state.activeTabIds,
-						tabHistoryStacks: state.tabHistoryStacks,
+						tabs: get().tabs,
+						activeTabIds: get().activeTabIds,
+						tabHistoryStacks: get().tabHistoryStacks,
 					});
+					// Pane reuse and splitting must operate on the full mosaic, not
+					// the single-pane zoom layout.
+					unzoomTabIfNeeded(get, resolvedActiveTabId);
+					const state = get();
 					const activeTab = resolvedActiveTabId
 						? state.tabs.find((t) => t.id === resolvedActiveTabId)
 						: null;
@@ -756,6 +801,9 @@ export const useTabsStore = create<TabsStore>()(
 				},
 
 				removePane: (paneId) => {
+					// Restore the mosaic first so removal edits the full layout and
+					// hidden panes aren't orphaned.
+					unzoomTabIfNeeded(get, get().panes[paneId]?.tabId);
 					const state = get();
 					const pane = state.panes[paneId];
 					if (!pane) return;
@@ -1033,6 +1081,10 @@ export const useTabsStore = create<TabsStore>()(
 
 				// Split operations
 				splitPaneVertical: (tabId, sourcePaneId, path, options) => {
+					const wasZoomed = Boolean(
+						get().tabs.find((t) => t.id === tabId)?.zoomedPaneId,
+					);
+					unzoomTabIfNeeded(get, tabId);
 					const state = get();
 					const tab = state.tabs.find((t) => t.id === tabId);
 					if (!tab) return;
@@ -1040,15 +1092,20 @@ export const useTabsStore = create<TabsStore>()(
 					const sourcePane = state.panes[sourcePaneId];
 					if (!sourcePane || sourcePane.tabId !== tabId) return;
 
+					// Paths computed against the zoom layout are stale after restore.
+					const effectivePath = wasZoomed
+						? (findPanePath(tab.layout, sourcePaneId) ?? undefined)
+						: path;
+
 					// Always create a new terminal when splitting
 					const newPane = createPane(tabId, "terminal", options);
 
 					let newLayout: MosaicNode<string>;
-					if (path && path.length > 0) {
+					if (effectivePath && effectivePath.length > 0) {
 						// Split at a specific path in the layout
 						newLayout = updateTree(tab.layout, [
 							{
-								path,
+								path: effectivePath,
 								spec: {
 									$set: {
 										direction: "row",
@@ -1085,6 +1142,10 @@ export const useTabsStore = create<TabsStore>()(
 				},
 
 				splitPaneHorizontal: (tabId, sourcePaneId, path, options) => {
+					const wasZoomed = Boolean(
+						get().tabs.find((t) => t.id === tabId)?.zoomedPaneId,
+					);
+					unzoomTabIfNeeded(get, tabId);
 					const state = get();
 					const tab = state.tabs.find((t) => t.id === tabId);
 					if (!tab) return;
@@ -1092,15 +1153,20 @@ export const useTabsStore = create<TabsStore>()(
 					const sourcePane = state.panes[sourcePaneId];
 					if (!sourcePane || sourcePane.tabId !== tabId) return;
 
+					// Paths computed against the zoom layout are stale after restore.
+					const effectivePath = wasZoomed
+						? (findPanePath(tab.layout, sourcePaneId) ?? undefined)
+						: path;
+
 					// Always create a new terminal when splitting
 					const newPane = createPane(tabId, "terminal", options);
 
 					let newLayout: MosaicNode<string>;
-					if (path && path.length > 0) {
+					if (effectivePath && effectivePath.length > 0) {
 						// Split at a specific path in the layout
 						newLayout = updateTree(tab.layout, [
 							{
-								path,
+								path: effectivePath,
 								spec: {
 									$set: {
 										direction: "column",
@@ -1144,7 +1210,55 @@ export const useTabsStore = create<TabsStore>()(
 					}
 				},
 
+				// Zoom operations
+				togglePaneZoom: (tabId, paneId) => {
+					const state = get();
+					const tab = state.tabs.find((t) => t.id === tabId);
+					if (!tab) return;
+
+					const tabPaneIds = new Set(getPaneIdsForTab(state.panes, tabId));
+					const update = computePaneZoomToggle(
+						tab,
+						paneId ?? state.focusedPaneIds[tabId],
+						tabPaneIds,
+					);
+					if (!update) return;
+
+					set({
+						tabs: state.tabs.map((t) =>
+							t.id === tabId
+								? {
+										...t,
+										layout: update.layout,
+										zoomedPaneId: update.zoomedPaneId,
+										preZoomLayout: update.preZoomLayout,
+									}
+								: t,
+						),
+						focusedPaneIds: {
+							...state.focusedPaneIds,
+							[tabId]: update.focusPaneId,
+						},
+					});
+				},
+
+				// Broadcast operations
+				toggleBroadcast: (tabId) => {
+					set((state) => {
+						const next = { ...state.broadcastTabIds };
+						if (next[tabId]) {
+							delete next[tabId];
+						} else {
+							next[tabId] = true;
+						}
+						return { broadcastTabIds: next };
+					});
+				},
+
 				movePaneToTab: (paneId, targetTabId) => {
+					// Restore full mosaics first — moving panes edits both layouts.
+					unzoomTabIfNeeded(get, get().panes[paneId]?.tabId);
+					unzoomTabIfNeeded(get, targetTabId);
 					const state = get();
 					const pane = state.panes[paneId];
 					const result = movePaneToTab(state, paneId, targetTabId);
@@ -1163,6 +1277,8 @@ export const useTabsStore = create<TabsStore>()(
 				},
 
 				movePaneToNewTab: (paneId) => {
+					// Restore the source tab's mosaic before extracting the pane.
+					unzoomTabIfNeeded(get, get().panes[paneId]?.tabId);
 					const state = get();
 					const pane = state.panes[paneId];
 					if (!pane) return "";
@@ -1231,6 +1347,40 @@ export const useTabsStore = create<TabsStore>()(
 				},
 
 				openInBrowserPane: (workspaceId: string, url: string) => {
+					{
+						// Zoom guards: an existing browser pane may be hidden behind a
+						// zoomed sibling, and the fallback path splits the active tab's
+						// layout — both need the full mosaic restored first.
+						const pre = get();
+						const preTabIds = new Set(
+							pre.tabs
+								.filter((t) => t.workspaceId === workspaceId)
+								.map((t) => t.id),
+						);
+						const preExisting = Object.values(pre.panes).find(
+							(p) =>
+								p.type === "webview" && p.browser && preTabIds.has(p.tabId),
+						);
+						if (preExisting) {
+							const paneTab = pre.tabs.find((t) => t.id === preExisting.tabId);
+							if (
+								paneTab?.zoomedPaneId &&
+								paneTab.zoomedPaneId !== preExisting.id
+							) {
+								get().togglePaneZoom(paneTab.id);
+							}
+						} else {
+							unzoomTabIfNeeded(
+								get,
+								resolveActiveTabIdForWorkspace({
+									workspaceId,
+									tabs: pre.tabs,
+									activeTabIds: pre.activeTabIds,
+									tabHistoryStacks: pre.tabHistoryStacks,
+								}),
+							);
+						}
+					}
 					const state = get();
 
 					// Find an existing browser pane in this workspace
@@ -1524,6 +1674,10 @@ export const useTabsStore = create<TabsStore>()(
 				},
 
 				openDevToolsPane: (tabId, browserPaneId, path) => {
+					const wasZoomed = Boolean(
+						get().tabs.find((t) => t.id === tabId)?.zoomedPaneId,
+					);
+					unzoomTabIfNeeded(get, tabId);
 					const state = get();
 					const tab = state.tabs.find((t) => t.id === tabId);
 					if (!tab) return null;
@@ -1531,13 +1685,18 @@ export const useTabsStore = create<TabsStore>()(
 					const sourcePane = state.panes[browserPaneId];
 					if (!sourcePane || sourcePane.tabId !== tabId) return null;
 
+					// Paths computed against the zoom layout are stale after restore.
+					const effectivePath = wasZoomed
+						? (findPanePath(tab.layout, browserPaneId) ?? undefined)
+						: path;
+
 					const newPane = createDevToolsPane(tabId, browserPaneId);
 
 					let newLayout: MosaicNode<string>;
-					if (path && path.length > 0) {
+					if (effectivePath && effectivePath.length > 0) {
 						newLayout = updateTree(tab.layout, [
 							{
-								path,
+								path: effectivePath,
 								spec: {
 									$set: {
 										direction: "row",
@@ -1844,6 +2003,9 @@ export const useTabsStore = create<TabsStore>()(
 						activeTabIds: nextActiveTabIds,
 						tabHistoryStacks: nextHistoryStacks,
 						focusedPaneIds: nextFocusedPaneIds,
+						// Broadcast is an armed mode, not a layout — never restore it
+						// across restarts.
+						broadcastTabIds: {},
 					};
 				},
 			},

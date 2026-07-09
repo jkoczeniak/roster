@@ -29,6 +29,10 @@ export interface ClosedTabEntry {
  */
 export interface Tab extends BaseTab {
 	layout: MosaicNode<string>; // Always defined, leaves are paneIds
+	/** When set, the tab is zoomed: `layout` is the single zoomed pane leaf. */
+	zoomedPaneId?: string;
+	/** Full mosaic layout to restore when zoom is toggled off. */
+	preZoomLayout?: MosaicNode<string>;
 }
 
 /**
@@ -38,6 +42,8 @@ export interface Tab extends BaseTab {
 export interface TabsState extends Omit<BaseTabsState, "tabs"> {
 	tabs: Tab[];
 	closedTabsStack: ClosedTabEntry[];
+	/** Tabs with keystroke broadcast armed (tabId → true). Reset on startup. */
+	broadcastTabIds: Record<string, boolean>;
 }
 
 /**
@@ -154,6 +160,18 @@ export interface TabsStore extends TabsState {
 		path?: MosaicBranch[],
 		options?: AddTabOptions,
 	) => void;
+
+	// Zoom operations
+	/**
+	 * Toggle zooming a pane to fill its tab (tmux-style). First call swaps the
+	 * tab layout for a single-pane leaf; second call restores the saved mosaic.
+	 * Defaults to the tab's focused pane when paneId is omitted.
+	 */
+	togglePaneZoom: (tabId: string, paneId?: string) => void;
+
+	// Broadcast operations
+	/** Toggle mirroring terminal input to all terminal panes in a tab. */
+	toggleBroadcast: (tabId: string) => void;
 
 	// Move operations
 	movePaneToTab: (paneId: string, targetTabId: string) => void;

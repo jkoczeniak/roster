@@ -138,6 +138,8 @@ function WorkspacePage() {
 	const removeTab = useTabsStore((s) => s.removeTab);
 	const removePane = useTabsStore((s) => s.removePane);
 	const setFocusedPane = useTabsStore((s) => s.setFocusedPane);
+	const togglePaneZoom = useTabsStore((s) => s.togglePaneZoom);
+	const toggleBroadcast = useTabsStore((s) => s.toggleBroadcast);
 	const toggleSidebar = useSidebarStore((s) => s.toggleSidebar);
 	const isSidebarOpen = useSidebarStore((s) => s.isSidebarOpen);
 	const setSidebarOpen = useSidebarStore((s) => s.setSidebarOpen);
@@ -600,6 +602,28 @@ function WorkspacePage() {
 			splitPaneHorizontal,
 			resolveSplitTarget,
 		],
+	);
+
+	// Zoom the focused pane to fill its tab; press again to restore (⌘⇧↵)
+	useAppHotkey(
+		"TOGGLE_PANE_ZOOM",
+		() => {
+			if (!activeTabId) return;
+			togglePaneZoom(activeTabId, focusedPaneId ?? undefined);
+		},
+		undefined,
+		[activeTabId, focusedPaneId, togglePaneZoom],
+	);
+
+	// Mirror terminal input to all terminal panes in the current tab (⌘⌥I)
+	useAppHotkey(
+		"TOGGLE_BROADCAST",
+		() => {
+			if (!activeTabId) return;
+			toggleBroadcast(activeTabId);
+		},
+		undefined,
+		[activeTabId, toggleBroadcast],
 	);
 
 	// Navigate to previous workspace (⌘↑)

@@ -1,3 +1,4 @@
+import { Maximize2, RadioTower } from "lucide-react";
 import { useContext, useRef } from "react";
 import type { MosaicBranch } from "react-mosaic-component";
 import { MosaicWindow, MosaicWindowContext } from "react-mosaic-component";
@@ -5,6 +6,47 @@ import { useDragPaneStore } from "renderer/stores/drag-pane-store";
 import { useTabsStore } from "renderer/stores/tabs/store";
 import type { SplitOrientation } from "../../hooks";
 import { useSplitOrientation } from "../../hooks";
+
+/**
+ * Floating chips (top-right of the pane content) for armed pane modes:
+ * broadcast input (shown on every terminal pane in the tab) and zoom
+ * (shown on the maximized pane).
+ */
+function PaneModeIndicators({
+	paneId,
+	tabId,
+}: {
+	paneId: string;
+	tabId: string;
+}) {
+	const isBroadcasting = useTabsStore(
+		(s) =>
+			Boolean(s.broadcastTabIds[tabId]) &&
+			s.panes[paneId]?.type === "terminal",
+	);
+	const isZoomed = useTabsStore(
+		(s) => s.tabs.find((t) => t.id === tabId)?.zoomedPaneId === paneId,
+	);
+
+	if (!isBroadcasting && !isZoomed) return null;
+
+	return (
+		<div className="pointer-events-none absolute right-2 top-2 z-10 flex items-center gap-1.5">
+			{isZoomed && (
+				<span className="flex items-center gap-1 rounded border border-border bg-background/80 px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground backdrop-blur-sm">
+					<Maximize2 className="h-3 w-3" />
+					Zoomed
+				</span>
+			)}
+			{isBroadcasting && (
+				<span className="flex items-center gap-1 rounded border border-amber-500/40 bg-amber-500/10 px-1.5 py-0.5 text-[10px] font-medium text-amber-500 backdrop-blur-sm">
+					<RadioTower className="h-3 w-3" />
+					Broadcast
+				</span>
+			)}
+		</div>
+	);
+}
 
 export interface PaneHandlers {
 	onFocus: () => void;
@@ -105,10 +147,11 @@ export function BasePaneWindow({
 			{/* biome-ignore lint/a11y/useKeyWithClickEvents lint/a11y/noStaticElementInteractions: Focus handler for pane */}
 			<div
 				ref={containerRef}
-				className={contentClassName}
+				className={`relative ${contentClassName}`}
 				style={isDragging ? { pointerEvents: "none" } : undefined}
 				onClick={handleFocus}
 			>
+				<PaneModeIndicators paneId={paneId} tabId={tabId} />
 				{children}
 			</div>
 		</MosaicWindow>
