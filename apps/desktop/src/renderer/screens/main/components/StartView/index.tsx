@@ -3,6 +3,7 @@ import { cn } from "@roster/ui/utils";
 import { LuFolderPlus } from "react-icons/lu";
 import { RosterLogo } from "renderer/components/RosterLogo";
 import { useOpenNewCategoryModal } from "renderer/stores/new-category-modal";
+import { PreflightCard } from "./PreflightCard";
 
 /**
  * First-run / empty onboarding. Roster groups agents under categories, so the
@@ -16,9 +17,7 @@ export function StartView() {
 		<div className="flex flex-col h-full w-full relative overflow-hidden bg-background">
 			<div className="relative flex flex-1 items-center justify-center">
 				<div className="flex flex-col items-center w-full max-w-md px-6">
-					<RosterLogo
-						className={cn("h-8 w-auto mb-12 opacity-80")}
-					/>
+					<RosterLogo className={cn("h-8 w-auto mb-12 opacity-80")} />
 
 					<div className="w-full flex flex-col items-center gap-4">
 						<button
@@ -52,6 +51,8 @@ export function StartView() {
 							<LuFolderPlus className="size-3.5" />
 							New team
 						</Button>
+
+						<PreflightCard />
 					</div>
 				</div>
 			</div>
