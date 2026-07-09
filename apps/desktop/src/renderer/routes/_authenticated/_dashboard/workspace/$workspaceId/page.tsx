@@ -444,7 +444,7 @@ function WorkspacePage() {
 	const isRepo = workspace?.isRepo === true;
 	const { pr } = usePRStatus({ workspaceId, enabled: isRepo });
 	const createPRMutation = electronTrpc.changes.createPR.useMutation({
-		onSuccess: () => toast.success("Opening GitHub..."),
+		onSuccess: (data) => toast.success(`Opening ${data.forgeName}...`),
 		onError: (error) => toast.error(`Failed: ${error.message}`),
 	});
 	useAppHotkey(

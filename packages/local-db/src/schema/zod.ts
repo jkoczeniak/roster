@@ -25,9 +25,13 @@ export const checkItemSchema = z.object({
 export type CheckItem = z.infer<typeof checkItemSchema>;
 
 /**
- * GitHub PR status
+ * PR/MR status for the worktree's branch. Named after GitHub for historical
+ * reasons (and stored in the `github_status` column) but populated by
+ * whichever forge hosts the origin remote — GitHub PRs or GitLab MRs.
  */
 export const gitHubStatusSchema = z.object({
+	/** Which forge produced this status. Absent on rows saved before GitLab support. */
+	forge: z.enum(["github", "gitlab"]).optional(),
 	pr: z
 		.object({
 			number: z.number(),

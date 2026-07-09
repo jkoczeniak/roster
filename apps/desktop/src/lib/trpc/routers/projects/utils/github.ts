@@ -1,12 +1,18 @@
+import { getForgeKindForPath } from "../../workspaces/utils/forge";
 import { execWithShellEnv } from "../../workspaces/utils/shell-env";
 
 /**
  * Fetches the GitHub owner (user or org) for a repository using the `gh` CLI.
- * Returns null if `gh` is not installed, not authenticated, or on error.
+ * Returns null for non-GitHub remotes (GitLab, Bitbucket, …) and if `gh` is
+ * not installed, not authenticated, or on error.
  */
 export async function fetchGitHubOwner(
 	repoPath: string,
 ): Promise<string | null> {
+	if ((await getForgeKindForPath(repoPath)) !== "github") {
+		return null;
+	}
+
 	try {
 		const { stdout } = await execWithShellEnv(
 			"gh",
