@@ -3,9 +3,12 @@ import simpleGit from "simple-git";
 import { z } from "zod";
 import { publicProcedure, router } from "../..";
 import {
-	execWithShellEnv,
-	getProcessEnvWithShellPath,
-} from "../workspaces/utils/shell-env";
+	type Forge,
+	ForgePRNotFoundError,
+	ForgePRNotMergeableError,
+	getForgeForPath,
+} from "../workspaces/utils/forge";
+import { getProcessEnvWithShellPath } from "../workspaces/utils/shell-env";
 import { isUpstreamMissingError } from "./git-utils";
 import { assertGitWorktree } from "./security";
 
@@ -94,6 +97,22 @@ async function getGitWithShellPath(worktreePath: string) {
 	const git = simpleGit(worktreePath);
 	git.env(await getProcessEnvWithShellPath());
 	return git;
+}
+
+/**
+ * Resolves the forge for a worktree, or throws a user-facing error when the
+ * origin remote isn't on a supported host (Bitbucket, bare git, no remote).
+ */
+async function requireForge(worktreePath: string): Promise<Forge> {
+	const forge = await getForgeForPath(worktreePath);
+	if (!forge) {
+		throw new TRPCError({
+			code: "BAD_REQUEST",
+			message:
+				"This repository's origin isn't on GitHub or GitLab, so Roster can't manage pull requests for it.",
+		});
+	}
+	return forge;
 }
 
 export const createGitOperationsRouter = () => {
@@ -221,8 +240,12 @@ export const createGitOperationsRouter = () => {
 				}),
 			)
 			.mutation(
-				async ({ input }): Promise<{ success: boolean; url: string }> => {
+				async ({
+					input,
+				}): Promise<{ success: boolean; url: string; forgeName: string }> => {
 					assertGitWorktree(input.worktreePath);
+
+					const forge = await requireForge(input.worktreePath);
 
 					const git = await getGitWithShellPath(input.worktreePath);
 					const branch = (await git.revparse(["--abbrev-ref", "HEAD"])).trim();
@@ -246,16 +269,13 @@ export const createGitOperationsRouter = () => {
 						}
 					}
 
-					const { stdout } = await execWithShellEnv(
-						"gh",
-						["pr", "create", "--web", "--fill", "--head", branch],
-						{ cwd: input.worktreePath },
-					);
-
-					const url = stdout.trim() || "https://github.com";
+					const { url } = await forge.createPR({
+						worktreePath: input.worktreePath,
+						branch,
+					});
 					await fetchCurrentBranch(git);
 
-					return { success: true, url };
+					return { success: true, url, forgeName: forge.displayName };
 				},
 			),
 
@@ -270,35 +290,31 @@ export const createGitOperationsRouter = () => {
 				async ({ input }): Promise<{ success: boolean; mergedAt?: string }> => {
 					assertGitWorktree(input.worktreePath);
 
-					const args = ["pr", "merge", `--${input.strategy}`];
+					const forge = await requireForge(input.worktreePath);
 
 					try {
-						await execWithShellEnv("gh", args, { cwd: input.worktreePath });
+						await forge.mergePR({
+							worktreePath: input.worktreePath,
+							strategy: input.strategy,
+						});
 						return { success: true, mergedAt: new Date().toISOString() };
 					} catch (error) {
 						const message =
 							error instanceof Error ? error.message : String(error);
-						console.error("[git/mergePR] Failed to merge PR:", message);
+						console.error(
+							`[git/mergePR] Failed to merge ${forge.prAbbrev}:`,
+							message,
+						);
 
-						if (message.includes("no pull requests found")) {
-							throw new TRPCError({
-								code: "NOT_FOUND",
-								message: "No pull request found for this branch",
-							});
+						if (error instanceof ForgePRNotFoundError) {
+							throw new TRPCError({ code: "NOT_FOUND", message });
 						}
-						if (
-							message.includes("not mergeable") ||
-							message.includes("blocked")
-						) {
-							throw new TRPCError({
-								code: "BAD_REQUEST",
-								message:
-									"PR cannot be merged. Check for merge conflicts or required status checks.",
-							});
+						if (error instanceof ForgePRNotMergeableError) {
+							throw new TRPCError({ code: "BAD_REQUEST", message });
 						}
 						throw new TRPCError({
 							code: "INTERNAL_SERVER_ERROR",
-							message: `Failed to merge PR: ${message}`,
+							message: `Failed to merge ${forge.prAbbrev}: ${message}`,
 						});
 					}
 				},

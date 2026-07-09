@@ -26,10 +26,12 @@ export function WorkspaceHoverCardContent({
 	// whole git block (branch row + needs-rebase warning) for them, and don't
 	// fire the PR-status query at all.
 	const isRepo = worktreeInfo?.isRepo ?? true;
-	const { repoUrl, branchExistsOnRemote } = usePRStatus({
+	const { repoUrl, branchExistsOnRemote, forge } = usePRStatus({
 		workspaceId,
 		enabled: isRepo,
 	});
+	// GitLab's canonical branch path is /-/tree/ (plain /tree/ only redirects).
+	const branchUrlPath = forge === "gitlab" ? "/-/tree/" : "/tree/";
 	const needsRebase = isRepo && worktreeInfo?.gitStatus?.needsRebase;
 	const behindCount = worktreeInfo?.gitStatus?.behind;
 
@@ -57,7 +59,7 @@ export function WorkspaceHoverCardContent({
 						</span>
 						{repoUrl && branchExistsOnRemote ? (
 							<a
-								href={`${repoUrl}/tree/${branchName}`}
+								href={`${repoUrl}${branchUrlPath}${branchName}`}
 								target="_blank"
 								rel="noopener noreferrer"
 								className={`flex items-center gap-1 font-mono break-all hover:underline ${hasCustomAlias ? "text-xs" : "text-sm"}`}

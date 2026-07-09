@@ -726,7 +726,7 @@ export const HOTKEYS = {
 		keys: "meta+shift+p",
 		label: "Open Pull Request",
 		category: "Workspace",
-		description: "Open existing PR or create a new one on GitHub",
+		description: "Open the existing PR/MR or create one on GitHub or GitLab",
 	}),
 
 	// Window

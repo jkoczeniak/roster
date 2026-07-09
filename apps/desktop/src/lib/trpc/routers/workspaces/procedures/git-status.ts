@@ -10,6 +10,7 @@ import {
 	getWorktree,
 	updateProjectDefaultBranch,
 } from "../utils/db-helpers";
+import { getForgeForPath } from "../utils/forge";
 import {
 	fetchDefaultBranch,
 	getAheadBehindCount,
@@ -17,7 +18,6 @@ import {
 	listExternalWorktrees,
 	refreshDefaultBranch,
 } from "../utils/git";
-import { fetchGitHubPRStatus } from "../utils/github";
 
 export const createGitStatusProcedures = () => {
 	return router({
@@ -128,7 +128,14 @@ export const createGitStatusProcedures = () => {
 					return null;
 				}
 
-				const freshStatus = await fetchGitHubPRStatus(worktree.path);
+				// Unknown forges (Bitbucket, bare git servers, no remote) return
+				// null too, which hides PR affordances in every caller.
+				const forge = await getForgeForPath(worktree.path);
+				if (!forge) {
+					return null;
+				}
+
+				const freshStatus = await forge.fetchPRStatus(worktree.path);
 
 				if (freshStatus) {
 					localDb

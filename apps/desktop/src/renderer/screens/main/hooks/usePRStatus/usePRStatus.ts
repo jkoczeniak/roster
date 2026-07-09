@@ -11,12 +11,14 @@ interface UsePRStatusResult {
 	pr: GitHubStatus["pr"] | null;
 	repoUrl: string | null;
 	branchExistsOnRemote: boolean;
+	/** Which forge hosts the repo — null while loading or for unknown hosts. */
+	forge: GitHubStatus["forge"] | null;
 	isLoading: boolean;
 	refetch: () => void;
 }
 
 /**
- * Hook to fetch and manage GitHub PR status for a workspace.
+ * Hook to fetch and manage PR/MR status for a workspace (GitHub or GitLab).
  * Returns PR info, loading state, and refetch function.
  */
 export function usePRStatus({
@@ -40,6 +42,7 @@ export function usePRStatus({
 		pr: githubStatus?.pr ?? null,
 		repoUrl: githubStatus?.repoUrl ?? null,
 		branchExistsOnRemote: githubStatus?.branchExistsOnRemote ?? false,
+		forge: githubStatus?.forge ?? null,
 		isLoading,
 		refetch,
 	};
