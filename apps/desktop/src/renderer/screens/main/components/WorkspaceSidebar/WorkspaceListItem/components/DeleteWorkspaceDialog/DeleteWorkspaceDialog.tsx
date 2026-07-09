@@ -145,8 +145,8 @@ export function DeleteWorkspaceDialog({
 						<AlertDialogDescription asChild>
 							<div className="text-muted-foreground space-y-1.5">
 								<span className="block">
-									This will close the agent and kill any active terminals.
-									Your branch and commits will remain in the repository.
+									This will close the agent and kill any active terminals. Your
+									branch and commits will remain in the repository.
 								</span>
 							</div>
 						</AlertDialogDescription>
@@ -196,8 +196,8 @@ export function DeleteWorkspaceDialog({
 								<span className="text-destructive">{reason}</span>
 							) : (
 								<span className="block">
-									Deleting will permanently remove the worktree. You can hide
-									instead to keep files on disk.
+									Deleting will permanently remove this agent's folder. You can
+									hide instead to keep files on disk.
 								</span>
 							)}
 						</div>
@@ -208,7 +208,7 @@ export function DeleteWorkspaceDialog({
 					<div className="px-4 pb-2">
 						<div className="text-xs text-yellow-700 dark:text-yellow-400 bg-yellow-50 dark:bg-yellow-500/10 border border-yellow-200 dark:border-yellow-500/20 rounded-md px-2.5 py-1.5">
 							{hasChanges && hasUnpushedCommits
-								? "Has uncommitted changes and unpushed commits"
+								? "Has work that isn't committed or pushed yet"
 								: hasChanges
 									? "Has uncommitted changes"
 									: "Has unpushed commits"}
@@ -230,7 +230,7 @@ export function DeleteWorkspaceDialog({
 								htmlFor="delete-local-branch"
 								className="text-xs text-muted-foreground cursor-pointer select-none"
 							>
-								Also delete local branch
+								Also delete its git branch
 							</Label>
 						</div>
 					</div>
@@ -267,7 +267,7 @@ export function DeleteWorkspaceDialog({
 							</Button>
 						</TooltipTrigger>
 						<TooltipContent side="top" className="text-xs max-w-[200px]">
-							Permanently delete agent and git worktree from disk.
+							Permanently delete this agent and its folder from disk.
 						</TooltipContent>
 					</Tooltip>
 				</AlertDialogFooter>

@@ -22,18 +22,46 @@ export interface BuildRuntimeCommandOptions {
 	model?: string | null;
 	/** Codex only */
 	reasoningEffort?: "medium" | "high";
+	/**
+	 * Optional initial prompt submitted when the interactive session opens
+	 * (positional argument on both CLIs). Used for the first-session
+	 * introduction of a brand-new agent.
+	 */
+	initialPrompt?: string;
 }
+
+/** Single-quote a string for the shell (POSIX-safe). */
+function shellQuote(value: string): string {
+	return `'${value.replace(/'/g, `'\\''`)}'`;
+}
+
+/**
+ * First words a brand-new agent hears. Makes the agent introduce itself
+ * instead of dropping the user at a blank prompt: who it is (AGENT.md), what
+ * tools it has, what it could do, and a question to get started. Read-only by
+ * instruction, so a guarded session needs no approvals to answer.
+ */
+export const FIRST_SESSION_KICKOFF_PROMPT =
+	"This is your very first session with your user watching. In a few short " +
+	"lines: introduce yourself by name and role (see AGENT.md), mention the " +
+	"tools listed in your Tools section (if none are wired up yet, say they " +
+	"can be added in the Connectors panel on the right), offer two or three " +
+	"concrete things you could do right now given your role, and end by " +
+	"asking what to start with. Plain language, no headers. Do not create or " +
+	"modify any files for this introduction.";
 
 export function buildRuntimeCommand({
 	runtime,
 	mode = DEFAULT_PERMISSION_MODE,
 	model,
 	reasoningEffort,
+	initialPrompt,
 }: BuildRuntimeCommandOptions): string {
 	if (runtime === "claude") {
 		const parts = ["claude"];
 		if (model) parts.push("--model", model);
 		if (mode === "auto") parts.push("--dangerously-skip-permissions");
+		if (initialPrompt) parts.push(shellQuote(initialPrompt));
 		return parts.join(" ");
 	}
 	const parts = ["codex", "--model", model ?? "gpt-5.5"];
@@ -43,6 +71,7 @@ export function buildRuntimeCommand({
 	if (mode === "auto") {
 		parts.push("--ask-for-approval never", "--sandbox danger-full-access");
 	}
+	if (initialPrompt) parts.push(shellQuote(initialPrompt));
 	return parts.join(" ");
 }
 
@@ -64,7 +93,7 @@ export const MODEL_VARIANTS: ModelVariant[] = [
 		id: "claude-default",
 		runtime: "claude",
 		label: "Claude",
-		description: "Claude Code — CLI default model",
+		description: "Start a new session — Claude Code (CLI default model)",
 		model: null,
 		isDefault: true,
 	},
@@ -72,28 +101,28 @@ export const MODEL_VARIANTS: ModelVariant[] = [
 		id: "claude-fable",
 		runtime: "claude",
 		label: "Fable",
-		description: "Claude Code — Fable 5",
+		description: "Start a new session — Claude Code (Fable 5)",
 		model: "claude-fable-5",
 	},
 	{
 		id: "claude-opus",
 		runtime: "claude",
 		label: "Opus",
-		description: "Claude Code — Opus 4.8",
+		description: "Start a new session — Claude Code (Opus 4.8)",
 		model: "claude-opus-4-8",
 	},
 	{
 		id: "claude-sonnet",
 		runtime: "claude",
 		label: "Sonnet",
-		description: "Claude Code — Sonnet 5",
+		description: "Start a new session — Claude Code (Sonnet 5)",
 		model: "claude-sonnet-5",
 	},
 	{
 		id: "codex-high",
 		runtime: "codex",
 		label: "High",
-		description: "Codex — GPT-5.5, high reasoning",
+		description: "Start a new session — Codex (GPT-5.5, high reasoning)",
 		model: "gpt-5.5",
 		reasoningEffort: "high",
 	},
@@ -101,7 +130,7 @@ export const MODEL_VARIANTS: ModelVariant[] = [
 		id: "codex-medium",
 		runtime: "codex",
 		label: "Medium",
-		description: "Codex — GPT-5.5, medium reasoning",
+		description: "Start a new session — Codex (GPT-5.5, medium reasoning)",
 		model: "gpt-5.5",
 		reasoningEffort: "medium",
 	},

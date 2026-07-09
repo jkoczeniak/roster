@@ -35,9 +35,8 @@ export function EngineSetting() {
 					Engine
 				</Label>
 				<p className="text-xs text-muted-foreground">
-					Applies to newly opened terminals.
-					{engine === "ghostty" &&
-						" Ghostty renders with its own canvas engine, so the renderer preference does not apply."}
+					How terminal text is drawn. Ghostty is faster; xterm.js maximizes
+					compatibility. Applies to newly opened terminals.
 				</p>
 			</div>
 			<Select value={engine} onValueChange={handleChange}>

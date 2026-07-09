@@ -29,7 +29,7 @@ const GROUP_ORDER: AgentFileGroup[] = ["Memory", "Skills", "Worktree"];
 const GROUP_LABELS: Record<AgentFileGroup, string> = {
 	Memory: "Memory",
 	Skills: "Skills",
-	Worktree: "Bridge files",
+	Worktree: "Setup files",
 };
 
 /**
@@ -154,7 +154,7 @@ export function AgentFilesView() {
 										type="button"
 										onClick={() => setShowNewSkill(true)}
 										className="flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground transition-colors"
-										title="Scaffold a new skill for this agent"
+										title="Start a new skill for this agent"
 									>
 										<LuPlus className="size-3" />
 										New skill

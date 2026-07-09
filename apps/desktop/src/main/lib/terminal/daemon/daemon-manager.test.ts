@@ -35,10 +35,6 @@ mock.module("../../terminal-host/client", () => ({
 	disposeTerminalHostClient: () => {},
 }));
 
-mock.module("main/lib/analytics", () => ({
-	track: () => {},
-}));
-
 mock.module("main/lib/app-state", () => ({
 	appState: { data: null },
 }));

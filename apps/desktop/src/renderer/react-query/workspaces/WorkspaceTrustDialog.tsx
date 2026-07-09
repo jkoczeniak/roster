@@ -30,14 +30,17 @@ export function WorkspaceTrustDialog() {
 		>
 			<AlertDialogContent>
 				<AlertDialogHeader>
-					<AlertDialogTitle>Run setup commands from this repo?</AlertDialogTitle>
+					<AlertDialogTitle>
+						Run setup commands from this folder?
+					</AlertDialogTitle>
 					<AlertDialogDescription asChild>
 						<div className="space-y-2">
 							<p>
-								This repository defines setup commands in{" "}
-								<span className="font-mono text-xs">.roster/config.json</span>{" "}
-								that run in a terminal — outside the agent sandbox — when the
-								workspace opens. Only run them if you trust this folder.
+								This folder wants to run setup commands on your machine when it
+								opens (declared in{" "}
+								<span className="font-mono text-xs">.roster/config.json</span>,
+								run directly on your Mac). Only continue if you trust where it
+								came from.
 							</p>
 							<p className="font-mono text-xs break-all text-muted-foreground">
 								{root}

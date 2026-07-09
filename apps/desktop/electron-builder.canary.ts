@@ -13,7 +13,7 @@ import type { Configuration } from "electron-builder";
 import baseConfig from "./electron-builder";
 import pkg from "./package.json";
 
-const productName = "ADE Canary";
+const productName = "Roster Canary";
 const canaryMacIconPath = join(pkg.resources, "build/icons/icon-canary.icns");
 const canaryLinuxIconPath = join(pkg.resources, "build/icons/icon-canary.png");
 const canaryWinIconPath = join(pkg.resources, "build/icons/icon-canary.ico");
@@ -33,7 +33,7 @@ const config: Configuration = {
 	mac: {
 		...baseConfig.mac,
 		...(existsSync(canaryMacIconPath) ? { icon: canaryMacIconPath } : {}),
-		artifactName: `ADE-Canary-\${version}-\${arch}.\${ext}`,
+		artifactName: `Roster-Canary-\${version}-\${arch}.\${ext}`,
 		extendInfo: {
 			...baseConfig.mac?.extendInfo,
 			CFBundleName: productName,
@@ -51,7 +51,7 @@ const config: Configuration = {
 	win: {
 		...baseConfig.win,
 		...(existsSync(canaryWinIconPath) ? { icon: canaryWinIconPath } : {}),
-		artifactName: `ADE-Canary-\${version}-\${arch}.\${ext}`,
+		artifactName: `Roster-Canary-\${version}-\${arch}.\${ext}`,
 	},
 };
 

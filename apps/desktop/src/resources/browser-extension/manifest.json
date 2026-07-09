@@ -1,8 +1,8 @@
 {
 	"manifest_version": 3,
-	"name": "ADE Browser Tools",
+	"name": "Roster Browser Tools",
 	"version": "0.1.0",
-	"description": "Browser tools for ADE desktop",
+	"description": "Browser tools for the Roster desktop app",
 	"permissions": ["activeTab", "scripting"],
 	"background": {
 		"service_worker": "background.js"

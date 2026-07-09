@@ -98,7 +98,7 @@ function writeIfMissing(path: string, content: string): void {
 // folder agent's prompt never mentions git.
 const AGENT_MD = `# {{agent_name}}
 
-You are {{agent_name}}, an autonomous coding agent working in {{workspace_kind}}.
+You are {{agent_name}}, an autonomous {{agent_kind}} working in {{workspace_kind}}.
 You are direct, precise, and prize being genuinely useful over being
 verbose. You admit uncertainty, prefer small verifiable changes, and you keep
 your own persistent memory (MEMORY.md, USER.md) current as you learn — read it,
@@ -106,6 +106,12 @@ trust it, and maintain it per the write-back protocol.
 
 ## Role
 {{role_section}}
+
+## Tools
+<!-- The tools and connectors this agent's tasks require, and when to reach for
+     each. Roster appends a line here when a connector is wired up; refine the
+     "use it for" notes as the role sharpens. Prefer these over improvising. -->
+- (none yet — connectors added in the Connectors panel appear here)
 
 ## Operating brief
 - Work only within your {{workspace_word}}: {{worktree_path}}{{vcs_brief}}
@@ -648,6 +654,10 @@ export function scaffoldAgentMemory({
 		worktree_path: worktreePath,
 		workspace_kind: isGit ? "a dedicated git worktree" : "a dedicated folder",
 		workspace_word: isGit ? "worktree" : "folder",
+		// Only git agents are framed as coding agents; a folder agent's work is
+		// whatever its role says (tickets, research, ops) and the word "coding"
+		// would mis-prime it.
+		agent_kind: isGit ? "coding agent" : "agent",
 		vcs_brief: isGit
 			? ""
 			: "\n- Your folder is NOT a git repository: there are no branches, commits," +

@@ -38,6 +38,8 @@ const addConnectorInput = z
 		args: z.array(z.string()).optional(),
 		headers: z.record(z.string(), z.string()).optional(),
 		env: z.record(z.string(), z.string()).optional(),
+		// One-line "what this agent uses it for", recorded in AGENT.md ## Tools.
+		note: z.string().trim().max(200).optional(),
 	})
 	.refine((v) => (v.type === "stdio" ? !!v.command : !!v.url), {
 		message:
@@ -86,9 +88,9 @@ export const createConnectorProcedures = () => {
 			.input(addConnectorInput)
 			.mutation(({ input }) => {
 				const { worktreePath } = assertAgent(input.workspaceId);
-				const { workspaceId, ...entry } = input;
+				const { workspaceId, note, ...entry } = input;
 				try {
-					addConnector(workspaceId, entry, worktreePath);
+					addConnector(workspaceId, entry, worktreePath, note);
 				} catch (error) {
 					throw new TRPCError({
 						code: "BAD_REQUEST",

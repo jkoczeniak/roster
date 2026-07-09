@@ -21,8 +21,7 @@ function PaneModeIndicators({
 }) {
 	const isBroadcasting = useTabsStore(
 		(s) =>
-			Boolean(s.broadcastTabIds[tabId]) &&
-			s.panes[paneId]?.type === "terminal",
+			Boolean(s.broadcastTabIds[tabId]) && s.panes[paneId]?.type === "terminal",
 	);
 	const isZoomed = useTabsStore(
 		(s) => s.tabs.find((t) => t.id === tabId)?.zoomedPaneId === paneId,
@@ -39,7 +38,10 @@ function PaneModeIndicators({
 				</span>
 			)}
 			{isBroadcasting && (
-				<span className="flex items-center gap-1 rounded border border-amber-500/40 bg-amber-500/10 px-1.5 py-0.5 text-[10px] font-medium text-amber-500 backdrop-blur-sm">
+				<span
+					title="Typing goes to all panes in this tab"
+					className="pointer-events-auto flex items-center gap-1 rounded border border-amber-500/40 bg-amber-500/10 px-1.5 py-0.5 text-[10px] font-medium text-amber-500 backdrop-blur-sm"
+				>
 					<RadioTower className="h-3 w-3" />
 					Broadcast
 				</span>

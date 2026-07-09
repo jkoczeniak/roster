@@ -55,6 +55,9 @@ export const OpenInMenuButton = memo(function OpenInMenuButton({
 		onSuccess: () => toast.success("Path copied to clipboard"),
 		onError: (error) => toast.error(`Failed to copy path: ${error.message}`),
 	});
+	const openInFinder = electronTrpc.external.openInFinder.useMutation({
+		onError: (error) => toast.error(`Failed to open folder: ${error.message}`),
+	});
 
 	const currentApp = useMemo(
 		() => (defaultApp ? (getAppOption(defaultApp) ?? null) : null),
@@ -64,18 +67,19 @@ export const OpenInMenuButton = memo(function OpenInMenuButton({
 	const copyPathShortcut = useHotkeyText("COPY_PATH");
 	const showOpenInShortcut = openInShortcut !== "Unassigned";
 	const showCopyPathShortcut = copyPathShortcut !== "Unassigned";
-	const isLoading = openInApp.isPending || copyPath.isPending;
+	const isLoading =
+		openInApp.isPending || copyPath.isPending || openInFinder.isPending;
 
+	// With a default editor set, opens the worktree there; without one, reveals
+	// the worktree in Finder instead. Editor choices live in the dropdown.
 	const handleOpenInEditor = useCallback(() => {
-		if (openInApp.isPending || copyPath.isPending) return;
+		if (isLoading) return;
 		if (!defaultApp) {
-			toast.error("No default editor configured", {
-				description: "Open a team in an editor first to set a default.",
-			});
+			openInFinder.mutate(worktreePath);
 			return;
 		}
 		openInApp.mutate({ path: worktreePath, app: defaultApp, projectId });
-	}, [worktreePath, defaultApp, projectId, openInApp, copyPath.isPending]);
+	}, [worktreePath, defaultApp, projectId, openInApp, openInFinder, isLoading]);
 
 	const handleOpenInOtherApp = useCallback(
 		(appId: ExternalApp) => {
@@ -98,11 +102,11 @@ export const OpenInMenuButton = memo(function OpenInMenuButton({
 					<button
 						type="button"
 						onClick={handleOpenInEditor}
-						disabled={isLoading || !currentApp}
+						disabled={isLoading}
 						aria-label={
 							currentApp
 								? `Open in ${currentApp.displayLabel ?? currentApp.label}`
-								: "Open in editor"
+								: "Open folder in Finder"
 						}
 						className={cn(
 							"group flex items-center gap-1.5 h-6 px-1.5 sm:pl-1.5 sm:pr-2 rounded-l border border-r-0 border-border/60 bg-secondary/50 text-xs font-medium",
@@ -111,7 +115,6 @@ export const OpenInMenuButton = memo(function OpenInMenuButton({
 							"focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",
 							"active:scale-[0.98]",
 							isLoading && "opacity-50 pointer-events-none",
-							!currentApp && "opacity-50",
 						)}
 					>
 						{currentApp ? (
@@ -138,7 +141,7 @@ export const OpenInMenuButton = memo(function OpenInMenuButton({
 						<span className="flex items-center gap-1.5">
 							{currentApp
 								? `Open in ${currentApp.displayLabel ?? currentApp.label}`
-								: "Select an editor from the dropdown"}
+								: "Open folder in Finder — pick an editor from the menu to change this"}
 							{currentApp && showOpenInShortcut && (
 								<kbd className="px-1 py-0.5 text-[10px] font-mono bg-foreground/10 text-foreground/70 rounded">
 									{openInShortcut}

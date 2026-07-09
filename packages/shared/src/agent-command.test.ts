@@ -1,5 +1,9 @@
 import { describe, expect, it } from "bun:test";
-import { buildAgentPromptCommand, buildRuntimeCommand } from "./agent-command";
+import {
+	buildAgentPromptCommand,
+	buildRuntimeCommand,
+	FIRST_SESSION_KICKOFF_PROMPT,
+} from "./agent-command";
 
 describe("buildAgentPromptCommand", () => {
 	it("adds `--` before codex prompt payload", () => {
@@ -57,5 +61,31 @@ describe("buildRuntimeCommand", () => {
 		expect(command).toContain('-c model_reasoning_effort="medium"');
 		expect(command).toContain("--ask-for-approval never");
 		expect(command).toContain("--sandbox danger-full-access");
+	});
+
+	it("appends a shell-quoted initial prompt for claude", () => {
+		expect(
+			buildRuntimeCommand({ runtime: "claude", initialPrompt: "hi there" }),
+		).toBe("claude 'hi there'");
+	});
+
+	it("escapes single quotes in the initial prompt", () => {
+		expect(
+			buildRuntimeCommand({ runtime: "claude", initialPrompt: "don't stop" }),
+		).toBe("claude 'don'\\''t stop'");
+	});
+
+	it("appends the initial prompt after codex flags", () => {
+		const command = buildRuntimeCommand({
+			runtime: "codex",
+			initialPrompt: "hello",
+		});
+		expect(command.endsWith(" 'hello'")).toBe(true);
+	});
+
+	it("keeps the kickoff prompt free of double quotes and backslashes", () => {
+		// The command is written into a PTY line; these characters would need
+		// extra escaping layers, so the canonical prompt must not contain them.
+		expect(FIRST_SESSION_KICKOFF_PROMPT).not.toMatch(/["\\]/);
 	});
 });

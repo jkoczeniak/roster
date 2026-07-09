@@ -1,6 +1,6 @@
 import {
-	CONNECTOR_CATALOG,
 	type CatalogConnector,
+	CONNECTOR_CATALOG,
 } from "@roster/shared/connector-catalog";
 import { Button } from "@roster/ui/button";
 import {
@@ -70,6 +70,7 @@ export function ConnectorsView() {
 			name: item.id,
 			type: item.type,
 			url: item.url,
+			note: item.description,
 		});
 		setShowAdd(false);
 		toast.success(
@@ -102,7 +103,7 @@ export function ConnectorsView() {
 		<div className="flex flex-col flex-1 min-h-0 overflow-auto">
 			{data?.error && (
 				<div className="mx-3 mt-3 rounded-md border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-xs text-muted-foreground">
-					Couldn't read this agent's .mcp.json: {data.error}
+					Couldn't read this agent's connector settings: {data.error}
 				</div>
 			)}
 
@@ -114,8 +115,8 @@ export function ConnectorsView() {
 					<p className="text-xs">
 						Connectors let the agent reach the systems it works with — Jira and
 						Confluence for a ticket reviewer, Linear for a product agent, or
-						your company's internal endpoints. Add one below; the agent signs
-						in from its own session.
+						your company's internal endpoints. Add one below; the agent signs in
+						from its own session.
 					</p>
 				</div>
 			) : (
@@ -206,6 +207,7 @@ function AddConnectorDialog({
 	const [customName, setCustomName] = useState("");
 	const [customUrl, setCustomUrl] = useState("");
 	const [customCommand, setCustomCommand] = useState("");
+	const [customNote, setCustomNote] = useState("");
 	const [pendingId, setPendingId] = useState<string | null>(null);
 
 	const addConnector = electronTrpc.workspaces.addConnector.useMutation();
@@ -215,6 +217,7 @@ function AddConnectorDialog({
 		setCustomName("");
 		setCustomUrl("");
 		setCustomCommand("");
+		setCustomNote("");
 		setCustomKind("remote");
 	};
 
@@ -243,6 +246,7 @@ function AddConnectorDialog({
 					name: customName.trim(),
 					type: "http",
 					url: customUrl.trim(),
+					note: customNote.trim() || undefined,
 				});
 			} else {
 				const parts = customCommand.trim().split(/\s+/);
@@ -252,6 +256,7 @@ function AddConnectorDialog({
 					type: "stdio",
 					command: parts[0],
 					args: parts.slice(1),
+					note: customNote.trim() || undefined,
 				});
 			}
 			onAdded();
@@ -379,11 +384,32 @@ function AddConnectorDialog({
 								/>
 							</div>
 						)}
+						<div className="flex flex-col gap-1.5">
+							<Label htmlFor="connector-note">What is it for? (optional)</Label>
+							<Input
+								id="connector-note"
+								value={customNote}
+								onChange={(e) => setCustomNote(e.target.value)}
+								maxLength={200}
+								placeholder="e.g. Updating ServiceNow tickets"
+								onKeyDown={(e) => {
+									if (e.key === "Enter" && canAddCustom) handleAddCustom();
+								}}
+							/>
+							<p className="text-xs text-muted-foreground">
+								Recorded in the agent's persona so it knows when to use this
+								tool.
+							</p>
+						</div>
 						<div className="flex justify-between gap-2 pt-1">
 							<Button variant="ghost" size="sm" onClick={resetCustom}>
 								Back
 							</Button>
-							<Button size="sm" onClick={handleAddCustom} disabled={!canAddCustom}>
+							<Button
+								size="sm"
+								onClick={handleAddCustom}
+								disabled={!canAddCustom}
+							>
 								{addConnector.isPending ? "Adding…" : "Add connector"}
 							</Button>
 						</div>

@@ -55,11 +55,11 @@ export function SessionsSection() {
 			},
 			onSuccess: (result) => {
 				if (result.remainingCount > 0) {
-					toast.warning("Some sessions could not be killed", {
+					toast.warning("Some sessions could not be stopped", {
 						description: `${result.killedCount} terminated, ${result.remainingCount} remaining`,
 					});
 				} else {
-					toast.success("Killed all terminal sessions", {
+					toast.success("Stopped all terminal sessions", {
 						description: `${result.killedCount} sessions terminated`,
 					});
 				}
@@ -71,7 +71,7 @@ export function SessionsSection() {
 						context.previous,
 					);
 				}
-				toast.error("Failed to kill sessions", {
+				toast.error("Failed to stop sessions", {
 					description: error.message,
 				});
 			},
@@ -97,11 +97,11 @@ export function SessionsSection() {
 
 	const killDaemonSession = electronTrpc.terminal.kill.useMutation({
 		onSuccess: () => {
-			toast.success("Killed terminal session");
+			toast.success("Stopped terminal session");
 			utils.terminal.listDaemonSessions.invalidate();
 		},
 		onError: (error) => {
-			toast.error("Failed to kill session", {
+			toast.error("Failed to stop session", {
 				description: error.message,
 			});
 		},
@@ -109,14 +109,14 @@ export function SessionsSection() {
 
 	const restartDaemon = electronTrpc.terminal.restartDaemon.useMutation({
 		onSuccess: () => {
-			toast.success("Daemon restarted", {
+			toast.success("Terminal engine restarted", {
 				description:
-					"All sessions killed and daemon restarted. The app will use a fresh daemon.",
+					"All sessions stopped and the terminal engine restarted. The app will use a fresh engine.",
 			});
 			utils.terminal.listDaemonSessions.invalidate();
 		},
 		onError: (error) => {
-			toast.error("Failed to restart daemon", {
+			toast.error("Failed to restart terminal engine", {
 				description: error.message,
 			});
 		},
@@ -142,12 +142,12 @@ export function SessionsSection() {
 						</Button>
 					</div>
 					<p className="text-xs text-muted-foreground">
-						Daemon sessions running: {aliveSessions.length}
+						Background sessions running: {aliveSessions.length}
 					</p>
 					{aliveSessions.length >= 20 && (
 						<p className="text-xs text-muted-foreground/70">
 							Large numbers of persistent terminals can increase CPU/memory
-							usage. Consider killing old sessions if you notice slowdowns.
+							usage. Consider stopping old sessions if you notice slowdowns.
 						</p>
 					)}
 				</div>
@@ -161,7 +161,7 @@ export function SessionsSection() {
 						}
 						onClick={() => setConfirmKillAllOpen(true)}
 					>
-						Kill all sessions
+						Stop all sessions
 					</Button>
 					<Button
 						variant="secondary"
@@ -179,7 +179,7 @@ export function SessionsSection() {
 						disabled={restartDaemon.isPending}
 						onClick={() => setConfirmRestartDaemonOpen(true)}
 					>
-						Restart daemon
+						Restart terminal engine
 					</Button>
 					<Button
 						variant="ghost"
@@ -197,14 +197,14 @@ export function SessionsSection() {
 							<table className="w-full text-xs">
 								<thead className="sticky top-0 bg-background">
 									<tr className="text-muted-foreground">
-										<th className="px-2 py-2 text-left font-medium">
-											Agent
-										</th>
+										<th className="px-2 py-2 text-left font-medium">Agent</th>
 										<th className="px-2 py-2 text-left font-medium">Session</th>
 										<th className="px-2 py-2 text-right font-medium">
 											Clients
 										</th>
-										<th className="px-2 py-2 text-right font-medium">PID</th>
+										<th className="px-2 py-2 text-right font-medium">
+											Process
+										</th>
 										<th className="px-2 py-2 text-left font-medium">
 											Last attached
 										</th>
@@ -240,7 +240,7 @@ export function SessionsSection() {
 														})
 													}
 												>
-													Kill
+													Stop
 												</Button>
 											</td>
 										</tr>
@@ -259,7 +259,7 @@ export function SessionsSection() {
 				<AlertDialogContent className="max-w-[520px] gap-0 p-0">
 					<AlertDialogHeader className="px-4 pt-4 pb-2">
 						<AlertDialogTitle className="font-medium">
-							Kill all terminal sessions?
+							Stop all terminal sessions?
 						</AlertDialogTitle>
 						<AlertDialogDescription asChild>
 							<div className="text-muted-foreground space-y-1.5">
@@ -291,7 +291,7 @@ export function SessionsSection() {
 								killAllDaemonSessions.mutate();
 							}}
 						>
-							Kill all
+							Stop all
 						</Button>
 					</AlertDialogFooter>
 				</AlertDialogContent>
@@ -309,7 +309,7 @@ export function SessionsSection() {
 						<AlertDialogDescription asChild>
 							<div className="text-muted-foreground space-y-1.5">
 								<span className="block">
-									This deletes the saved scrollback used for reboot/crash
+									This deletes the saved terminal history used for reboot/crash
 									recovery.
 								</span>
 								<span className="block">
@@ -351,7 +351,7 @@ export function SessionsSection() {
 				<AlertDialogContent className="max-w-[520px] gap-0 p-0">
 					<AlertDialogHeader className="px-4 pt-4 pb-2">
 						<AlertDialogTitle className="font-medium">
-							Kill terminal session?
+							Stop terminal session?
 						</AlertDialogTitle>
 						<AlertDialogDescription asChild>
 							<div className="text-muted-foreground space-y-1.5">
@@ -386,7 +386,7 @@ export function SessionsSection() {
 								killDaemonSession.mutate({ paneId: sessionId });
 							}}
 						>
-							Kill
+							Stop
 						</Button>
 					</AlertDialogFooter>
 				</AlertDialogContent>
@@ -399,13 +399,13 @@ export function SessionsSection() {
 				<AlertDialogContent className="max-w-[520px] gap-0 p-0">
 					<AlertDialogHeader className="px-4 pt-4 pb-2">
 						<AlertDialogTitle className="font-medium">
-							Restart terminal daemon?
+							Restart the terminal engine?
 						</AlertDialogTitle>
 						<AlertDialogDescription asChild>
 							<div className="text-muted-foreground space-y-1.5">
 								<span className="block">
-									This will kill all running sessions and restart the terminal
-									daemon. The app will restart terminals with a fresh daemon.
+									This will stop all running sessions and restart the terminal
+									engine. The app will restart terminals with a fresh engine.
 								</span>
 								<span className="block">
 									Use this to fix terminals that are stuck or unresponsive.
@@ -430,7 +430,7 @@ export function SessionsSection() {
 								restartDaemon.mutate(undefined, {});
 							}}
 						>
-							Restart daemon
+							Restart terminal engine
 						</Button>
 					</AlertDialogFooter>
 				</AlertDialogContent>

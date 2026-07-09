@@ -141,7 +141,7 @@ export function ResourceConsumption() {
 							</div>
 							<div className="px-3 py-1.5 pl-6 flex items-center justify-between bg-muted/30">
 								<span className="text-[11px] text-muted-foreground min-w-0 truncate">
-									Main
+									App
 								</span>
 								<div
 									className={`${METRIC_COLS} text-[11px] text-muted-foreground`}
@@ -156,7 +156,7 @@ export function ResourceConsumption() {
 							</div>
 							<div className="px-3 py-1.5 pl-6 flex items-center justify-between bg-muted/30">
 								<span className="text-[11px] text-muted-foreground min-w-0 truncate">
-									Renderer
+									Interface
 								</span>
 								<div
 									className={`${METRIC_COLS} text-[11px] text-muted-foreground`}

@@ -70,7 +70,14 @@ export function useAgentSession() {
 	}, [missingBinary, availability]);
 
 	const spawnAgentSession = useCallback(
-		(workspace: AgentSessionWorkspace, variant?: AgentSessionVariant) => {
+		(
+			workspace: AgentSessionWorkspace,
+			variant?: AgentSessionVariant,
+			options?: {
+				/** Submitted as the session's first prompt (new-agent introduction). */
+				initialPrompt?: string;
+			},
+		) => {
 			const { id, runtime, worktreePath } = workspace;
 			const cwd = worktreePath || undefined;
 			// Per-agent override wins; absent/null inherits the global default.
@@ -94,6 +101,7 @@ export function useAgentSession() {
 				mode,
 				model: variant?.model ?? null,
 				reasoningEffort: variant?.reasoningEffort,
+				initialPrompt: options?.initialPrompt,
 			});
 
 			const preset: TerminalPreset = {

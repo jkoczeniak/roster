@@ -253,7 +253,7 @@ export function WorkspaceInitializingView({
 								>
 									{retryMutation.isPending
 										? "Retrying..."
-										: "Retry With Deduplicated Branch"}
+										: "Retry with a new branch name"}
 								</Button>
 							)}
 						</div>

@@ -1,6 +1,10 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { getAgentCodexHome, getAgentWorktreePath } from "./agent-home";
+import {
+	getAgentCodexHome,
+	getAgentMemoryDir,
+	getAgentWorktreePath,
+} from "./agent-home";
 
 /**
  * Per-agent connectors (MCP servers).
@@ -139,6 +143,8 @@ export function addConnector(
 	agentId: string,
 	entry: ConnectorEntry,
 	worktreePath?: string,
+	/** One-line "what it's for" recorded in AGENT.md's ## Tools section. */
+	note?: string,
 ): void {
 	if (!isValidConnectorName(entry.name)) {
 		throw new Error(
@@ -158,6 +164,7 @@ export function addConnector(
 	data.mcpServers = servers;
 	writeMcpJson(agentId, data, worktreePath);
 	syncCodexConnectors(agentId, worktreePath);
+	recordToolInAgentMd(agentId, name, note);
 }
 
 /** Remove a connector by name. No-op if absent. */
@@ -173,6 +180,55 @@ export function removeConnector(
 	delete (servers as Record<string, unknown>)[name];
 	writeMcpJson(agentId, data, worktreePath);
 	syncCodexConnectors(agentId, worktreePath);
+}
+
+const TOOLS_HEADING = "## Tools";
+const TOOLS_SEED_LINE =
+	"- (none yet — connectors added in the Connectors panel appear here)";
+
+/**
+ * Record a newly wired tool in the agent's persona (AGENT.md ## Tools) so the
+ * agent explicitly knows this connector exists and what its tasks use it for.
+ * Guidance, not enforcement: the persona is read every session, which is what
+ * steers the model's tool choice. Respectful of user ownership — no Tools
+ * heading (user removed it) or an existing entry means no write; the seed
+ * placeholder bullet is replaced by the first real entry. Best-effort.
+ */
+export function recordToolInAgentMd(
+	agentId: string,
+	name: string,
+	note?: string,
+): void {
+	try {
+		const agentMd = join(getAgentMemoryDir(agentId), "AGENT.md");
+		if (!existsSync(agentMd)) return;
+		const text = readFileSync(agentMd, "utf8");
+		const headingIdx = text.indexOf(TOOLS_HEADING);
+		if (headingIdx === -1) return;
+		if (text.includes(`- **${name}**`)) return;
+		const bullet = `- **${name}** connector — ${note?.trim() || "use it when the task touches this system"}`;
+
+		let next: string;
+		if (text.includes(TOOLS_SEED_LINE)) {
+			next = text.replace(TOOLS_SEED_LINE, bullet);
+		} else {
+			// Insert at the end of the Tools section (before the next heading).
+			const rest = text.slice(headingIdx + TOOLS_HEADING.length);
+			const nextHeadingRel = rest.indexOf("\n## ");
+			const insertAt =
+				nextHeadingRel === -1
+					? text.length
+					: headingIdx + TOOLS_HEADING.length + nextHeadingRel;
+			const before = text.slice(0, insertAt).replace(/\n*$/, "\n");
+			next = `${before}${bullet}\n${text.slice(insertAt).replace(/^\n*/, "\n")}`;
+		}
+		writeFileSync(agentMd, next, "utf8");
+	} catch (error) {
+		console.warn(
+			`[agent-connectors] AGENT.md tools update failed for ${agentId}:`,
+			error,
+		);
+	}
 }
 
 const CODEX_BLOCK_START =

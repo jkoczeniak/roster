@@ -154,7 +154,7 @@ export function TabContentContextMenu({
 				{onOpenInGhostty && (
 					<ContextMenuItem onSelect={onOpenInGhostty}>
 						<img src={ghosttyIcon} alt="" className="size-4" />
-						Open in Ghostty
+						Open in Ghostty terminal
 					</ContextMenuItem>
 				)}
 				{hasTerminalActions && <ContextMenuSeparator />}

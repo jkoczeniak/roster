@@ -1,3 +1,4 @@
+import { FIRST_SESSION_KICKOFF_PROMPT } from "@roster/shared/agent-command";
 import { toast } from "@roster/ui/sonner";
 import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -176,20 +177,27 @@ function WorkspacePage() {
 
 	// Spawn the agent's runtime CLI as a session tab. Used for the "New session"
 	// affordance and the auto-spawn-on-activation effect below.
-	const spawnSession = useCallback(() => {
-		return spawnAgentSession({
-			id: workspaceId,
-			runtime: workspace?.runtime ?? null,
-			worktreePath: workspace?.worktreePath ?? null,
-			permissionMode: workspace?.permissionMode ?? null,
-		});
-	}, [
-		spawnAgentSession,
-		workspaceId,
-		workspace?.runtime,
-		workspace?.worktreePath,
-		workspace?.permissionMode,
-	]);
+	const spawnSession = useCallback(
+		(options?: { initialPrompt?: string }) => {
+			return spawnAgentSession(
+				{
+					id: workspaceId,
+					runtime: workspace?.runtime ?? null,
+					worktreePath: workspace?.worktreePath ?? null,
+					permissionMode: workspace?.permissionMode ?? null,
+				},
+				undefined,
+				options,
+			);
+		},
+		[
+			spawnAgentSession,
+			workspaceId,
+			workspace?.runtime,
+			workspace?.worktreePath,
+			workspace?.permissionMode,
+		],
+	);
 
 	// Wait for the persisted tabs store to hydrate before deciding whether an
 	// agent has any existing session — otherwise we'd race persistence and
@@ -215,7 +223,17 @@ function WorkspacePage() {
 		if (tabs.length > 0) return;
 		if (autoSpawnedRef.current.has(workspaceId)) return;
 		autoSpawnedRef.current.add(workspaceId);
-		spawnSession();
+		// A brand-new agent's first session opens with an introduction prompt so
+		// the agent speaks first (role, tools, suggestions) instead of dropping
+		// the user at a blank CLI. Recently-created is the signal: the auto-spawn
+		// also fires for older agents that simply have no open sessions, and
+		// those shouldn't re-introduce themselves.
+		const isBrandNew =
+			typeof workspace.createdAt === "number" &&
+			Date.now() - workspace.createdAt < 15 * 60 * 1000;
+		spawnSession(
+			isBrandNew ? { initialPrompt: FIRST_SESSION_KICKOFF_PROMPT } : undefined,
+		);
 	}, [
 		tabsHydrated,
 		workspace,

@@ -95,6 +95,9 @@ export function ModelBar() {
 
 	return (
 		<div className="flex h-9 shrink-0 items-center gap-0.5 border-b bg-background px-2">
+			<span className="mr-1 whitespace-nowrap text-[11px] text-muted-foreground">
+				New session:
+			</span>
 			<div
 				className={`flex items-center gap-0.5 ${
 					ready ? "" : "pointer-events-none opacity-40"
@@ -115,7 +118,7 @@ export function ModelBar() {
 									aria-label={
 										missing
 											? `${variant.description} — not detected, click to install`
-											: `New session — ${variant.description}`
+											: variant.description
 									}
 									disabled={!ready}
 									onClick={() => handleVariantClick(variant)}
@@ -192,15 +195,18 @@ export function ModelBar() {
 							</SelectTrigger>
 						</TooltipTrigger>
 						<TooltipContent side="bottom" showArrow={false}>
+							{effectiveMode === "auto"
+								? "Acts without asking — only for agents you fully trust"
+								: "Asks you before risky actions"}
 							{overrideMode
-								? "Permissions for this agent's new sessions (overrides the app default)"
-								: `Permissions for this agent's new sessions — using the app default (${globalModeLabel})`}
+								? " (set for this agent, overriding the app default)"
+								: ` (app default: ${globalModeLabel})`}
 						</TooltipContent>
 					</Tooltip>
 					<SelectContent align="end">
 						<SelectItem value="default">Default ({globalModeLabel})</SelectItem>
-						<SelectItem value="guarded">Guarded</SelectItem>
-						<SelectItem value="auto">Full autonomy</SelectItem>
+						<SelectItem value="guarded">Guarded — asks first</SelectItem>
+						<SelectItem value="auto">Full autonomy — never asks</SelectItem>
 					</SelectContent>
 				</Select>
 			</div>

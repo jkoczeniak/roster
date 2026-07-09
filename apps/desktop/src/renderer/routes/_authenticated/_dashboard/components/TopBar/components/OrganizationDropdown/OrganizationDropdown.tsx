@@ -6,38 +6,24 @@ import {
 	DropdownMenuItem,
 	DropdownMenuSeparator,
 	DropdownMenuShortcut,
-	DropdownMenuSub,
-	DropdownMenuSubContent,
-	DropdownMenuSubTrigger,
 	DropdownMenuTrigger,
 } from "@roster/ui/dropdown-menu";
 import { useNavigate } from "@tanstack/react-router";
-import { FaDiscord, FaGithub, FaXTwitter } from "react-icons/fa6";
 import {
 	HiChevronUpDown,
-	HiOutlineArrowRightOnRectangle,
 	HiOutlineBookOpen,
-	HiOutlineChatBubbleLeftRight,
 	HiOutlineCog6Tooth,
-	HiOutlineEnvelope,
 } from "react-icons/hi2";
 import { IoBugOutline } from "react-icons/io5";
 import { LuKeyboard } from "react-icons/lu";
 import { authClient } from "renderer/lib/auth-client";
-import { electronTrpc } from "renderer/lib/electron-trpc";
 import { useHotkeyText } from "renderer/stores/hotkeys";
 
 export function OrganizationDropdown() {
 	const { data: session } = authClient.useSession();
-	const signOutMutation = electronTrpc.auth.signOut.useMutation();
 	const navigate = useNavigate();
 	const settingsHotkey = useHotkeyText("OPEN_SETTINGS");
 	const shortcutsHotkey = useHotkeyText("SHOW_HOTKEYS");
-
-	async function handleSignOut(): Promise<void> {
-		await authClient.signOut();
-		signOutMutation.mutate();
-	}
 
 	function openExternal(url: string): void {
 		window.open(url, "_blank");
@@ -54,11 +40,7 @@ export function OrganizationDropdown() {
 					className="no-drag flex items-center gap-1.5 h-6 px-1.5 rounded border border-border/60 bg-secondary/50 hover:bg-secondary hover:border-border transition-all duration-150 ease-out focus:outline-none focus:ring-1 focus:ring-ring"
 					aria-label="Menu"
 				>
-					<Avatar
-						size="xs"
-						fullName={userName}
-						className="rounded size-4"
-					/>
+					<Avatar size="xs" fullName={userName} className="rounded size-4" />
 					<span className="text-xs font-medium truncate max-w-32">
 						{displayName}
 					</span>
@@ -97,37 +79,6 @@ export function OrganizationDropdown() {
 				>
 					<IoBugOutline className="h-4 w-4" />
 					Report Issue
-				</DropdownMenuItem>
-				<DropdownMenuSub>
-					<DropdownMenuSubTrigger>
-						<HiOutlineChatBubbleLeftRight className="h-4 w-4" />
-						Contact Us
-					</DropdownMenuSubTrigger>
-					<DropdownMenuSubContent sideOffset={8} className="w-56">
-						<DropdownMenuItem onClick={() => openExternal(COMPANY.GITHUB_URL)}>
-							<FaGithub className="h-4 w-4" />
-							GitHub
-						</DropdownMenuItem>
-						<DropdownMenuItem onClick={() => openExternal(COMPANY.DISCORD_URL)}>
-							<FaDiscord className="h-4 w-4" />
-							Discord
-						</DropdownMenuItem>
-						<DropdownMenuItem onClick={() => openExternal(COMPANY.X_URL)}>
-							<FaXTwitter className="h-4 w-4" />X
-						</DropdownMenuItem>
-						<DropdownMenuItem onClick={() => openExternal(COMPANY.MAIL_TO)}>
-							<HiOutlineEnvelope className="h-4 w-4" />
-							Email Founders
-						</DropdownMenuItem>
-					</DropdownMenuSubContent>
-				</DropdownMenuSub>
-
-				<DropdownMenuSeparator />
-
-				{/* Account */}
-				<DropdownMenuItem onSelect={handleSignOut} className="gap-2">
-					<HiOutlineArrowRightOnRectangle className="h-4 w-4" />
-					<span>Log out</span>
 				</DropdownMenuItem>
 			</DropdownMenuContent>
 		</DropdownMenu>

@@ -455,17 +455,11 @@ export function BehaviorSettings({ visibleItems }: BehaviorSettingsProps) {
 								Default agent autonomy
 							</Label>
 							<p className="text-xs text-muted-foreground">
-								Guarded (recommended): each CLI asks before risky actions. Full
-								autonomy passes{" "}
-								<code className="bg-muted px-1 py-0.5 rounded">
-									--dangerously-skip-permissions
-								</code>{" "}
-								/{" "}
-								<code className="bg-muted px-1 py-0.5 rounded">
-									--sandbox danger-full-access
-								</code>{" "}
-								to new sessions. Applies to newly launched sessions only. Each
-								agent can override this from the model bar above its sessions.
+								Guarded (recommended): the agent asks before risky actions like
+								editing files or running commands. Full autonomy: sessions act
+								without asking — only for work you fully trust. Applies to newly
+								launched sessions only. Each agent can override this from the
+								model bar above its sessions.
 							</p>
 						</div>
 						<Select

@@ -101,13 +101,13 @@ export function SearchDialog<TItem extends SearchDialogItem>({
 					<Input
 						value={includePattern}
 						onChange={(event) => onIncludePatternChange(event.target.value)}
-						placeholder="files to include (glob)"
+						placeholder="only these files (e.g. *.md)"
 						className="h-8 text-xs"
 					/>
 					<Input
 						value={excludePattern}
 						onChange={(event) => onExcludePatternChange(event.target.value)}
-						placeholder="files to exclude (glob)"
+						placeholder="skip these files"
 						className="h-8 text-xs"
 					/>
 				</div>

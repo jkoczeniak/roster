@@ -176,11 +176,107 @@ describe("list/add/remove connectors", () => {
 			readFileSync(join(externalDir, ".mcp.json"), "utf8"),
 		);
 		expect(raw.mcpServers.linear.url).toBe("https://mcp.linear.app/mcp");
-		expect(
-			connectors.listConnectors("legacy-agent", externalDir),
-		).toHaveLength(1);
+		expect(connectors.listConnectors("legacy-agent", externalDir)).toHaveLength(
+			1,
+		);
 		// Nothing landed at the derived path.
 		expect(connectors.listConnectors("legacy-agent")).toEqual([]);
+	});
+});
+
+describe("AGENT.md ## Tools recording", () => {
+	const AGENT = "conn-agent-tools";
+	let memoryDir: string;
+
+	const SEED = `# Testy
+
+You are Testy.
+
+## Role
+- test things
+
+## Tools
+<!-- guidance comment -->
+- (none yet — connectors added in the Connectors panel appear here)
+
+## Operating brief
+- work
+`;
+
+	it("replaces the seed bullet with the first wired tool", async () => {
+		makeWorktree(AGENT);
+		const home = await import("./agent-home");
+		memoryDir = home.getAgentMemoryDir(AGENT);
+		mkdirSync(memoryDir, { recursive: true });
+		writeFileSync(join(memoryDir, "AGENT.md"), SEED);
+		connectors.addConnector(
+			AGENT,
+			{
+				name: "atlassian",
+				type: "sse",
+				url: "https://mcp.atlassian.com/v1/sse",
+			},
+			undefined,
+			"Read and update Jira tickets and Confluence pages",
+		);
+		const text = readFileSync(join(memoryDir, "AGENT.md"), "utf8");
+		expect(text).toContain(
+			"- **atlassian** connector — Read and update Jira tickets and Confluence pages",
+		);
+		expect(text).not.toContain("(none yet — connectors");
+	});
+
+	it("appends further tools inside the Tools section, before the next heading", () => {
+		connectors.addConnector(
+			AGENT,
+			{ name: "servicenow", type: "http", url: "https://mcp.corp/snow" },
+			undefined,
+			"Updating ServiceNow tickets",
+		);
+		const text = readFileSync(join(memoryDir, "AGENT.md"), "utf8");
+		const toolsIdx = text.indexOf("## Tools");
+		const briefIdx = text.indexOf("## Operating brief");
+		const snowIdx = text.indexOf(
+			"- **servicenow** connector — Updating ServiceNow tickets",
+		);
+		expect(snowIdx).toBeGreaterThan(toolsIdx);
+		expect(snowIdx).toBeLessThan(briefIdx);
+	});
+
+	it("does not duplicate an already-listed tool", () => {
+		const before = readFileSync(join(memoryDir, "AGENT.md"), "utf8");
+		connectors.addConnector(
+			AGENT,
+			{
+				name: "atlassian",
+				type: "sse",
+				url: "https://mcp.atlassian.com/v1/sse",
+			},
+			undefined,
+			"different note",
+		);
+		expect(readFileSync(join(memoryDir, "AGENT.md"), "utf8")).toBe(before);
+	});
+
+	it("leaves AGENT.md alone when the user removed the Tools section", () => {
+		const noTools = "# Testy\n\n## Role\n- test\n";
+		writeFileSync(join(memoryDir, "AGENT.md"), noTools);
+		connectors.addConnector(
+			AGENT,
+			{ name: "linear", type: "http", url: "https://mcp.linear.app/mcp" },
+			undefined,
+			"Linear issues",
+		);
+		expect(readFileSync(join(memoryDir, "AGENT.md"), "utf8")).toBe(noTools);
+	});
+
+	it("uses a generic note when none is given", () => {
+		writeFileSync(join(memoryDir, "AGENT.md"), SEED);
+		connectors.recordToolInAgentMd(AGENT, "mystery");
+		const text = readFileSync(join(memoryDir, "AGENT.md"), "utf8");
+		expect(text).toContain(
+			"- **mystery** connector — use it when the task touches this system",
+		);
 	});
 });
 

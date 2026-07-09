@@ -222,7 +222,7 @@ export function NewAgentModal() {
 					</div>
 
 					<div className="flex flex-col gap-1.5">
-						<Label>Runtime</Label>
+						<Label>Powered by</Label>
 						<Select
 							value={runtime}
 							onValueChange={(v) =>
@@ -254,8 +254,8 @@ export function NewAgentModal() {
 						</Select>
 						{runtimeMissing && (
 							<p className="text-xs text-muted-foreground">
-								{AGENT_LABELS[runtime]}'s CLI isn't installed — the agent will
-								be created, but you'll need it to run sessions.{" "}
+								{AGENT_LABELS[runtime]} isn't installed yet — the agent will be
+								created, but it can't run sessions until you install it.{" "}
 								<button
 									type="button"
 									className="text-foreground underline underline-offset-2 hover:no-underline"

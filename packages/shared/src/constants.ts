@@ -14,8 +14,11 @@ export const COMPANY = {
 	DOMAIN: "roster.local",
 	EMAIL_DOMAIN: "@roster.local",
 	GITHUB_URL: "https://github.com/jkoczeniak/roster",
-	DOCS_URL: process.env.NEXT_PUBLIC_DOCS_URL || "https://docs.roster.local",
-	MARKETING_URL: process.env.NEXT_PUBLIC_MARKETING_URL || "https://roster.local",
+	DOCS_URL:
+		process.env.NEXT_PUBLIC_DOCS_URL ||
+		"https://github.com/jkoczeniak/roster#readme",
+	MARKETING_URL:
+		process.env.NEXT_PUBLIC_MARKETING_URL || "https://roster.local",
 	TERMS_URL: `${process.env.NEXT_PUBLIC_MARKETING_URL || "https://roster.local"}/terms`,
 	PRIVACY_URL:
 		(process.env.NEXT_PUBLIC_MARKETING_URL || "https://roster.local") +
@@ -23,10 +26,7 @@ export const COMPANY = {
 	CHANGELOG_URL:
 		(process.env.NEXT_PUBLIC_MARKETING_URL || "https://roster.local") +
 		"/changelog",
-	X_URL: "https://x.com/roster_sh",
-	MAIL_TO: "mailto:hello@roster.local",
 	REPORT_ISSUE_URL: "https://github.com/jkoczeniak/roster/issues/new",
-	DISCORD_URL: "https://discord.gg/cZeD9WYcV7",
 } as const;
 
 // Theme
