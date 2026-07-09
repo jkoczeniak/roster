@@ -71,6 +71,7 @@ export function ConnectorsView() {
 			type: item.type,
 			url: item.url,
 		});
+		setShowAdd(false);
 		toast.success(
 			`${item.label} connected — run /mcp in the agent's session to sign in`,
 		);
