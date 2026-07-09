@@ -1,11 +1,9 @@
 import {
-	type AgentBinary,
 	type CheckedBinary,
 	RUNTIME_BINARY,
 } from "@roster/shared/agent-binaries";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@roster/ui/tooltip";
 import { useParams } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
 import {
 	getPresetIcon,
 	useIsDarkTheme,
@@ -28,22 +26,19 @@ import {
 export function ModelBar() {
 	const { workspaceId } = useParams({ strict: false });
 	const isDark = useIsDarkTheme();
-	const { spawnAgentSession } = useAgentSession();
-	const { isAvailable, recheck, isFetching } = useRuntimeAvailability();
+	const {
+		spawnAgentSession,
+		missingBinary,
+		dismissMissingBinary,
+		recheckAvailability,
+		isRecheckingAvailability,
+	} = useAgentSession();
+	const { isAvailable } = useRuntimeAvailability();
 
 	const { data: workspace } = electronTrpc.workspaces.get.useQuery(
 		{ id: workspaceId! },
 		{ enabled: !!workspaceId },
 	);
-
-	const [installBinary, setInstallBinary] = useState<AgentBinary | null>(null);
-
-	// Close the install dialog once a re-check confirms the tool is now present.
-	useEffect(() => {
-		if (installBinary && isAvailable(installBinary as CheckedBinary)) {
-			setInstallBinary(null);
-		}
-	}, [installBinary, isAvailable]);
 
 	if (!workspaceId) return null;
 
@@ -52,12 +47,8 @@ export function ModelBar() {
 
 	const handleVariantClick = (variant: ModelVariant) => {
 		if (!ready) return;
-		// Availability gate: the runtime's binary must be present before spawning.
-		const binary = RUNTIME_BINARY[variant.runtime];
-		if (!isAvailable(binary as CheckedBinary)) {
-			setInstallBinary(binary);
-			return;
-		}
+		// spawnAgentSession gates on binary availability and opens the install
+		// dialog (missingBinary) itself when the runtime isn't installed.
 		spawnAgentSession(
 			{
 				id: workspaceId,
@@ -137,10 +128,10 @@ export function ModelBar() {
 			</div>
 
 			<BinaryInstallDialog
-				binary={installBinary}
-				onOpenChange={(open) => !open && setInstallBinary(null)}
-				onRecheck={recheck}
-				isRechecking={isFetching}
+				binary={missingBinary}
+				onOpenChange={(open) => !open && dismissMissingBinary()}
+				onRecheck={recheckAvailability}
+				isRechecking={isRecheckingAvailability}
 			/>
 		</div>
 	);

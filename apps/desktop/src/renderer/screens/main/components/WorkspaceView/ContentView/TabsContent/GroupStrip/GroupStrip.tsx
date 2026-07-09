@@ -10,6 +10,7 @@ import {
 import { electronTrpc } from "renderer/lib/electron-trpc";
 import { useAppHotkey } from "renderer/stores/hotkeys";
 import { useRenamePaneStore } from "renderer/stores/rename-pane-store";
+import { BinaryInstallDialog } from "renderer/components/BinaryInstallDialog/BinaryInstallDialog";
 import { useTabsStore } from "renderer/stores/tabs/store";
 import { useAgentSession } from "renderer/stores/tabs/useAgentSession";
 import { useTabsWithPresets } from "renderer/stores/tabs/useTabsWithPresets";
@@ -31,7 +32,13 @@ export function GroupStrip() {
 	const activeTabIds = useTabsStore((s) => s.activeTabIds);
 	const tabHistoryStacks = useTabsStore((s) => s.tabHistoryStacks);
 	const { addTab } = useTabsWithPresets();
-	const { spawnAgentSession } = useAgentSession();
+	const {
+		spawnAgentSession,
+		missingBinary,
+		dismissMissingBinary,
+		recheckAvailability,
+		isRecheckingAvailability,
+	} = useAgentSession();
 	const addBrowserTab = useTabsStore((s) => s.addBrowserTab);
 	const renameTab = useTabsStore((s) => s.renameTab);
 	const removeTab = useTabsStore((s) => s.removeTab);
@@ -355,6 +362,12 @@ export function GroupStrip() {
 			{hasHorizontalOverflow && (
 				<div className="shrink-0 bg-background/95 pr-1">{plusControl}</div>
 			)}
+			<BinaryInstallDialog
+				binary={missingBinary}
+				onOpenChange={(open) => !open && dismissMissingBinary()}
+				onRecheck={recheckAvailability}
+				isRechecking={isRecheckingAvailability}
+			/>
 		</div>
 	);
 }
