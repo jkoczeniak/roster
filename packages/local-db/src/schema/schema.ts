@@ -142,6 +142,10 @@ export const workspaces = sqliteTable(
 		// AGENT_PRESET_COMMANDS in @roster/shared. Defaults to "claude" at the
 		// insert site; null on pre-Roster rows.
 		runtime: text("runtime").$type<AgentRuntime>(),
+		// Roster: per-agent permission posture override for new sessions.
+		// null = inherit the global settings.agentPermissionMode. Any unreadable
+		// or missing value must resolve to "guarded" at the launch site.
+		permissionMode: text("permission_mode").$type<"guarded" | "auto">(),
 	},
 	(table) => [
 		index("workspaces_project_id_idx").on(table.projectId),

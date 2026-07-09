@@ -1,0 +1,1 @@
+ALTER TABLE `workspaces` ADD `permission_mode` text;

@@ -327,7 +327,7 @@ export function useTerminalLifecycle({
 							// Synced-from-peer panes stage the command without pressing Enter.
 							const stagedNewline = consumeSyncedPane(paneId) ? "" : "\n";
 							setTimeout(() => {
-								buildClaudeResumeCommand(sessionId)
+								buildClaudeResumeCommand(sessionId, workspaceId)
 									.then((command) =>
 										trpcClient.terminal.write.mutate({
 											paneId,
@@ -526,7 +526,7 @@ export function useTerminalLifecycle({
 									// Synced-from-peer panes stage the command without pressing Enter.
 									const stagedNewline = consumeSyncedPane(paneId) ? "" : "\n";
 									setTimeout(() => {
-										buildClaudeResumeCommand(sessionId)
+										buildClaudeResumeCommand(sessionId, workspaceId)
 											.then((command) =>
 												trpcClient.terminal.write.mutate({
 													paneId,

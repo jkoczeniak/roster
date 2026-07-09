@@ -181,12 +181,14 @@ function WorkspacePage() {
 			id: workspaceId,
 			runtime: workspace?.runtime ?? null,
 			worktreePath: workspace?.worktreePath ?? null,
+			permissionMode: workspace?.permissionMode ?? null,
 		});
 	}, [
 		spawnAgentSession,
 		workspaceId,
 		workspace?.runtime,
 		workspace?.worktreePath,
+		workspace?.permissionMode,
 	]);
 
 	// Wait for the persisted tabs store to hydrate before deciding whether an

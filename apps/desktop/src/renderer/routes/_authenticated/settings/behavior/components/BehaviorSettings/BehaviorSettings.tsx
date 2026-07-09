@@ -451,7 +451,9 @@ export function BehaviorSettings({ visibleItems }: BehaviorSettingsProps) {
 				{showAgentAutonomy && (
 					<div className="flex items-center justify-between">
 						<div className="space-y-0.5">
-							<Label className="text-sm font-medium">Agent autonomy</Label>
+							<Label className="text-sm font-medium">
+								Default agent autonomy
+							</Label>
 							<p className="text-xs text-muted-foreground">
 								Guarded (recommended): each CLI asks before risky actions. Full
 								autonomy passes{" "}
@@ -462,7 +464,8 @@ export function BehaviorSettings({ visibleItems }: BehaviorSettingsProps) {
 								<code className="bg-muted px-1 py-0.5 rounded">
 									--sandbox danger-full-access
 								</code>{" "}
-								to new sessions. Applies to newly launched sessions only.
+								to new sessions. Applies to newly launched sessions only. Each
+								agent can override this from the model bar above its sessions.
 							</p>
 						</div>
 						<Select
@@ -501,7 +504,6 @@ export function BehaviorSettings({ visibleItems }: BehaviorSettingsProps) {
 						/>
 					</div>
 				)}
-
 			</div>
 		</div>
 	);

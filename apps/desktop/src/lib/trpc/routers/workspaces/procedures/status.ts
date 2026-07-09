@@ -1,4 +1,5 @@
 import { AGENT_RUNTIMES, workspaces, worktrees } from "@roster/local-db";
+import { PERMISSION_MODES } from "@roster/shared/agent-command";
 import { and, eq, isNull, not } from "drizzle-orm";
 import { localDb } from "main/lib/local-db";
 import {
@@ -154,6 +155,29 @@ export const createStatusProcedures = () => {
 					.run();
 
 				return { success: true, runtime: input.runtime };
+			}),
+
+		// Roster: per-agent permission posture override for new sessions.
+		// null = inherit the global Settings → Behavior default.
+		setPermissionMode: publicProcedure
+			.input(
+				z.object({ id: z.string(), mode: z.enum(PERMISSION_MODES).nullable() }),
+			)
+			.mutation(({ input }) => {
+				const workspace = getWorkspaceNotDeleting(input.id);
+				if (!workspace) {
+					throw new Error(
+						`Workspace ${input.id} not found or is being deleted`,
+					);
+				}
+
+				localDb
+					.update(workspaces)
+					.set({ permissionMode: input.mode })
+					.where(eq(workspaces.id, input.id))
+					.run();
+
+				return { success: true, permissionMode: input.mode };
 			}),
 
 		setUnread: publicProcedure

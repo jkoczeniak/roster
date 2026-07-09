@@ -12,21 +12,27 @@ export function shellEscapePaths(paths: string[]): string {
 
 /**
  * Build the `claude --resume` command for the auto-resume paths, honoring the
- * global permission posture (Settings → Agent autonomy) exactly like a fresh
- * session launch does. Resume used to hardcode --dangerously-skip-permissions,
- * silently upgrading "guarded" users to full autonomy. Any failure to read the
- * setting falls back to guarded — never grant autonomy on error.
+ * same posture resolution as a fresh session launch: the workspace's per-agent
+ * permission override first, then the global default (Settings → Behavior).
+ * Resume used to hardcode --dangerously-skip-permissions, silently upgrading
+ * "guarded" users to full autonomy. Any failure to read either value falls
+ * back to guarded — never grant autonomy on error.
  */
 export async function buildClaudeResumeCommand(
 	sessionId: string,
+	workspaceId?: string,
 ): Promise<string> {
 	let mode: PermissionMode = DEFAULT_PERMISSION_MODE;
 	try {
-		mode =
-			(await trpcClient.settings.getPermissionMode.query()) ??
-			DEFAULT_PERMISSION_MODE;
+		const [globalMode, workspace] = await Promise.all([
+			trpcClient.settings.getPermissionMode.query(),
+			workspaceId
+				? trpcClient.workspaces.get.query({ id: workspaceId })
+				: Promise.resolve(null),
+		]);
+		mode = workspace?.permissionMode ?? globalMode ?? DEFAULT_PERMISSION_MODE;
 	} catch {
-		// Unreadable setting → guarded.
+		// Unreadable setting or workspace → guarded.
 	}
 	const parts = ["claude", "--resume", sessionId];
 	if (mode === "auto") parts.push("--dangerously-skip-permissions");

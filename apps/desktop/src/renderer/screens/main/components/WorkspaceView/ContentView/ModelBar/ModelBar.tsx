@@ -2,8 +2,19 @@ import {
 	type CheckedBinary,
 	RUNTIME_BINARY,
 } from "@roster/shared/agent-binaries";
+import {
+	DEFAULT_PERMISSION_MODE,
+	type PermissionMode,
+} from "@roster/shared/agent-command";
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+} from "@roster/ui/select";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@roster/ui/tooltip";
 import { useParams } from "@tanstack/react-router";
+import { HiBolt, HiOutlineShieldCheck } from "react-icons/hi2";
 import {
 	getPresetIcon,
 	useIsDarkTheme,
@@ -21,7 +32,9 @@ import {
 /**
  * A quiet row of model variants below the session tab strip. Clicking a variant
  * opens a new session in the current agent's worktree running that runtime's
- * CLI with the variant's model (permission mode comes from Settings → Features).
+ * CLI with the variant's model. The right edge shows the agent's permission
+ * posture for new sessions: the per-agent override when set, otherwise the
+ * global default (Settings → Behavior → Default agent autonomy).
  */
 export function ModelBar() {
 	const { workspaceId } = useParams({ strict: false });
@@ -34,16 +47,31 @@ export function ModelBar() {
 		isRecheckingAvailability,
 	} = useAgentSession();
 	const { isAvailable } = useRuntimeAvailability();
+	const utils = electronTrpc.useUtils();
 
 	const { data: workspace } = electronTrpc.workspaces.get.useQuery(
 		{ id: workspaceId! },
 		{ enabled: !!workspaceId },
 	);
+	// Global default posture; guarded while loading (same fallback as launch).
+	const { data: globalPermissionMode } =
+		electronTrpc.settings.getPermissionMode.useQuery();
+	const setPermissionMode =
+		electronTrpc.workspaces.setPermissionMode.useMutation({
+			onSuccess: () => {
+				utils.workspaces.get.invalidate({ id: workspaceId! });
+			},
+		});
 
 	if (!workspaceId) return null;
 
 	const worktreePath = workspace?.worktreePath ?? null;
 	const ready = !!worktreePath;
+
+	const globalMode = globalPermissionMode ?? DEFAULT_PERMISSION_MODE;
+	const overrideMode = workspace?.permissionMode ?? null;
+	const effectiveMode = overrideMode ?? globalMode;
+	const globalModeLabel = globalMode === "auto" ? "Full autonomy" : "Guarded";
 
 	const handleVariantClick = (variant: ModelVariant) => {
 		if (!ready) return;
@@ -54,6 +82,7 @@ export function ModelBar() {
 				id: workspaceId,
 				runtime: variant.runtime,
 				worktreePath,
+				permissionMode: overrideMode,
 			},
 			{
 				id: variant.id,
@@ -125,6 +154,55 @@ export function ModelBar() {
 						</Tooltip>
 					);
 				})}
+			</div>
+
+			{/* Per-agent permission posture for new sessions. Effective mode is
+			    always visible; "auto" is deliberately loud (amber) so a session
+			    launching without approval prompts is never a surprise. */}
+			<div className="ml-auto">
+				<Select
+					value={overrideMode ?? "default"}
+					onValueChange={(value) =>
+						setPermissionMode.mutate({
+							id: workspaceId,
+							mode: value === "default" ? null : (value as PermissionMode),
+						})
+					}
+					disabled={setPermissionMode.isPending}
+				>
+					<Tooltip>
+						<TooltipTrigger asChild>
+							<SelectTrigger
+								size="sm"
+								aria-label="Agent permissions for new sessions"
+								className={`w-auto gap-1.5 rounded-md border-none bg-transparent px-2 text-[11px] shadow-none data-[size=sm]:h-7 dark:bg-transparent hover:bg-muted dark:hover:bg-muted ${
+									effectiveMode === "auto"
+										? "text-amber-500 hover:text-amber-400"
+										: "text-muted-foreground hover:text-foreground"
+								}`}
+							>
+								{effectiveMode === "auto" ? (
+									<HiBolt className="h-3.5 w-3.5 text-current" />
+								) : (
+									<HiOutlineShieldCheck className="h-3.5 w-3.5 text-current" />
+								)}
+								<span>
+									{effectiveMode === "auto" ? "Full autonomy" : "Guarded"}
+								</span>
+							</SelectTrigger>
+						</TooltipTrigger>
+						<TooltipContent side="bottom" showArrow={false}>
+							{overrideMode
+								? "Permissions for this agent's new sessions (overrides the app default)"
+								: `Permissions for this agent's new sessions — using the app default (${globalModeLabel})`}
+						</TooltipContent>
+					</Tooltip>
+					<SelectContent align="end">
+						<SelectItem value="default">Default ({globalModeLabel})</SelectItem>
+						<SelectItem value="guarded">Guarded</SelectItem>
+						<SelectItem value="auto">Full autonomy</SelectItem>
+					</SelectContent>
+				</Select>
 			</div>
 
 			<BinaryInstallDialog

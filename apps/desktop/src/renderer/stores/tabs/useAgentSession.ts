@@ -5,6 +5,7 @@ import {
 	AGENT_LABELS,
 	buildRuntimeCommand,
 	DEFAULT_PERMISSION_MODE,
+	type PermissionMode,
 } from "@roster/shared/agent-command";
 import { useCallback, useEffect, useState } from "react";
 import { electronTrpc } from "renderer/lib/electron-trpc";
@@ -16,6 +17,8 @@ export interface AgentSessionWorkspace {
 	id: string;
 	runtime?: AgentRuntime | null;
 	worktreePath?: string | null;
+	/** Per-agent permission override; null/undefined = inherit the global default. */
+	permissionMode?: PermissionMode | null;
 }
 
 /** A model variant to launch (see MODEL_VARIANTS); omit for the CLI default. */
@@ -32,7 +35,8 @@ export interface AgentSessionVariant {
  *
  * A "session" is just a normal terminal tab. Given an agent (workspace) with a
  * runtime, we build a synthetic TerminalPreset that launches the runtime's CLI
- * (via buildRuntimeCommand, honoring the global permission mode and an optional
+ * (via buildRuntimeCommand, honoring the agent's permission override — falling
+ * back to the global default — and an optional
  * model variant) in the agent's worktree and open it as a new tab. When the
  * agent has no runtime we fall back to a plain shell tab.
  *
@@ -45,18 +49,22 @@ export interface AgentSessionVariant {
  */
 export function useAgentSession() {
 	const { openPreset, addTab } = useTabsWithPresets();
-	// Global permission posture (Settings → Features → Agent autonomy). Defaults
-	// to guarded while loading so a race can never grant full autonomy.
+	// Global default posture (Settings → Behavior → Default agent autonomy).
+	// A workspace's permissionMode overrides it per-agent. Defaults to guarded
+	// while loading so a race can never grant full autonomy.
 	const { data: permissionMode } =
 		electronTrpc.settings.getPermissionMode.useQuery();
-	const mode = permissionMode ?? DEFAULT_PERMISSION_MODE;
+	const globalMode = permissionMode ?? DEFAULT_PERMISSION_MODE;
 
 	const { availability, recheck, isFetching } = useRuntimeAvailability();
 	const [missingBinary, setMissingBinary] = useState<AgentBinary | null>(null);
 
 	// Close the install dialog once a re-check confirms the tool is now present.
 	useEffect(() => {
-		if (missingBinary && (availability?.[missingBinary as CheckedBinary] ?? true)) {
+		if (
+			missingBinary &&
+			(availability?.[missingBinary as CheckedBinary] ?? true)
+		) {
 			setMissingBinary(null);
 		}
 	}, [missingBinary, availability]);
@@ -65,6 +73,8 @@ export function useAgentSession() {
 		(workspace: AgentSessionWorkspace, variant?: AgentSessionVariant) => {
 			const { id, runtime, worktreePath } = workspace;
 			const cwd = worktreePath || undefined;
+			// Per-agent override wins; absent/null inherits the global default.
+			const mode = workspace.permissionMode ?? globalMode;
 
 			if (!runtime) {
 				// No runtime configured — open a plain shell in the worktree.
@@ -100,7 +110,7 @@ export function useAgentSession() {
 
 			return openPreset(id, preset, { target: "new-tab" });
 		},
-		[openPreset, addTab, mode, availability],
+		[openPreset, addTab, globalMode, availability],
 	);
 
 	const dismissMissingBinary = useCallback(() => setMissingBinary(null), []);

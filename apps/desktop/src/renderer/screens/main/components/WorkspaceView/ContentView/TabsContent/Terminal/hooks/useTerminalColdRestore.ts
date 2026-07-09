@@ -241,7 +241,7 @@ export function useTerminalColdRestore({
 						// Synced-from-peer panes stage the command without pressing Enter.
 						const stagedNewline = consumeSyncedPane(paneId) ? "" : "\n";
 						setTimeout(() => {
-							buildClaudeResumeCommand(claudeSessionId)
+							buildClaudeResumeCommand(claudeSessionId, workspaceId)
 								.then((command) =>
 									trpcClient.terminal.write.mutate({
 										paneId,

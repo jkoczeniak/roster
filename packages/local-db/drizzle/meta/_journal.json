@@ -288,6 +288,13 @@
       "when": 1783528795500,
       "tag": "0040_faulty_shinobi_shaw",
       "breakpoints": true
+    },
+    {
+      "idx": 41,
+      "version": "6",
+      "when": 1783595815533,
+      "tag": "0041_add-workspace-permission-mode",
+      "breakpoints": true
     }
   ]
 }
