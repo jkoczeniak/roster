@@ -6,6 +6,7 @@ import {
 	HiOutlinePaintBrush,
 	HiOutlineShieldCheck,
 	HiOutlineSparkles,
+	HiOutlineUserCircle,
 } from "react-icons/hi2";
 import { LuKeyboard } from "react-icons/lu";
 import { electronTrpc } from "renderer/lib/electron-trpc";
@@ -16,6 +17,7 @@ interface GeneralSettingsProps {
 }
 
 type SettingsRoute =
+	| "/settings/account"
 	| "/settings/appearance"
 	| "/settings/ringtones"
 	| "/settings/keyboard"
@@ -30,6 +32,12 @@ const GENERAL_SECTIONS: {
 	icon: React.ReactNode;
 	macOnly?: boolean;
 }[] = [
+	{
+		id: "/settings/account",
+		section: "account",
+		label: "Account",
+		icon: <HiOutlineUserCircle className="h-4 w-4" />,
+	},
 	{
 		id: "/settings/appearance",
 		section: "appearance",

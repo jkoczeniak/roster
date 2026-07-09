@@ -1,8 +1,7 @@
 import type { SettingsSection } from "renderer/stores/settings-state";
 
 export const SETTING_ITEM_ID = {
-	ACCOUNT_PROFILE: "account-profile",
-	ACCOUNT_SIGNOUT: "account-signout",
+	ACCOUNT_AGENT_AUTH: "account-agent-auth",
 
 	ORGANIZATION_LOGO: "organization-logo",
 	ORGANIZATION_NAME: "organization-name",
@@ -77,34 +76,26 @@ export interface SettingsItem {
 
 export const SETTINGS_ITEMS: SettingsItem[] = [
 	{
-		id: SETTING_ITEM_ID.ACCOUNT_PROFILE,
+		id: SETTING_ITEM_ID.ACCOUNT_AGENT_AUTH,
 		section: "account",
-		title: "Profile",
-		description: "Your profile information",
+		title: "Agent authentication",
+		description:
+			"See which accounts your agents use for Claude Code, Codex, and GitHub",
 		keywords: [
 			"account",
-			"name",
-			"email",
-			"avatar",
-			"user",
-			"profile",
-			"picture",
-			"photo",
-			"me",
-		],
-	},
-	{
-		id: SETTING_ITEM_ID.ACCOUNT_SIGNOUT,
-		section: "account",
-		title: "Sign Out",
-		description: "Sign out of your account",
-		keywords: [
-			"account",
-			"sign out",
-			"logout",
-			"log out",
-			"disconnect",
-			"leave",
+			"auth",
+			"authentication",
+			"login",
+			"logged in",
+			"signed in",
+			"credentials",
+			"claude",
+			"codex",
+			"github",
+			"gh",
+			"cli",
+			"status",
+			"connected",
 		],
 	},
 	{

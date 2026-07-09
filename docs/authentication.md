@@ -55,11 +55,15 @@ Two local tokens exist, and neither is an identity:
 
 ## Checking your auth state
 
-There is currently no in-app indicator of which accounts your agents use. To
-check, open any agent terminal and run:
+**Settings → Account** shows the login state of each CLI (Claude Code, Codex,
+GitHub) as your agents will see it — it resolves the CLIs via your login
+shell's `PATH` (like agent terminals do) and displays only status strings,
+never tokens (`apps/desktop/src/lib/trpc/routers/auth/cli-auth-status.ts`).
+
+To check manually, open any agent terminal and run:
 
 ```bash
-claude /status     # or: claude auth status in newer CLIs
+claude auth status # or: claude /status inside an interactive session
 codex login status
 gh auth status
 ```
