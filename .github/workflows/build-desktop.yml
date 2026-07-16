@@ -105,7 +105,17 @@ jobs:
           APPLE_ID: ${{ secrets.APPLE_ID }}
           APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_ID_PASSWORD }}
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
-        run: bun run package -- --publish never --config ${{ inputs.electron_builder_config }}
+        run: |
+          # Unset signing vars that came through as empty strings (missing repo
+          # secrets): electron-builder treats an empty CSC_LINK as a certificate
+          # file path and fails with "<projectDir> not a file". Without them it
+          # falls back to ad-hoc signing, matching local builds.
+          [ -n "$CSC_LINK" ] || unset CSC_LINK
+          [ -n "$CSC_KEY_PASSWORD" ] || unset CSC_KEY_PASSWORD
+          [ -n "$APPLE_ID" ] || unset APPLE_ID
+          [ -n "$APPLE_APP_SPECIFIC_PASSWORD" ] || unset APPLE_APP_SPECIFIC_PASSWORD
+          [ -n "$APPLE_TEAM_ID" ] || unset APPLE_TEAM_ID
+          bun run package -- --publish never --config ${{ inputs.electron_builder_config }}
 
       - name: Verify app-update.yml exists
         working-directory: apps/desktop

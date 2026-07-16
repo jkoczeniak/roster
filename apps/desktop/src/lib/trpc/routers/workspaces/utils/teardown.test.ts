@@ -1,4 +1,11 @@
-import { afterEach, beforeEach, describe, expect, mock, test } from "bun:test";
+import {
+	afterAll,
+	afterEach,
+	beforeEach,
+	describe,
+	expect,
+	test,
+} from "bun:test";
 import {
 	existsSync,
 	mkdirSync,
@@ -10,20 +17,23 @@ import { homedir, tmpdir } from "node:os";
 import { join } from "node:path";
 import { PROJECTS_DIR_NAME, ROSTER_DIR_NAME } from "shared/constants";
 
-// Teardown commands run only for trusted repo roots. These tests exercise the
-// execution path, so the root is trusted; a dedicated test below covers the
-// untrusted-skip behavior.
-let repoTrusted = true;
-mock.module("main/lib/workspace-trust", () => ({
-	isTrusted: () => repoTrusted,
-	trust: () => {},
-	listTrusted: () => [],
-}));
+// Teardown commands run only for trusted repo roots. Use the REAL
+// workspace-trust module against a throwaway ADE_HOME_DIR — a global
+// mock.module here leaks into every later-loaded test file (bun shares one
+// module registry per run), which broke resolve-setup-commands' untrusted-root
+// test depending on platform file order.
+const TRUST_TEST_HOME = join(
+	tmpdir(),
+	`roster-teardown-trust-home-${process.pid}-${Date.now()}`,
+);
+process.env.ADE_HOME_DIR = TRUST_TEST_HOME;
 
-import { runTeardown } from "./teardown";
+const { trust } = await import("main/lib/workspace-trust");
+const { runTeardown } = await import("./teardown");
 
 const TEST_DIR = join(tmpdir(), `roster-test-teardown-${process.pid}`);
 const MAIN_REPO = join(TEST_DIR, "main-repo");
+const UNTRUSTED_REPO = join(TEST_DIR, "untrusted-repo");
 const WORKTREE = join(TEST_DIR, "worktree");
 const PROJECT_ID = "test-teardown-project";
 const USER_CONFIG_DIR = join(
@@ -35,9 +45,10 @@ const USER_CONFIG_DIR = join(
 
 describe("runTeardown", () => {
 	beforeEach(() => {
-		// Create test directories
+		// Create test directories; only MAIN_REPO is trusted (idempotent).
 		mkdirSync(join(MAIN_REPO, ".roster"), { recursive: true });
 		mkdirSync(WORKTREE, { recursive: true });
+		trust(MAIN_REPO);
 	});
 
 	afterEach(() => {
@@ -259,15 +270,15 @@ describe("runTeardown", () => {
 	});
 
 	test("does NOT run teardown commands for an untrusted repo root", async () => {
-		repoTrusted = false;
 		const marker = join(WORKTREE, "should-not-exist.txt");
+		mkdirSync(join(UNTRUSTED_REPO, ".roster"), { recursive: true });
 		writeFileSync(
-			join(MAIN_REPO, ".roster", "config.json"),
+			join(UNTRUSTED_REPO, ".roster", "config.json"),
 			JSON.stringify({ teardown: [`echo "x" > "${marker}"`] }),
 		);
 
 		const result = await runTeardown({
-			mainRepoPath: MAIN_REPO,
+			mainRepoPath: UNTRUSTED_REPO,
 			worktreePath: WORKTREE,
 			workspaceName: "test-workspace",
 		});
@@ -275,6 +286,9 @@ describe("runTeardown", () => {
 		// Skipped silently (success) but the command must not have executed.
 		expect(result.success).toBe(true);
 		expect(existsSync(marker)).toBe(false);
-		repoTrusted = true;
 	});
+});
+
+afterAll(() => {
+	rmSync(TRUST_TEST_HOME, { recursive: true, force: true });
 });
