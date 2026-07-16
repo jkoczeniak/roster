@@ -307,6 +307,25 @@ describe("Claude Code session-reflection hook (Hermes learning-loop analog)", ()
 		expect(script).toContain("unlinkSync(LOCK_PATH)");
 	});
 
+	it("re-scaffold refreshes the hook script (machine-owned, not frozen at creation)", async () => {
+		const hookPath = join(
+			getAgentWorktreePath(agentId),
+			".claude",
+			"reflect-on-stop.mjs",
+		);
+		const { writeFileSync } = await import("node:fs");
+		writeFileSync(hookPath, "// stale generated hook\n", "utf8");
+		scaffoldAgentMemory({
+			agentId,
+			agentName: "Testy",
+			runtime: "claude",
+			userName: "Pat",
+		});
+		const refreshed = readFileSync(hookPath, "utf8");
+		expect(refreshed).toContain("stop_hook_active");
+		expect(refreshed).not.toContain("stale generated hook");
+	});
+
 	it("hook script stats MEMORY.md and the SHARED USER.md against their budgets", () => {
 		const script = readFileSync(
 			join(getAgentWorktreePath(agentId), ".claude", "reflect-on-stop.mjs"),
@@ -327,18 +346,71 @@ describe("Claude Code bridge", () => {
 		await makeAgent(agentId, "claude");
 	});
 
-	it("CLAUDE.md @imports AGENT.md, the SHARED USER.md, and the protocol", () => {
+	it("CLAUDE.md @imports AGENT.md, USER.md, and the protocol via in-worktree links", () => {
 		const wt = getAgentWorktreePath(agentId);
 		const claudeMd = readFileSync(join(wt, "CLAUDE.md"), "utf8");
-		const mem = getAgentMemoryDir(agentId);
-		expect(claudeMd).toContain(`@${join(mem, "AGENT.md")}`);
-		// USER.md is imported from the SHARED path, not the per-agent one.
-		expect(claudeMd).toContain(`@${getSharedUserProfilePath()}`);
-		expect(claudeMd).not.toContain(`@${join(mem, "USER.md")}`);
-		// The write-back protocol reaches Claude Code too.
-		expect(claudeMd).toContain(`@${join(mem, ".writeback-protocol.md")}`);
+		// Imports are relative, resolving through .claude/ symlinks, so nothing
+		// is "external" to the project (avoids the external-imports dialog).
+		expect(claudeMd).toContain("@.claude/memory/AGENT.md");
+		expect(claudeMd).toContain("@.claude/USER.md");
+		expect(claudeMd).toContain("@.claude/memory/.writeback-protocol.md");
+		// No absolute-path (external) imports remain.
+		expect(claudeMd).not.toContain(`@${getAgentHome(agentId)}`);
+		expect(claudeMd).not.toContain(`@${getSharedUserProfilePath()}`);
 		// MEMORY.md must NOT be @imported (native auto-memory owns it).
-		expect(claudeMd).not.toContain(`@${join(mem, "MEMORY.md")}`);
+		expect(claudeMd).not.toContain("memory/MEMORY.md");
+	});
+
+	it("creates .claude/memory and .claude/USER.md links resolving to canonical files", async () => {
+		const { lstatSync, realpathSync } = await import("node:fs");
+		const wt = getAgentWorktreePath(agentId);
+		const memLink = join(wt, ".claude", "memory");
+		const userLink = join(wt, ".claude", "USER.md");
+		expect(lstatSync(memLink).isSymbolicLink()).toBe(true);
+		expect(lstatSync(userLink).isSymbolicLink()).toBe(true);
+		// The imported files are reachable through the links.
+		expect(realpathSync(join(memLink, "AGENT.md"))).toBe(
+			realpathSync(join(getAgentMemoryDir(agentId), "AGENT.md")),
+		);
+		expect(realpathSync(userLink)).toBe(
+			realpathSync(getSharedUserProfilePath()),
+		);
+	});
+
+	it("upgrades an untouched legacy absolute-import bridge in place", async () => {
+		const { writeFileSync } = await import("node:fs");
+		const wt = getAgentWorktreePath(agentId);
+		const bridgePath = join(wt, "CLAUDE.md");
+		const legacy = `@${getAgentHome(agentId)}/memory/AGENT.md
+@${getSharedUserProfilePath()}
+@${getAgentHome(agentId)}/memory/.writeback-protocol.md
+<!-- MEMORY.md is loaded via Claude Code native auto-memory (autoMemoryDirectory). -->
+`;
+		writeFileSync(bridgePath, legacy, "utf8");
+		scaffoldAgentMemory({
+			agentId,
+			agentName: "Testy",
+			runtime: "claude",
+			userName: "Pat",
+		});
+		expect(readFileSync(bridgePath, "utf8")).toContain(
+			"@.claude/memory/AGENT.md",
+		);
+	});
+
+	it("leaves a user-customized bridge alone", async () => {
+		const { writeFileSync } = await import("node:fs");
+		const wt = getAgentWorktreePath(agentId);
+		const bridgePath = join(wt, "CLAUDE.md");
+		const custom = "# my own bridge\n@.claude/memory/AGENT.md\n";
+		writeFileSync(bridgePath, custom, "utf8");
+		scaffoldAgentMemory({
+			agentId,
+			agentName: "Testy",
+			runtime: "claude",
+			userName: "Pat",
+		});
+		expect(readFileSync(bridgePath, "utf8")).toBe(custom);
 	});
 
 	it("points native auto-memory at the canonical dir", () => {

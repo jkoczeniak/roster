@@ -22,7 +22,7 @@ Each agent has a home directory containing its worktree, its memory, and its ski
 │   └── USER.md          # SHARED user profile — one per user, read by ALL agents
 └── agents/<agent-id>/
     ├── worktree/            # the git worktree; the CLI's working directory
-    │   ├── CLAUDE.md        # bridge: Claude Code (generated, git-excluded)
+    │   ├── CLAUDE.md        # bridge: Claude Code (generated, git-excluded; relative @imports via .claude/ links)
     │   └── .claude/         # Claude Code settings + reflection hook (generated)
     │       └── skills/      # symlink → <agent-home>/skills (so skills load back)
     ├── memory/              # CANONICAL memory — source of truth, never committed
@@ -80,7 +80,7 @@ The canonical files are the same for every runtime; each CLI is pointed at them 
 
 | Runtime | Bridge | Mechanism | Native write-back |
 |---|---|---|---|
-| Claude Code | `CLAUDE.md` + `.claude/settings.json` + `.claude/skills` symlink | `@import` for AGENT.md, the shared USER.md, and the write-back protocol; native auto-memory for MEMORY.md; skills via the symlink | Yes (Stop-hook-enforced reflection) |
+| Claude Code | `CLAUDE.md` + `.claude/settings.json` + `.claude/skills`, `.claude/memory`, `.claude/USER.md` symlinks | Relative `@import` for AGENT.md, the shared USER.md, and the write-back protocol, resolving through the in-worktree symlinks (Claude Code treats symlinked files inside the project as internal, so no external-imports approval interrupts the first session); native auto-memory for MEMORY.md; skills via the symlink | Yes (Stop-hook-enforced reflection) |
 | Codex | `.codex/AGENTS.md` | Concatenated text (AGENT.md + shared USER.md + MEMORY.md + protocol + skills index), regenerated on each launch (Codex can't import) | Driven by the protocol (convention) |
 
 Claude Code references the live canonical files, so it needs no rebuild. Codex has no import syntax, so its bridge is a concatenation of the memory files regenerated from the canonical source every time a Codex session launches. Either way, the agent always edits the canonical files — the bridges are derived, never hand-edited.

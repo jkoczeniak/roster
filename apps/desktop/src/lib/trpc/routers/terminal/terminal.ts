@@ -5,6 +5,7 @@ import { eq } from "drizzle-orm";
 import { syncCodexConnectors } from "main/lib/agent-connectors";
 import {
 	ensureClaudeSkillsLink,
+	ensureMemoryBridgeLinks,
 	regenerateCodexAgentsMd,
 } from "main/lib/agent-scaffold";
 import { appState } from "main/lib/app-state";
@@ -152,10 +153,12 @@ export const createTerminalRouter = () => {
 				// Claude Code loads skills from <worktree>/.claude/skills; the agent
 				// WRITES them to <agent-home>/skills. Re-ensure the symlink between
 				// the two before every Claude launch (the Claude analog of the codex
-				// bridge regen above). Best-effort + idempotent; a user-owned real
-				// .claude/skills directory is left alone.
+				// bridge regen above). Same for the memory bridge links the CLAUDE.md
+				// imports resolve through. Best-effort + idempotent; user-owned real
+				// files/directories at the link paths are left alone.
 				if (workspace?.runtime === "claude" && MEMORY_SCAFFOLD_ENABLED) {
 					ensureClaudeSkillsLink(workspaceId, workspacePath);
+					ensureMemoryBridgeLinks(workspaceId, workspacePath);
 				}
 
 				try {
