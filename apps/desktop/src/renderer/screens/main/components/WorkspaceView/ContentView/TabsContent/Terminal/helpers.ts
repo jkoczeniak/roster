@@ -48,6 +48,7 @@ import {
 	isGhosttyReady,
 	isScrolledToBottom,
 	redrawTerminal,
+	syncGhosttyDevicePixelRatio,
 } from "./engine";
 import { FilePathLinkProvider, UrlLinkProvider } from "./link-providers";
 import { GhosttySearchController } from "./search/GhosttySearchController";
@@ -325,6 +326,46 @@ function createLinkProviders(
 	return { urlLinkProvider, filePathLinkProvider };
 }
 
+/**
+ * Watch for devicePixelRatio changes (window dragged to a different-DPI
+ * monitor) and re-rasterize the ghostty canvas at the new scale.
+ *
+ * A `(resolution: …dppx)` media query only matches the DPR it was created
+ * with, so the listener must be re-armed with a fresh query after every
+ * change — there is no single query that fires on all DPR transitions.
+ *
+ * Returns a cleanup function.
+ */
+function setupGhosttyDprWatcher(terminal: TerminalInstance): () => void {
+	if (typeof window.matchMedia !== "function") return () => {};
+
+	let media: MediaQueryList | null = null;
+	let disposed = false;
+
+	const handleChange = () => {
+		media?.removeEventListener("change", handleChange);
+		media = null;
+		if (disposed) return;
+		if (syncGhosttyDevicePixelRatio(terminal)) {
+			redrawTerminal(terminal);
+		}
+		arm();
+	};
+
+	const arm = () => {
+		media = window.matchMedia(`(resolution: ${window.devicePixelRatio}dppx)`);
+		media.addEventListener("change", handleChange);
+	};
+
+	arm();
+
+	return () => {
+		disposed = true;
+		media?.removeEventListener("change", handleChange);
+		media = null;
+	};
+}
+
 function createGhosttyTerminalInstance(
 	container: HTMLDivElement,
 	options: CreateTerminalOptions,
@@ -373,6 +414,11 @@ function createGhosttyTerminalInstance(
 
 	fitAddon.fit();
 
+	// ghostty-web bakes devicePixelRatio into its canvas at construction and
+	// has no API to update it live, so without this a monitor-DPI change
+	// leaves the terminal blurry/misaligned until the pane remounts.
+	const cleanupDprWatcher = setupGhosttyDprWatcher(terminal);
+
 	const search = new GhosttySearchController(terminal);
 
 	// ghostty renders itself (canvas); there is no swappable GPU renderer.
@@ -391,6 +437,7 @@ function createGhosttyTerminalInstance(
 		search,
 		renderer: rendererRef,
 		cleanup: () => {
+			cleanupDprWatcher();
 			search.dispose();
 		},
 	};
