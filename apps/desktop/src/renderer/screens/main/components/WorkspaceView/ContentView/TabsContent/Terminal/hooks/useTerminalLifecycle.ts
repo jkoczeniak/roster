@@ -295,6 +295,9 @@ export function useTerminalLifecycle({
 			isExitedRef.current = false;
 			isStreamReadyRef.current = false;
 			wasKilledByUserRef.current = false;
+			// A stale connection error (e.g. cold-start createOrAttach timeout)
+			// must not survive into the fresh attempt; onError below re-sets it.
+			setConnectionError(null);
 			setExitStatus(null);
 			resetModes();
 			xterm.clear();
@@ -356,12 +359,18 @@ export function useTerminalLifecycle({
 		restartTerminalRef.current = restartTerminalSession;
 
 		const handleTerminalInput = (data: string) => {
-			if (isRestoredModeRef.current || connectionErrorRef.current) return;
+			if (isRestoredModeRef.current) return;
+			// Exited panes must stay restartable even after a connection error —
+			// a cold-start createOrAttach timeout sets connectionError AND shows
+			// "[Press any key to restart]", and gating restart on the error left
+			// the user at a prompt that ignored every key. restartTerminalSession
+			// clears/re-reports the error itself via its own create path.
 			if (isExitedRef.current) {
 				if (!isFocusedRef.current || wasKilledByUserRef.current) return;
 				restartTerminalSession();
 				return;
 			}
+			if (connectionErrorRef.current) return;
 			// Broadcast: mirror input to every other terminal pane in the tab.
 			// Hidden (zoomed-away) panes still receive writes — their PTY stays
 			// alive in the main process even while detached.

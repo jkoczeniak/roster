@@ -391,7 +391,7 @@ export class DaemonTerminalManager extends EventEmitter {
 				});
 			}
 
-			const response = await this.client.createOrAttach({
+			const createParams = {
 				sessionId: paneId,
 				paneId,
 				tabId,
@@ -404,7 +404,24 @@ export class DaemonTerminalManager extends EventEmitter {
 				cwd,
 				env,
 				shell,
-			});
+			};
+			let response: Awaited<ReturnType<typeof this.client.createOrAttach>>;
+			try {
+				response = await this.client.createOrAttach(createParams);
+			} catch (error) {
+				// Cold-start daemons can miss the request deadline while the PTY
+				// subprocess is still warming up (fresh install, Gatekeeper). The
+				// daemon-side createOrAttach is idempotent by sessionId, so one
+				// retry attaches to whatever the first attempt actually created
+				// instead of stranding the pane (and losing the agent launch
+				// command that is typed only after a successful create).
+				const message = error instanceof Error ? error.message : String(error);
+				if (!message.includes("Request timeout")) throw error;
+				console.warn(
+					`[DaemonTerminalManager] createOrAttach timed out for ${paneId}; retrying once (cold daemon start?)`,
+				);
+				response = await this.client.createOrAttach(createParams);
+			}
 
 			this.daemonAliveSessionIds.add(paneId);
 

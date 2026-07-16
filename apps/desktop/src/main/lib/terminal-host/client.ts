@@ -77,7 +77,12 @@ const SCRIPT_MTIME_PATH = join(ROSTER_HOME_DIR, "terminal-host.mtime");
 
 // Connection timeouts
 const CONNECT_TIMEOUT_MS = 5000;
-const SPAWN_WAIT_MS = 2000;
+// Generous: on a fresh machine the daemon is a cold ELECTRON_RUN_AS_NODE spawn
+// (disk cache misses + Gatekeeper verification) and 2s provably wasn't enough —
+// a first-ever agent session died on "Daemon failed to start in time". The
+// poll loop below returns as soon as the socket appears, so a healthy start
+// never waits longer than before.
+const SPAWN_WAIT_MS = 15000;
 const REQUEST_TIMEOUT_MS = 30000;
 const SPAWN_LOCK_TIMEOUT_MS = 10000; // Max time to hold spawn lock
 

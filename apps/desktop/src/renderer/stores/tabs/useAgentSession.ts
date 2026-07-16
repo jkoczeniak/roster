@@ -108,9 +108,12 @@ export function useAgentSession() {
 				id: variant
 					? `agent-${runtime}-${variant.id ?? variant.label.toLowerCase()}`
 					: `agent-${runtime}`,
-				name: variant
-					? `${AGENT_LABELS[runtime]} ${variant.label}`
-					: AGENT_LABELS[runtime],
+				// The default variant's label equals the runtime label ("Claude") —
+				// don't render it twice ("Claude Claude").
+				name:
+					variant && variant.label !== AGENT_LABELS[runtime]
+						? `${AGENT_LABELS[runtime]} ${variant.label}`
+						: AGENT_LABELS[runtime],
 				cwd: worktreePath ?? "",
 				commands: [command],
 				executionMode: "new-tab",
