@@ -138,7 +138,10 @@ export function usePersistentWebview({
 		} else {
 			// Create new webview
 			webview = document.createElement("webview") as Electron.WebviewTag;
-			webview.setAttribute("partition", "persist:roster");
+			// Untrusted web content gets its own partition, separate from the app
+			// window's persist:roster — web pages must not share the app's session
+			// state or see privileged schemes like roster-icon://.
+			webview.setAttribute("partition", "persist:roster-web");
 			webview.setAttribute("allowpopups", "");
 			webview.style.display = "flex";
 			webview.style.flex = "1";

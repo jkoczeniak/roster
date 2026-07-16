@@ -150,7 +150,7 @@ export const createBrowserRouter = () => {
 				}),
 			)
 			.mutation(async ({ input }) => {
-				const ses = session.fromPartition("persist:roster");
+				const ses = session.fromPartition("persist:roster-web");
 				switch (input.type) {
 					case "cookies":
 						await ses.clearStorageData({ storages: ["cookies"] });

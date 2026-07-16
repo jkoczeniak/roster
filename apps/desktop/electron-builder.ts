@@ -5,7 +5,12 @@
 
 import { existsSync } from "node:fs";
 import { join } from "node:path";
-import type { Configuration } from "electron-builder";
+import { FuseV1Options, FuseVersion, flipFuses } from "@electron/fuses";
+import {
+	type AfterPackContext,
+	Arch,
+	type Configuration,
+} from "electron-builder";
 import pkg from "./package.json";
 
 const currentYear = new Date().getFullYear();
@@ -29,6 +34,58 @@ const macIconPath = join(pkg.resources, "build/icons/icon.icns");
 const linuxIconPath = join(pkg.resources, "build/icons");
 const winIconPath = join(pkg.resources, "build/icons/icon.ico");
 
+/**
+ * Flip Electron fuses on the packaged binary (runs before code signing).
+ *
+ * RunAsNode deliberately stays ENABLED: the terminal-host daemon and its PTY
+ * subprocesses are spawned as `process.execPath` with ELECTRON_RUN_AS_NODE=1
+ * (src/main/lib/terminal-host/client.ts, src/main/terminal-host/session.ts).
+ * The remaining fuses close off NODE_OPTIONS/inspector injection and
+ * unpackaged-app loading, and enable cookie encryption + asar integrity.
+ */
+async function flipElectronFuses(context: AfterPackContext): Promise<void> {
+	const { appOutDir, electronPlatformName, packager } = context;
+	const appName = packager.appInfo.productFilename;
+
+	let electronBinaryPath: string;
+	switch (electronPlatformName) {
+		case "darwin":
+		case "mas":
+			electronBinaryPath = join(
+				appOutDir,
+				`${appName}.app`,
+				"Contents",
+				"MacOS",
+				appName,
+			);
+			break;
+		case "win32":
+			electronBinaryPath = join(appOutDir, `${appName}.exe`);
+			break;
+		default:
+			electronBinaryPath = join(
+				appOutDir,
+				("executableName" in packager &&
+					typeof packager.executableName === "string" &&
+					packager.executableName) ||
+					appName,
+			);
+	}
+
+	await flipFuses(electronBinaryPath, {
+		version: FuseVersion.V1,
+		resetAdHocDarwinSignature:
+			electronPlatformName === "darwin" && context.arch === Arch.arm64,
+		[FuseV1Options.RunAsNode]: true, // required by the terminal-host daemon
+		[FuseV1Options.EnableCookieEncryption]: true,
+		[FuseV1Options.EnableNodeOptionsEnvironmentVariable]: false,
+		[FuseV1Options.EnableNodeCliInspectArguments]: false,
+		[FuseV1Options.EnableEmbeddedAsarIntegrityValidation]:
+			electronPlatformName === "darwin",
+		[FuseV1Options.OnlyLoadAppFromAsar]: true,
+	});
+}
+
 const config: Configuration = {
 	appId: "com.koczeniak.roster",
 	productName,
@@ -38,6 +95,9 @@ const config: Configuration = {
 	// Generate update manifests for all channels (latest.yml, canary.yml, etc.)
 	// This enables proper channel-based auto-updates following electron-builder conventions
 	generateUpdatesFilesForAllChannels: true,
+
+	// Harden the packaged Electron binary (runs before signing/notarization).
+	afterPack: flipElectronFuses,
 
 	// Publish target for update manifests (latest-mac.yml, etc.). The release
 	// workflow uploads artifacts itself (--publish never), but this makes the

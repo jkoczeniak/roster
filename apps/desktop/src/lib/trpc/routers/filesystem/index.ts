@@ -9,6 +9,7 @@ import Fuse from "fuse.js";
 import type { DirectoryEntry } from "shared/file-tree-types";
 import { z } from "zod";
 import { publicProcedure, router } from "../..";
+import { assertPathInAllowedRoot } from "../changes/security/path-validation";
 
 const SEARCH_INDEX_TTL_MS = 30_000;
 const MAX_SEARCH_RESULTS = 500;
@@ -596,6 +597,7 @@ export const createFilesystemRouter = () => {
 				const { dirPath, rootPath, includeHidden } = input;
 
 				try {
+					assertPathInAllowedRoot(dirPath);
 					const entries = await fs.readdir(dirPath, { withFileTypes: true });
 
 					return entries
@@ -653,6 +655,7 @@ export const createFilesystemRouter = () => {
 				}
 
 				try {
+					assertPathInAllowedRoot(rootPath);
 					const index = await getSearchIndex({ rootPath, includeHidden });
 					const pathMatcher = createPathFilterMatcher({
 						includePattern,
@@ -720,6 +723,7 @@ export const createFilesystemRouter = () => {
 				}
 
 				try {
+					assertPathInAllowedRoot(rootPath);
 					const index = await getSearchIndex({ rootPath, includeHidden });
 					const pathMatcher = createPathFilterMatcher({
 						includePattern,
@@ -762,6 +766,7 @@ export const createFilesystemRouter = () => {
 			)
 			.mutation(async ({ input }) => {
 				const filePath = path.join(input.dirPath, input.fileName);
+				assertPathInAllowedRoot(filePath);
 
 				try {
 					await fs.access(filePath);
@@ -788,6 +793,7 @@ export const createFilesystemRouter = () => {
 				}),
 			)
 			.mutation(async ({ input }) => {
+				assertPathInAllowedRoot(input.rootPath);
 				const notesDir = path.join(input.rootPath, ".roster", "notes");
 				await fs.mkdir(notesDir, { recursive: true });
 
@@ -832,6 +838,7 @@ export const createFilesystemRouter = () => {
 				}),
 			)
 			.mutation(async ({ input }) => {
+				assertPathInAllowedRoot(input.rootPath);
 				const notesDir = path.join(input.rootPath, ".roster", "notes");
 				await fs.mkdir(notesDir, { recursive: true });
 				const logPath = path.join(notesDir, "sessions.md");
@@ -959,6 +966,7 @@ export const createFilesystemRouter = () => {
 			)
 			.mutation(async ({ input }) => {
 				const dirPath = path.join(input.parentPath, input.dirName);
+				assertPathInAllowedRoot(dirPath);
 
 				try {
 					await fs.access(dirPath);
@@ -984,7 +992,9 @@ export const createFilesystemRouter = () => {
 				}),
 			)
 			.mutation(async ({ input }) => {
+				assertPathInAllowedRoot(input.oldPath);
 				const newPath = path.join(path.dirname(input.oldPath), input.newName);
+				assertPathInAllowedRoot(newPath);
 
 				try {
 					await fs.access(newPath);
@@ -1015,6 +1025,7 @@ export const createFilesystemRouter = () => {
 
 				for (const filePath of input.paths) {
 					try {
+						assertPathInAllowedRoot(filePath);
 						if (input.permanent) {
 							await fs.rm(filePath, { recursive: true, force: true });
 						} else {
@@ -1045,8 +1056,10 @@ export const createFilesystemRouter = () => {
 
 				for (const sourcePath of input.sourcePaths) {
 					try {
+						assertPathInAllowedRoot(sourcePath);
 						const fileName = path.basename(sourcePath);
 						const destPath = path.join(input.destinationDir, fileName);
+						assertPathInAllowedRoot(destPath);
 
 						try {
 							await fs.access(destPath);
@@ -1086,8 +1099,10 @@ export const createFilesystemRouter = () => {
 
 				for (const sourcePath of input.sourcePaths) {
 					try {
+						assertPathInAllowedRoot(sourcePath);
 						const fileName = path.basename(sourcePath);
 						let destPath = path.join(input.destinationDir, fileName);
+						assertPathInAllowedRoot(destPath);
 
 						let counter = 1;
 						while (true) {
@@ -1122,6 +1137,7 @@ export const createFilesystemRouter = () => {
 			.input(z.object({ path: z.string() }))
 			.query(async ({ input }) => {
 				try {
+					assertPathInAllowedRoot(input.path);
 					await fs.access(input.path);
 					const stats = await fs.stat(input.path);
 					return {
@@ -1155,6 +1171,7 @@ export const createFilesystemRouter = () => {
 					| { ok: false; reason: "not-found" | "too-large" | "binary" }
 				> => {
 					try {
+						assertPathInAllowedRoot(input.absolutePath);
 						const stats = await fs.stat(input.absolutePath);
 						if (!stats.isFile()) {
 							return { ok: false, reason: "not-found" };
@@ -1182,6 +1199,7 @@ export const createFilesystemRouter = () => {
 			.input(z.object({ path: z.string() }))
 			.query(async ({ input }) => {
 				try {
+					assertPathInAllowedRoot(input.path);
 					const stats = await fs.stat(input.path);
 					return {
 						size: stats.size,

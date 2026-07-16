@@ -42,7 +42,15 @@ export async function makeAppSetup(
 	app.on("web-contents-created", (_, contents) => {
 		// Browser/DevTools <webview> panes navigate freely by design; only the app
 		// window's own contents are locked to their origin here.
-		if (contents.getType() === "webview") return;
+		if (contents.getType() === "webview") {
+			// Deny popups from the moment the webview exists. Webviews are created
+			// with allowpopups, and browser-manager only installs its own handler
+			// (which routes popups into new panes) after the renderer registers the
+			// pane on dom-ready — without this, a hostile page could window.open
+			// during that gap and get Electron's default popup window.
+			contents.setWindowOpenHandler(() => ({ action: "deny" }));
+			return;
+		}
 		contents.on("will-navigate", (event, url) => {
 			let target: URL;
 			try {

@@ -170,6 +170,7 @@
 		"zustand": "^5.0.8"
 	},
 	"devDependencies": {
+		"@electron/fuses": "^2.1.3",
 		"@roster/typescript": "workspace:*",
 		"@tailwindcss/vite": "^4.0.9",
 		"@tanstack/router-cli": "^1.149.0",

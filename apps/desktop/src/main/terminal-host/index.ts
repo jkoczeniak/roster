@@ -12,7 +12,7 @@
  * - Auth token: ~/.roster/terminal-host.token
  */
 
-import { randomBytes } from "node:crypto";
+import { randomBytes, timingSafeEqual } from "node:crypto";
 import {
 	chmodSync,
 	existsSync,
@@ -100,7 +100,10 @@ function ensureAuthToken(): string {
 }
 
 function validateToken(token: string): boolean {
-	return token === authToken;
+	const provided = Buffer.from(token);
+	const expected = Buffer.from(authToken);
+	if (provided.length !== expected.length) return false;
+	return timingSafeEqual(provided, expected);
 }
 
 // =============================================================================

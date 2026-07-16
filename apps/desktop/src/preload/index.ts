@@ -23,20 +23,39 @@ const API = {
 type IpcListener = (...args: unknown[]) => void;
 const listenerMap = new WeakMap<IpcListener, IpcListener>();
 
+// Every channel the renderer may touch through the raw bridge. Primary IPC is
+// tRPC; anything new here must be added deliberately so a compromised renderer
+// can't reach arbitrary ipcMain handlers through this escape hatch.
+const ALLOWED_RECEIVE_CHANNELS = new Set(["deep-link-navigate"]);
+const ALLOWED_SEND_CHANNELS = new Set<string>([]);
+
+function assertChannel(allowed: Set<string>, channel: string): void {
+	if (!allowed.has(channel)) {
+		throw new Error(`IPC channel not allowlisted: ${channel}`);
+	}
+}
+
 /**
  * IPC renderer API
- * Note: Primary IPC communication uses tRPC. This API is for low-level IPC needs.
+ * Note: Primary IPC communication uses tRPC. This API is for low-level IPC
+ * needs, restricted to the explicit channel allowlists above.
  */
 const ipcRendererAPI = {
 	// biome-ignore lint/suspicious/noExplicitAny: IPC invoke requires any for dynamic channel types
-	invoke: (channel: string, ...args: any[]) =>
-		ipcRenderer.invoke(channel, ...args),
+	invoke: (channel: string, ...args: any[]) => {
+		assertChannel(ALLOWED_SEND_CHANNELS, channel);
+		return ipcRenderer.invoke(channel, ...args);
+	},
 
 	// biome-ignore lint/suspicious/noExplicitAny: IPC send requires any for dynamic channel types
-	send: (channel: string, ...args: any[]) => ipcRenderer.send(channel, ...args),
+	send: (channel: string, ...args: any[]) => {
+		assertChannel(ALLOWED_SEND_CHANNELS, channel);
+		ipcRenderer.send(channel, ...args);
+	},
 
 	// biome-ignore lint/suspicious/noExplicitAny: IPC listener requires any for dynamic event types
 	on: (channel: string, listener: (...args: any[]) => void) => {
+		assertChannel(ALLOWED_RECEIVE_CHANNELS, channel);
 		// biome-ignore lint/suspicious/noExplicitAny: IPC event wrapper requires any
 		const wrappedListener = (_event: any, ...args: any[]) => {
 			listener(...args);

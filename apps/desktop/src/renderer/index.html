@@ -18,13 +18,13 @@
       - script-src 'self' 'wasm-unsafe-eval': same-origin scripts + WASM (ghostty-web / xterm)
       - style-src 'self' 'unsafe-inline': same-origin + inline styles (CSS-in-JS)
       - connect-src 'self' data: blob: ws: wss:: IPC-backed trpc + dev HMR socket + data/blob URIs
-      - img-src 'self' data: blob: https: http:: favicons, webview thumbnails, disk/web avatars, attachment previews
+      - img-src 'self' roster-icon: data: blob: https: http:: favicons, webview thumbnails, disk/web avatars (roster-icon://), attachment previews
       - font-src 'self': same-origin fonts
       - frame-src https: http: data: blob:: built-in browser panes load any URL
       - child-src 'self' blob:: same-origin + blob workers
       - object-src 'none': no plugins/embeds
     -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; connect-src 'self' data: blob: ws: wss:; img-src 'self' data: blob: https: http:; font-src 'self'; frame-src https: http: data: blob:; child-src 'self' blob:; object-src 'none';" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; connect-src 'self' data: blob: ws: wss:; img-src 'self' roster-icon: data: blob: https: http:; font-src 'self'; frame-src https: http: data: blob:; child-src 'self' blob:; object-src 'none';" />
   </head>
 
   <body>

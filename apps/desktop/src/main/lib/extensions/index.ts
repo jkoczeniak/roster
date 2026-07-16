@@ -6,6 +6,9 @@ import { app, session } from "electron";
 import { env } from "main/env.main";
 
 const APP_PARTITION = "persist:roster";
+// Browser-pane <webview>s live in their own partition, isolated from the app
+// window's session (see usePersistentWebview).
+const WEBVIEW_PARTITION = "persist:roster-web";
 const REACT_DEVTOOLS_EXTENSION_ID = "fmkadmapgofadopljbjfkapdkoienihi";
 
 function safeReadDir(pathname: string): string[] {
@@ -215,7 +218,7 @@ export async function loadWebviewBrowserExtension(): Promise<void> {
 
 	try {
 		await session
-			.fromPartition(APP_PARTITION)
+			.fromPartition(WEBVIEW_PARTITION)
 			.extensions.loadExtension(extensionPath);
 		console.log("[main] Browser extension loaded");
 	} catch (error) {

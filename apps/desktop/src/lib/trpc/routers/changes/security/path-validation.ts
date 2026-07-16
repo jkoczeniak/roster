@@ -1,6 +1,18 @@
-import { isAbsolute, normalize, resolve, sep } from "node:path";
+import { realpathSync } from "node:fs";
+import { homedir } from "node:os";
+import {
+	basename,
+	dirname,
+	isAbsolute,
+	join,
+	normalize,
+	relative,
+	resolve,
+	sep,
+} from "node:path";
 import { projects, worktrees } from "@roster/local-db";
 import { eq } from "drizzle-orm";
+import { ROSTER_HOME_DIR } from "main/lib/app-environment";
 import { localDb } from "main/lib/local-db";
 
 /**
@@ -234,4 +246,102 @@ export function resolvePathInWorktree(
  */
 export function assertValidGitPath(filePath: string): void {
 	validateRelativePath(filePath, { allowRoot: true });
+}
+
+/**
+ * Roots the filesystem router may touch: every registered worktree, every
+ * project main repo + custom worktree base dir, the Roster home dir (agent
+ * homes, icons, notes), and ~/.claude (session listings).
+ */
+export function getAllowedFilesystemRoots(): string[] {
+	const roots = new Set<string>([
+		resolve(ROSTER_HOME_DIR),
+		resolve(join(homedir(), ".claude")),
+	]);
+
+	// Fail closed: if the DB read is unavailable, confinement tightens to the
+	// static roots above rather than opening up.
+	try {
+		for (const row of localDb
+			.select({ path: worktrees.path })
+			.from(worktrees)
+			.all()) {
+			if (row.path) roots.add(resolve(row.path));
+		}
+
+		for (const row of localDb
+			.select({
+				mainRepoPath: projects.mainRepoPath,
+				worktreeBaseDir: projects.worktreeBaseDir,
+			})
+			.from(projects)
+			.all()) {
+			if (row.mainRepoPath) roots.add(resolve(row.mainRepoPath));
+			if (row.worktreeBaseDir) roots.add(resolve(row.worktreeBaseDir));
+		}
+	} catch (error) {
+		console.warn(
+			"[path-validation] Could not read worktree/project roots from DB:",
+			error,
+		);
+	}
+
+	return [...roots];
+}
+
+function isWithinRoot(root: string, target: string): boolean {
+	const rel = relative(root, target);
+	return rel === "" || (!rel.startsWith("..") && !isAbsolute(rel));
+}
+
+/**
+ * Confines an absolute path to the Roster-managed roots above. This is
+ * defense-in-depth for the generic filesystem tRPC surface: even if a
+ * renderer-side bug produces an attacker-influenced absolute path, the main
+ * process refuses to read, write, or delete outside known roots.
+ *
+ * Both the literal resolved path and its realpath (macOS /tmp → /private/tmp
+ * style aliasing) are checked against both forms of each root.
+ *
+ * @returns the resolved path on success
+ * @throws PathValidationError if the path is outside every allowed root
+ */
+export function assertPathInAllowedRoot(targetPath: string): string {
+	const resolved = resolve(targetPath);
+
+	const candidates = new Set<string>([resolved]);
+	try {
+		candidates.add(realpathSync.native(resolved));
+	} catch {
+		// Target may not exist yet (createFile/createDirectory) — try resolving
+		// the parent instead so symlinked parents still match.
+		try {
+			candidates.add(
+				join(realpathSync.native(dirname(resolved)), basename(resolved)),
+			);
+		} catch {
+			// Parent missing too; the literal form alone will be checked.
+		}
+	}
+
+	const rootForms = new Set<string>();
+	for (const root of getAllowedFilesystemRoots()) {
+		rootForms.add(root);
+		try {
+			rootForms.add(realpathSync.native(root));
+		} catch {
+			// Root doesn't exist on disk (stale DB row) — literal form suffices.
+		}
+	}
+
+	for (const candidate of candidates) {
+		for (const root of rootForms) {
+			if (isWithinRoot(root, candidate)) return resolved;
+		}
+	}
+
+	throw new PathValidationError(
+		`Path is outside Roster-managed roots: ${targetPath}`,
+		"UNREGISTERED_WORKTREE",
+	);
 }

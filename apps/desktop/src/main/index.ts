@@ -233,8 +233,9 @@ protocol.registerSchemesAsPrivileged([
 		privileges: {
 			standard: true,
 			secure: true,
-			bypassCSP: true,
-			supportFetchAPI: true,
+			// No bypassCSP/supportFetchAPI: icons are only ever loaded via <img>
+			// in the app renderer (img-src allows roster-icon: in index.html), and
+			// web content must not be able to fetch() this privileged scheme.
 		},
 	},
 ]);
@@ -256,6 +257,44 @@ if (!gotTheLock) {
 	(async () => {
 		await app.whenReady();
 		registerWithMacOSNotificationCenter();
+
+		// Deny-by-default web permissions. The app frame (main window) needs
+		// clipboard + fullscreen + pointer lock; <webview> browser panes load
+		// arbitrary internet content and get only fullscreen and sanitized
+		// clipboard writes. Everything else (media/mic/camera, geolocation,
+		// notifications, clipboard-read from web pages, USB/HID/serial…) is
+		// denied — Electron's default would grant it.
+		const APP_FRAME_PERMISSIONS = new Set([
+			"clipboard-sanitized-write",
+			"clipboard-read",
+			"fullscreen",
+			"pointerLock",
+		]);
+		const WEBVIEW_PERMISSIONS = new Set([
+			"clipboard-sanitized-write",
+			"fullscreen",
+		]);
+		const isPermissionAllowed = (
+			webContents: Electron.WebContents | null,
+			permission: string,
+		): boolean => {
+			const allowed =
+				webContents?.getType() === "webview"
+					? WEBVIEW_PERMISSIONS
+					: APP_FRAME_PERMISSIONS;
+			return allowed.has(permission);
+		};
+		const setupPermissionHandlers = (ses: Electron.Session) => {
+			ses.setPermissionRequestHandler((webContents, permission, callback) => {
+				callback(isPermissionAllowed(webContents, permission));
+			});
+			ses.setPermissionCheckHandler((webContents, permission) =>
+				isPermissionAllowed(webContents, permission),
+			);
+		};
+		setupPermissionHandlers(session.defaultSession);
+		setupPermissionHandlers(session.fromPartition("persist:roster"));
+		setupPermissionHandlers(session.fromPartition("persist:roster-web"));
 
 		// Must register on both default session and the app's custom partition
 		const iconProtocolHandler = (request: Request) => {

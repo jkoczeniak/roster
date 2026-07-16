@@ -38,11 +38,13 @@ export const notificationsEmitter = new EventEmitter();
 
 const app = express();
 
+// Shared-secret + loopback-Host gate on every endpoint except GET /health.
+// Must run before body parsing so unauthenticated requests are rejected
+// without their bodies ever being parsed.
+app.use(createNotificationAuthMiddleware(getNotificationToken));
+
 // Parse JSON request bodies
 app.use(express.json());
-
-// Shared-secret + loopback-Host gate on every endpoint except GET /health.
-app.use(createNotificationAuthMiddleware(getNotificationToken));
 
 /**
  * Resolves paneId from tabId or workspaceId using synced tabs state.
