@@ -10,21 +10,22 @@ import { localDb } from "./local-db";
 import { getUserName } from "./user-profile";
 
 /**
- * One-time backfill of the per-agent memory scaffold (docs/memory.md).
- *
- * Agents created while ADE_MEMORY_SCAFFOLD was OFF have a repo + an empty
- * memory/ dir but no canonical files or bridges. Now that the scaffold is
- * enabled by default we bring those agents up to spec at app launch.
+ * Launch-time pass that brings every agent's scaffold up to spec
+ * (docs/memory.md): seeds missing canonical files for agents created while
+ * ADE_MEMORY_SCAFFOLD was off, AND refreshes machine-owned runtime artifacts
+ * (reflect-on-stop hook, bridge symlinks, legacy-bridge migration) for agents
+ * that are already scaffolded — this pass is how existing agents pick up
+ * generated-artifact fixes.
  *
  * Conservative + idempotent by construction:
  * - Only touches Roster agents (workspaces.runtime set) whose repo is already set
  *   up (worktree/.git exists). A still-initializing or failed agent is left to
  *   its own init job.
- * - Skips any agent whose memory/ dir already holds a non-empty *.md file, so a
- *   scaffolded (or hand-authored) memory is never re-processed.
- * - Delegates to scaffoldAgentMemory, which is write-if-missing: even if it
- *   runs, it never overwrites an existing canonical file or bridge — including
- *   one the user deliberately emptied.
+ * - Delegates to scaffoldAgentMemory: user-owned files (memory/*.md, USER.md,
+ *   .claude/settings.json, a customized CLAUDE.md bridge) are write-if-missing
+ *   and never overwritten — including files the user deliberately emptied.
+ *   Machine-owned artifacts (reflect-on-stop.mjs, an UNTOUCHED legacy bridge)
+ *   are regenerated/migrated in place.
  * - Per-agent try/catch so one bad agent never blocks the others or app launch.
  */
 export function backfillAgentMemory(): void {
@@ -75,7 +76,7 @@ export function backfillAgentMemory(): void {
 				continue;
 			}
 
-			if (!memoryDirIsEmpty(getAgentMemoryDir(agent.id))) continue;
+			const isFirstScaffold = memoryDirIsEmpty(getAgentMemoryDir(agent.id));
 
 			scaffoldAgentMemory({
 				agentId: agent.id,
@@ -85,7 +86,7 @@ export function backfillAgentMemory(): void {
 				worktreePath,
 				vcs,
 			});
-			scaffolded++;
+			if (isFirstScaffold) scaffolded++;
 		} catch (error) {
 			console.error(`[memory-backfill] Failed for ${agent.id}:`, error);
 		}

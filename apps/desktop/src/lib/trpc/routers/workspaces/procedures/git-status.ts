@@ -1,4 +1,6 @@
+import { execFile } from "node:child_process";
 import { existsSync } from "node:fs";
+import { promisify } from "node:util";
 import { workspaces, worktrees } from "@roster/local-db";
 import { and, eq, isNull } from "drizzle-orm";
 import { localDb } from "main/lib/local-db";
@@ -18,6 +20,33 @@ import {
 	listExternalWorktrees,
 	refreshDefaultBranch,
 } from "../utils/git";
+
+const execFileAsync = promisify(execFile);
+
+// Worktrees whose ci.skip push default has been dropped this app run (a live
+// PR/MR was observed). Guard so the polling path doesn't shell out per tick.
+const ciSkipCleared = new Set<string>();
+
+/**
+ * Once a live PR/MR exists for a worktree's branch, every push — including
+ * agent-terminal pushes with review fixes — must run CI, so drop the standing
+ * push.pushOption=ci.skip default set at worktree creation for GitLab. Covers
+ * MRs opened outside Roster too (this runs on the PR-status polling path).
+ * Best-effort: unset of an absent key just fails silently.
+ */
+async function clearCiSkipForLivePR(worktreePath: string): Promise<void> {
+	if (ciSkipCleared.has(worktreePath)) return;
+	ciSkipCleared.add(worktreePath);
+	try {
+		await execFileAsync(
+			"git",
+			["-C", worktreePath, "config", "--local", "--unset", "push.pushOption"],
+			{ timeout: 10_000 },
+		);
+	} catch {
+		// Key not set (GitHub worktree, already cleared) — nothing to do.
+	}
+}
 
 export const createGitStatusProcedures = () => {
 	return router({
@@ -143,6 +172,11 @@ export const createGitStatusProcedures = () => {
 						.set({ githubStatus: freshStatus })
 						.where(eq(worktrees.id, worktree.id))
 						.run();
+
+					const prState = freshStatus.pr?.state;
+					if (prState === "open" || prState === "draft") {
+						await clearCiSkipForLivePR(worktree.path);
+					}
 				}
 
 				return freshStatus;

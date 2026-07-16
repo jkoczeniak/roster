@@ -22,27 +22,16 @@ if (
 	typeof window !== "undefined" &&
 	typeof window.addEventListener === "function"
 ) {
-	window.addEventListener(
-		"keydown",
-		(event) => {
-			modifierHeld = event.metaKey;
-		},
-		true,
-	);
-	window.addEventListener(
-		"keyup",
-		(event) => {
-			modifierHeld = event.metaKey && event.key !== "Meta";
-		},
-		true,
-	);
-	window.addEventListener(
-		"mousemove",
-		(event) => {
-			modifierHeld = event.metaKey;
-		},
-		true,
-	);
+	// Ctrl counts too: the providers' activation handlers accept Ctrl-click as
+	// well as Cmd-click, and the hover gate must agree with them.
+	const readModifier = (event: KeyboardEvent | MouseEvent) => {
+		modifierHeld = event.metaKey || event.ctrlKey;
+	};
+	window.addEventListener("keydown", readModifier, true);
+	// On the release of the modifier itself, the event already reports the
+	// post-release state (metaKey/ctrlKey false), so a plain read is correct.
+	window.addEventListener("keyup", readModifier, true);
+	window.addEventListener("mousemove", readModifier, true);
 	// Cmd+Tab away leaves keyup unseen; reset on window blur.
 	window.addEventListener("blur", () => {
 		modifierHeld = false;

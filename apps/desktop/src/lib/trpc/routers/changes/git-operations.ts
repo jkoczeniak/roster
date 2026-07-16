@@ -156,7 +156,11 @@ export const createGitOperationsRouter = () => {
 			.mutation(async ({ input }): Promise<{ success: boolean }> => {
 				assertGitWorktree(input.worktreePath);
 
-				const git = await getGitWithShellPath(input.worktreePath);
+				// User-initiated pushes should run CI: clear the worktree's
+				// ci.skip default (set for agent-terminal WIP pushes on GitLab).
+				const git = await getGitWithShellPath(input.worktreePath, {
+					clearPushOptions: true,
+				});
 				const hasUpstream = await hasUpstreamBranch(git);
 
 				if (input.setUpstream && !hasUpstream) {
@@ -214,7 +218,10 @@ export const createGitOperationsRouter = () => {
 			.mutation(async ({ input }): Promise<{ success: boolean }> => {
 				assertGitWorktree(input.worktreePath);
 
-				const git = await getGitWithShellPath(input.worktreePath);
+				// Sync is user-initiated too — its push should run CI.
+				const git = await getGitWithShellPath(input.worktreePath, {
+					clearPushOptions: true,
+				});
 				try {
 					await git.pull(["--rebase"]);
 				} catch (error) {
@@ -284,6 +291,17 @@ export const createGitOperationsRouter = () => {
 						worktreePath: input.worktreePath,
 						branch,
 					});
+
+					// An MR/PR now exists for this branch: remove the worktree's
+					// standing ci.skip default so every subsequent push — including
+					// agent-terminal pushes with review fixes — runs the pipeline.
+					// (GitLab's "pipeline must succeed" treats skipped as not passed.)
+					try {
+						await git.raw(["config", "--local", "--unset", "push.pushOption"]);
+					} catch {
+						// Not set (GitHub worktrees, already unset) — nothing to do.
+					}
+
 					await fetchCurrentBranch(git);
 
 					return { success: true, url, forgeName: forge.displayName };

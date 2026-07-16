@@ -405,6 +405,9 @@ function createGhosttyTerminalInstance(
 		if (event.deltaY === 0) return false;
 
 		const rect = container.getBoundingClientRect();
+		// A zero-size container (mid-layout, hidden pane) would produce NaN
+		// cell coordinates — fall back to default handling.
+		if (rect.width <= 0 || rect.height <= 0) return false;
 		const cols = Math.max(1, ghosttyTerm.cols);
 		const rows = Math.max(1, ghosttyTerm.rows);
 		const col = Math.min(
@@ -424,11 +427,16 @@ function createGhosttyTerminalInstance(
 
 		// SGR (mode 1006) wheel buttons: 64 = up, 65 = down. Same tick scaling
 		// ghostty uses for its arrow-key fallback (~33px per line, max 5).
+		// Normalize deltaMode: line/page modes report deltas in lines/pages,
+		// not pixels (rounding those by /33 would clamp everything to 1 tick).
+		const lineDelta =
+			event.deltaMode === WheelEvent.DOM_DELTA_LINE
+				? event.deltaY
+				: event.deltaMode === WheelEvent.DOM_DELTA_PAGE
+					? event.deltaY * rows
+					: event.deltaY / 33;
 		const button = event.deltaY < 0 ? 64 : 65;
-		const ticks = Math.min(
-			5,
-			Math.max(1, Math.round(Math.abs(event.deltaY) / 33)),
-		);
+		const ticks = Math.min(5, Math.max(1, Math.round(Math.abs(lineDelta))));
 		for (let i = 0; i < ticks; i++) {
 			ghosttyTerm.input(`\x1b[<${button};${col};${row}M`, true);
 		}

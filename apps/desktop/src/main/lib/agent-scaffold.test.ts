@@ -880,13 +880,21 @@ describe("backfillAgentMemory — one-time migration of pre-flip agents", () => 
 		);
 	});
 
-	it("leaves an already-authored memory untouched (skips it entirely)", () => {
+	it("never overwrites an already-authored memory file, but still fills gaps", () => {
 		const mem = getAgentMemoryDir(AUTHORED);
+		// User-owned content is sacred (write-if-missing).
 		expect(readFileSync(join(mem, "AGENT.md"), "utf8")).toBe(
 			"# HAND AUTHORED — do not touch\n",
 		);
-		// Skipped before scaffolding, so the other canonical files were not created.
-		expect(fs.existsSync(join(mem, "MEMORY.md"))).toBe(false);
+		// The pass no longer skips scaffolded agents entirely: missing canonical
+		// files are seeded and machine-owned artifacts (reflect hook, bridge
+		// links) are refreshed — that's how existing agents pick up fixes.
+		expect(fs.existsSync(join(mem, "MEMORY.md"))).toBe(true);
+		expect(
+			fs.existsSync(
+				join(getAgentWorktreePath(AUTHORED), ".claude", "reflect-on-stop.mjs"),
+			),
+		).toBe(true);
 	});
 
 	it("skips an agent with no repo yet", () => {

@@ -647,6 +647,7 @@ export function useTerminalLifecycle({
 		const reattachRecovery = {
 			throttleMs: 120,
 			pendingFrame: null as number | null,
+			pendingRetry: null as ReturnType<typeof setTimeout> | null,
 			lastRunAt: 0,
 			pendingForceResize: false,
 		};
@@ -702,8 +703,19 @@ export function useTerminalLifecycle({
 				reattachRecovery.pendingFrame = null;
 
 				const now = Date.now();
-				if (now - reattachRecovery.lastRunAt < reattachRecovery.throttleMs)
+				const sinceLastRun = now - reattachRecovery.lastRunAt;
+				if (sinceLastRun < reattachRecovery.throttleMs) {
+					// Don't drop a throttled recovery (a blur right after a focus
+					// recovery would lose its repaint entirely) — run it when the
+					// throttle window closes.
+					if (reattachRecovery.pendingRetry === null) {
+						reattachRecovery.pendingRetry = setTimeout(() => {
+							reattachRecovery.pendingRetry = null;
+							scheduleReattachRecovery(false);
+						}, reattachRecovery.throttleMs - sinceLastRun);
+					}
 					return;
+				}
 				reattachRecovery.lastRunAt = now;
 
 				const shouldForceResize = reattachRecovery.pendingForceResize;
@@ -713,6 +725,10 @@ export function useTerminalLifecycle({
 		};
 
 		const cancelReattachRecovery = () => {
+			if (reattachRecovery.pendingRetry !== null) {
+				clearTimeout(reattachRecovery.pendingRetry);
+				reattachRecovery.pendingRetry = null;
+			}
 			if (reattachRecovery.pendingFrame === null) return;
 			cancelAnimationFrame(reattachRecovery.pendingFrame);
 			reattachRecovery.pendingFrame = null;

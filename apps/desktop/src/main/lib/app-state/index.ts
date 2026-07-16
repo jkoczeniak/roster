@@ -113,8 +113,13 @@ export async function initAppState(): Promise<void> {
 
 	// Persist now: JSONFilePreset only reads, so on a fresh install no file
 	// exists yet and the app-state watcher (started right after init) would
-	// fail with ENOENT trying to watch it.
-	await _appState.write();
+	// fail with ENOENT trying to watch it. Non-fatal: on a read-only disk the
+	// app must still boot (as it did when this write was deferred).
+	try {
+		await _appState.write();
+	} catch (error) {
+		console.warn("[app-state] Failed to persist initial app state:", error);
+	}
 
 	console.log(
 		`App state initialized at: ${APP_STATE_PATH} (deviceId=${_deviceId.slice(0, 8)}...)`,

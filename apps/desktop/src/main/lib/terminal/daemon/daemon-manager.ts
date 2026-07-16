@@ -416,7 +416,13 @@ export class DaemonTerminalManager extends EventEmitter {
 				// instead of stranding the pane (and losing the agent launch
 				// command that is typed only after a successful create).
 				const message = error instanceof Error ? error.message : String(error);
-				if (!message.includes("Request timeout")) throw error;
+				// Cold-start failures surface under several messages from client.ts:
+				// "Request timeout: createOrAttach", "Daemon failed to start in
+				// time", and connect timeouts. All are transient spawn latency, and
+				// all are safe to retry once.
+				if (!/request timeout|failed to start|connect timeout/i.test(message)) {
+					throw error;
+				}
 				console.warn(
 					`[DaemonTerminalManager] createOrAttach timed out for ${paneId}; retrying once (cold daemon start?)`,
 				);
