@@ -97,6 +97,14 @@ export interface GhosttyRendererHandle {
 	): void;
 	readonly charWidth: number;
 	readonly charHeight: number;
+	/**
+	 * Canvas backing-store scale. ghostty-web captures this once at
+	 * construction (declared private in its d.ts, but a plain runtime
+	 * property) and exposes no API to update it on a live renderer, so we
+	 * mutate it directly on monitor-DPI changes; see
+	 * syncGhosttyDevicePixelRatio.
+	 */
+	devicePixelRatio: number;
 }
 
 /**
@@ -360,10 +368,42 @@ export function adaptKeyHandlerForGhostty(
  * new output arrives. Forcing a full render (`render(..., forceAll=true)`)
  * paints the restored buffer immediately.
  */
+/**
+ * Sync a ghostty terminal's renderer to the window's current
+ * devicePixelRatio. Returns true if the stored ratio changed (the caller must
+ * then force a repaint, e.g. via redrawTerminal, to re-rasterize).
+ *
+ * ghostty-web's CanvasRenderer captures devicePixelRatio once at construction
+ * and never re-reads it, so moving the window to a monitor with a different
+ * DPI leaves the canvas backing store at the old scale — blurry or misaligned
+ * text until the pane remounts. There is no public API to update it, but
+ * render() self-heals the canvas size: it compares the backing store against
+ * cols × cellWidth × devicePixelRatio and calls resize() (which rebuilds the
+ * backing store and rescales the 2D context) on mismatch. Mutating the
+ * property and forcing a full render therefore re-rasterizes a live terminal
+ * at the new scale. Cell metrics are measured in CSS pixels, so cols/rows and
+ * the PTY grid are unaffected.
+ *
+ * No-op on xterm terminals — xterm.js observes DPR changes itself.
+ */
+export function syncGhosttyDevicePixelRatio(term: TerminalInstance): boolean {
+	const ghosttyRenderer = term.renderer;
+	if (!ghosttyRenderer) return false;
+	const dpr = window.devicePixelRatio || 1;
+	if (ghosttyRenderer.devicePixelRatio === dpr) return false;
+	ghosttyRenderer.devicePixelRatio = dpr;
+	return true;
+}
+
 export function redrawTerminal(term: TerminalInstance): void {
 	const ghosttyRenderer = term.renderer;
 	if (ghosttyRenderer && term.wasmTerm) {
-		ghosttyRenderer.render(term.wasmTerm, true, term.getViewportY?.() ?? 0, term);
+		ghosttyRenderer.render(
+			term.wasmTerm,
+			true,
+			term.getViewportY?.() ?? 0,
+			term,
+		);
 		return;
 	}
 	term.refresh?.(0, Math.max(0, term.rows - 1));

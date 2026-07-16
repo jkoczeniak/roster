@@ -14,7 +14,11 @@ import type {
 	TerminalInstance,
 	TerminalTheme,
 } from "../engine";
-import { isScrolledToBottom, redrawTerminal } from "../engine";
+import {
+	isScrolledToBottom,
+	redrawTerminal,
+	syncGhosttyDevicePixelRatio,
+} from "../engine";
 import {
 	createTerminalInstance,
 	setupClickToMoveCursor,
@@ -674,6 +678,10 @@ export function useTerminalLifecycle({
 
 			// Rebuild stale WebGL glyph cache after occlusion and force a paint pass.
 			rendererRef.current?.current.clearTextureAtlas?.();
+
+			// The window may have moved to a different-DPI monitor while hidden;
+			// pick up the new scale before the forced repaint below.
+			syncGhosttyDevicePixelRatio(xterm);
 
 			fitAddon.fit();
 			// Force a repaint: xterm exposes refresh(); ghostty needs an explicit

@@ -1,7 +1,8 @@
-import { describe, expect, it } from "bun:test";
+import { afterEach, beforeEach, describe, expect, it } from "bun:test";
 import {
 	adaptKeyHandlerForGhostty,
 	redrawTerminal,
+	syncGhosttyDevicePixelRatio,
 	type TerminalInstance,
 } from "./engine";
 
@@ -67,5 +68,52 @@ describe("redrawTerminal", () => {
 		} as unknown as TerminalInstance;
 		redrawTerminal(term);
 		expect(refreshCalls).toEqual([[0, 9]]);
+	});
+});
+
+// Regression guard: ghostty-web's CanvasRenderer captures devicePixelRatio
+// once at construction, so a window dragged to a different-DPI monitor stays
+// blurry until remount. syncGhosttyDevicePixelRatio must mutate the live
+// renderer's ratio (render() then self-heals the canvas backing store) and
+// report whether a repaint is needed.
+describe("syncGhosttyDevicePixelRatio", () => {
+	const originalWindow = globalThis.window;
+
+	beforeEach(() => {
+		// @ts-expect-error - minimal window stand-in for the Node test env
+		globalThis.window = { devicePixelRatio: 2 };
+	});
+
+	afterEach(() => {
+		globalThis.window = originalWindow;
+	});
+
+	const makeGhosttyTerm = (rendererDpr: number) => {
+		const renderer = {
+			setTheme() {},
+			render() {},
+			charWidth: 8,
+			charHeight: 16,
+			devicePixelRatio: rendererDpr,
+		};
+		const term = { renderer } as unknown as TerminalInstance;
+		return { term, renderer };
+	};
+
+	it("updates a stale renderer ratio and reports a change", () => {
+		const { term, renderer } = makeGhosttyTerm(1);
+		expect(syncGhosttyDevicePixelRatio(term)).toBe(true);
+		expect(renderer.devicePixelRatio).toBe(2);
+	});
+
+	it("is a no-op when the ratio already matches", () => {
+		const { term, renderer } = makeGhosttyTerm(2);
+		expect(syncGhosttyDevicePixelRatio(term)).toBe(false);
+		expect(renderer.devicePixelRatio).toBe(2);
+	});
+
+	it("is a no-op on xterm terminals (no ghostty renderer)", () => {
+		const term = { rows: 10 } as unknown as TerminalInstance;
+		expect(syncGhosttyDevicePixelRatio(term)).toBe(false);
 	});
 });
