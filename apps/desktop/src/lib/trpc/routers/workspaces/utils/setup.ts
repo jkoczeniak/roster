@@ -154,7 +154,11 @@ export function resolveSetupCommands({
 	worktreePath?: string;
 	projectId?: string;
 }): ResolvedSetupCommands {
-	const setupConfig = loadSetupConfig({ mainRepoPath, worktreePath, projectId });
+	const setupConfig = loadSetupConfig({
+		mainRepoPath,
+		worktreePath,
+		projectId,
+	});
 	const setup = setupConfig?.setup ?? null;
 	// Match workspace-trust.ts normalization (resolve()) so the returned key is
 	// the exact string the renderer hands back to setTrust / getTrust.

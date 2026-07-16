@@ -15,7 +15,6 @@ import { toast } from "@roster/ui/sonner";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@roster/ui/tooltip";
 import { cn } from "@roster/ui/utils";
 import { useMatchRoute, useNavigate } from "@tanstack/react-router";
-import type { ChangeEvent } from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useDrag, useDrop } from "react-dnd";
 import { HiMiniXMark } from "react-icons/hi2";

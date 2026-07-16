@@ -52,10 +52,7 @@ describe("loadSetupConfig", () => {
 	});
 
 	test("returns null for invalid JSON", () => {
-		writeFileSync(
-			join(MAIN_REPO, ".roster", "config.json"),
-			"{ invalid json",
-		);
+		writeFileSync(join(MAIN_REPO, ".roster", "config.json"), "{ invalid json");
 
 		const config = loadSetupConfig({ mainRepoPath: MAIN_REPO });
 		expect(config).toBeNull();

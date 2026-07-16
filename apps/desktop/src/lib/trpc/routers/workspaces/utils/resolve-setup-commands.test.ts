@@ -27,7 +27,10 @@ function makeRepoWithSetup(setup: string[]): string {
 	const root = mkdtempSync(join(tmpdir(), "roster-resolve-setup-repo-"));
 	createdRepos.push(root);
 	mkdirSync(join(root, ".roster"), { recursive: true });
-	writeFileSync(join(root, ".roster", "config.json"), JSON.stringify({ setup }));
+	writeFileSync(
+		join(root, ".roster", "config.json"),
+		JSON.stringify({ setup }),
+	);
 	return root;
 }
 

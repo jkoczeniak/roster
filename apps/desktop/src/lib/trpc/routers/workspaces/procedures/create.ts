@@ -37,7 +37,10 @@ import {
 	worktreeExists,
 } from "../utils/git";
 import { resolveWorktreePath } from "../utils/resolve-worktree-path";
-import { copyRosterConfigToWorktree, resolveSetupCommands } from "../utils/setup";
+import {
+	copyRosterConfigToWorktree,
+	resolveSetupCommands,
+} from "../utils/setup";
 import { initializeWorkspaceWorktree } from "../utils/workspace-init";
 
 interface CreateWorkspaceFromWorktreeParams {

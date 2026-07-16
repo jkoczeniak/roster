@@ -50,7 +50,7 @@ export function ModelBar() {
 	const utils = electronTrpc.useUtils();
 
 	const { data: workspace } = electronTrpc.workspaces.get.useQuery(
-		{ id: workspaceId! },
+		{ id: workspaceId ?? "" },
 		{ enabled: !!workspaceId },
 	);
 	// Global default posture; guarded while loading (same fallback as launch).
@@ -59,7 +59,7 @@ export function ModelBar() {
 	const setPermissionMode =
 		electronTrpc.workspaces.setPermissionMode.useMutation({
 			onSuccess: () => {
-				utils.workspaces.get.invalidate({ id: workspaceId! });
+				utils.workspaces.get.invalidate({ id: workspaceId ?? "" });
 			},
 		});
 

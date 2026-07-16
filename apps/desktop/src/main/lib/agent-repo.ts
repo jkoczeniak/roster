@@ -32,7 +32,9 @@ export function assertSafeCloneUrl(url: string): void {
 
 	// Leading dash → git would treat the source as an option.
 	if (value.startsWith("-")) {
-		throw new Error(`Refusing to clone from a source that starts with "-": ${value}`);
+		throw new Error(
+			`Refusing to clone from a source that starts with "-": ${value}`,
+		);
 	}
 
 	// Absolute local path (local clone) — must exist as a directory.
@@ -174,9 +176,8 @@ export async function setupAgentRepo({
 		await git.addConfig("user.email", "agent@ade.local", false, "local");
 		await git.raw(["commit", "--allow-empty", "-m", "Initial commit"]);
 		branch =
-			(await git
-				.revparse(["--abbrev-ref", "HEAD"])
-				.catch(() => "main")) || "main";
+			(await git.revparse(["--abbrev-ref", "HEAD"]).catch(() => "main")) ||
+			"main";
 		branch = branch.trim();
 	}
 

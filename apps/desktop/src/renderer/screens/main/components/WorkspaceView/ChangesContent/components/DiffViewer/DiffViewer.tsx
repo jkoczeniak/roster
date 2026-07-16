@@ -3,8 +3,8 @@ import type * as Monaco from "monaco-editor";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { LuLoader } from "react-icons/lu";
 import {
-	registerSaveAction,
 	ROSTER_THEME,
+	registerSaveAction,
 	useMonacoEditorOptions,
 	useMonacoReady,
 } from "renderer/providers/MonacoProvider";

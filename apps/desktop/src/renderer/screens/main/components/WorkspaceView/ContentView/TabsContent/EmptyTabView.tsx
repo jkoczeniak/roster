@@ -20,7 +20,7 @@ export function EmptyTabView() {
 	} = useAgentSession();
 
 	const { data: workspace } = electronTrpc.workspaces.get.useQuery(
-		{ id: workspaceId! },
+		{ id: workspaceId ?? "" },
 		{ enabled: !!workspaceId },
 	);
 

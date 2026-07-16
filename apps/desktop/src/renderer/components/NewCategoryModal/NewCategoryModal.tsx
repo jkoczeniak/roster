@@ -37,7 +37,6 @@ export function NewCategoryModal() {
 	const createCategory = electronTrpc.projects.createCategory.useMutation();
 	const setProjectIcon = electronTrpc.projects.setProjectIcon.useMutation();
 
-	// biome-ignore lint/correctness/useExhaustiveDependencies: reset each open
 	useEffect(() => {
 		if (!isOpen) return;
 		setName("");

@@ -1,21 +1,20 @@
 import { EventEmitter } from "node:events";
 import { agentMessages } from "@roster/local-db";
-import { BrowserWindow } from "electron";
 import express from "express";
 import { NOTIFICATION_EVENTS } from "shared/constants";
 import { env } from "shared/env.shared";
-import { createNotificationAuthMiddleware } from "./auth";
-import { getNotificationToken } from "./token";
 import type {
 	AgentInvokeEvent,
 	AgentLifecycleEvent,
 	AgentMessageEvent,
 } from "shared/notification-types";
 import { getAgentEntry } from "../agent-config/registry";
-import { localDb } from "../local-db";
 import { appState } from "../app-state";
+import { localDb } from "../local-db";
 import { HOOK_PROTOCOL_VERSION } from "../terminal/env";
+import { createNotificationAuthMiddleware } from "./auth";
 import { mapEventType } from "./map-event-type";
+import { getNotificationToken } from "./token";
 
 // Re-export types for backwards compatibility
 export type {
@@ -57,7 +56,7 @@ function resolvePaneId(
 	paneId: string | undefined,
 	tabId: string | undefined,
 	workspaceId: string | undefined,
-	sessionId: string | undefined,
+	_sessionId: string | undefined,
 ): string | undefined {
 	try {
 		const tabsState = appState.data.tabsState;
@@ -236,13 +235,7 @@ app.post("/agent/invoke", async (req, res) => {
  *   POST /agent/message  { agent, content, conversation?, role?, metadata? }
  */
 app.post("/agent/message", (req, res) => {
-	const {
-		agent,
-		content,
-		conversation,
-		role,
-		metadata,
-	} = (req.body ?? {}) as {
+	const { agent, content, conversation, role, metadata } = (req.body ?? {}) as {
 		agent?: string;
 		content?: string;
 		conversation?: string;

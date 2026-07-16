@@ -14,8 +14,8 @@ import type {
 } from "./types";
 import {
 	buildMultiPaneLayout,
-	computePaneZoomToggle,
 	type CreatePaneOptions,
+	computePaneZoomToggle,
 	createBrowserPane,
 	createBrowserTabWithPane,
 	createDevToolsPane,

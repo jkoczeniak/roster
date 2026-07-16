@@ -1,6 +1,6 @@
+import { afterAll, beforeAll, describe, expect, it } from "bun:test";
 import { request } from "node:http";
 import type { AddressInfo } from "node:net";
-import { afterAll, beforeAll, describe, expect, it } from "bun:test";
 import express from "express";
 import {
 	createNotificationAuthMiddleware,

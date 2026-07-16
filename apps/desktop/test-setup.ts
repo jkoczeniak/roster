@@ -87,18 +87,6 @@ mock.module("electron", () => ({
 		getAppPath: mock(() => testTmpDir),
 		isPackaged: false,
 	},
-	screen: {
-		getPrimaryDisplay: mock(() => ({
-			workAreaSize: { width: 1920, height: 1080 },
-			bounds: { x: 0, y: 0, width: 1920, height: 1080 },
-		})),
-		getAllDisplays: mock(() => [
-			{
-				bounds: { x: 0, y: 0, width: 1920, height: 1080 },
-				workAreaSize: { width: 1920, height: 1080 },
-			},
-		]),
-	},
 	dialog: {
 		showOpenDialog: mock(() =>
 			Promise.resolve({ canceled: false, filePaths: [] }),

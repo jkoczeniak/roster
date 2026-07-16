@@ -48,11 +48,16 @@ export const authClient = {
 	useSession: () => {
 		// Must be a real hook (call useMemo) so React hook count matches
 		const data = useMemo(() => mockSession, []);
-		return { data, isPending: false, error: null, refetch: async () => mockSession };
+		return {
+			data,
+			isPending: false,
+			error: null,
+			refetch: async () => mockSession,
+		};
 	},
-	signOut: async (_opts?: any) => {},
+	signOut: async (_opts?: unknown) => {},
 	signIn: {
-		social: async (_opts: any) => ({ data: mockSession, error: null }),
+		social: async (_opts: unknown) => ({ data: mockSession, error: null }),
 	},
 	organization: {
 		getFullOrganization: async () => ({
@@ -71,15 +76,15 @@ export const authClient = {
 			},
 			error: null,
 		}),
-		setActive: async (_opts: any) => ({ data: null, error: null }),
-		create: async (_opts: any) => ({ data: null, error: null }),
+		setActive: async (_opts: unknown) => ({ data: null, error: null }),
+		create: async (_opts: unknown) => ({ data: null, error: null }),
 	},
 	subscription: {
 		list: async () => ({ data: [], error: null }),
 	},
 	apiKey: {
 		list: async () => ({ data: [], error: null }),
-		create: async (_opts?: any) => ({ data: null, error: null }),
-		delete: async (_opts?: any) => ({ data: null, error: null }),
+		create: async (_opts?: unknown) => ({ data: null, error: null }),
+		delete: async (_opts?: unknown) => ({ data: null, error: null }),
 	},
 };

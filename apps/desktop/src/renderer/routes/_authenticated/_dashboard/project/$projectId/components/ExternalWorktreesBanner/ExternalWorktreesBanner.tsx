@@ -93,8 +93,8 @@ export function ExternalWorktreesBanner({ projectId }: { projectId: string }) {
 							<AlertDialogDescription>
 								This will import {externalWorktrees.length} existing worktree
 								{externalWorktrees.length === 1 ? "" : "s"} into Roster as
-								agents. Each worktree on disk will be tracked and appear in
-								your sidebar. No files will be modified.
+								agents. Each worktree on disk will be tracked and appear in your
+								sidebar. No files will be modified.
 							</AlertDialogDescription>
 						</AlertDialogHeader>
 						<AlertDialogFooter>

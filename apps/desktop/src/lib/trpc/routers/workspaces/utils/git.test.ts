@@ -11,10 +11,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { createWorktree, getCurrentBranch, parsePrUrl } from "./git";
 
-const TEST_DIR = join(
-	realpathSync(tmpdir()),
-	`roster-test-git-${process.pid}`,
-);
+const TEST_DIR = join(realpathSync(tmpdir()), `roster-test-git-${process.pid}`);
 
 function createTestRepo(name: string): string {
 	const repoPath = join(TEST_DIR, name);
@@ -417,8 +414,8 @@ describe("parsePrUrl", () => {
 	});
 
 	test("returns null for non-PR URLs", () => {
-		expect(
-			parsePrUrl("https://github.com/jkoczeniak/roster/issues/1781"),
-		).toBe(null);
+		expect(parsePrUrl("https://github.com/jkoczeniak/roster/issues/1781")).toBe(
+			null,
+		);
 	});
 });

@@ -11,6 +11,7 @@ export function RosterLogo({ className }: RosterLogoProps) {
 				"text-foreground font-mono font-bold tracking-[0.25em] text-4xl uppercase select-none",
 				className,
 			)}
+			role="img"
 			aria-label="Roster"
 		>
 			Roster

@@ -44,7 +44,9 @@ export function WorkspaceInitEffects() {
 	const terminalWrite = electronTrpc.terminal.write.useMutation();
 	const setTrust = electronTrpc.trust.setTrust.useMutation();
 	const openTrustDialog = useWorkspaceTrustDialogStore((s) => s.open);
-	const setTrustDialogPending = useWorkspaceTrustDialogStore((s) => s.setIsPending);
+	const setTrustDialogPending = useWorkspaceTrustDialogStore(
+		(s) => s.setIsPending,
+	);
 	const closeTrustDialog = useWorkspaceTrustDialogStore((s) => s.close);
 	const utils = electronTrpc.useUtils();
 

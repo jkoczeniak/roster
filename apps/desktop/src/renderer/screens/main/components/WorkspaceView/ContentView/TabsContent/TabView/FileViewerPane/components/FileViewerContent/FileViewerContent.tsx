@@ -10,8 +10,8 @@ import {
 import { LuLoader } from "react-icons/lu";
 import { MarkdownRenderer } from "renderer/components/MarkdownRenderer";
 import {
-	registerSaveAction,
 	ROSTER_THEME,
+	registerSaveAction,
 	useMonacoEditorOptions,
 	useMonacoReady,
 } from "renderer/providers/MonacoProvider";

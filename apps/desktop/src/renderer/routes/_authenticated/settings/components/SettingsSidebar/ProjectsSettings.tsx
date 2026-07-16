@@ -50,7 +50,7 @@ export function ProjectsSettings({ searchQuery }: ProjectsSettingsProps) {
 						to: "/settings/project/$projectId/general",
 						params: { projectId: group.project.id },
 					});
-	const isProjectActive = !!isGeneralActive;
+					const isProjectActive = !!isGeneralActive;
 
 					return (
 						<Collapsible key={group.project.id} defaultOpen>

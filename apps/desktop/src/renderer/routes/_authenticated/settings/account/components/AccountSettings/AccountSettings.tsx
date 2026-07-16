@@ -163,8 +163,8 @@ export function AccountSettings({ visibleItems }: AccountSettingsProps) {
 					<div className="pt-2 border-t border-border">
 						<p className="text-xs text-muted-foreground">
 							Each agent session runs a login shell that re-sources your
-							dotfiles, so Claude Code, Codex, and git/gh see the same logins
-							as your own terminal.{" "}
+							dotfiles, so Claude Code, Codex, and git/gh see the same logins as
+							your own terminal.{" "}
 							<button
 								type="button"
 								className="inline-flex items-center gap-1 text-foreground underline underline-offset-2 hover:no-underline"

@@ -215,7 +215,7 @@ export class DaemonTerminalManager extends EventEmitter {
 
 		this.client.on("disconnected", () => {
 			console.warn("[DaemonTerminalManager] Disconnected from daemon");
-			const activeSessionCount = Array.from(this.sessions.values()).filter(
+			const _activeSessionCount = Array.from(this.sessions.values()).filter(
 				(s) => s.isAlive,
 			).length;
 			this.daemonAliveSessionIds.clear();
@@ -550,7 +550,7 @@ export class DaemonTerminalManager extends EventEmitter {
 			rawScrollbackBytes > MAX_SCROLLBACK_BYTES
 				? truncateUtf8ToLastBytes(rawScrollback, MAX_SCROLLBACK_BYTES)
 				: rawScrollback;
-		const scrollbackBytes = Buffer.byteLength(scrollback, "utf8");
+		const _scrollbackBytes = Buffer.byteLength(scrollback, "utf8");
 
 		// Prefer stored session ID from meta.json (captured in real-time)
 		// Fall back to scrollback scanning if not stored
@@ -586,6 +586,7 @@ export class DaemonTerminalManager extends EventEmitter {
 
 	private extractClaudeSessionId(scrollback: string): string | undefined {
 		// Strip ANSI escape sequences for cleaner matching
+		// biome-ignore lint/suspicious/noControlCharactersInRegex: ANSI escape sequences start with the ESC control character
 		const plain = scrollback.replace(/\x1b\[[0-9;]*[a-zA-Z]/g, "");
 		const UUID_RE =
 			"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}";

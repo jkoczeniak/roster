@@ -1,8 +1,4 @@
-import {
-	createFileRoute,
-	Outlet,
-	useNavigate,
-} from "@tanstack/react-router";
+import { createFileRoute, Outlet, useNavigate } from "@tanstack/react-router";
 import { DndProvider } from "react-dnd";
 import { NewAgentModal } from "renderer/components/NewAgentModal/NewAgentModal";
 import { NewCategoryModal } from "renderer/components/NewCategoryModal/NewCategoryModal";

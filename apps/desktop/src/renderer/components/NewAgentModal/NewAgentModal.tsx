@@ -76,7 +76,6 @@ export function NewAgentModal() {
 	const setWorkspaceIcon =
 		electronTrpc.workspaces.setWorkspaceIcon.useMutation();
 
-	// biome-ignore lint/correctness/useExhaustiveDependencies: reset each open
 	useEffect(() => {
 		if (!isOpen) return;
 		setName("");

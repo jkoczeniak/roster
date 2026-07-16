@@ -9,6 +9,7 @@
 		"includes": [
 			"**",
 			"!**/drizzle",
+			"!.claude/worktrees",
 			"!**/*.template.js",
 			"!**/*.template.sh",
 			"!apps/mobile/uniwind-types.d.ts"
