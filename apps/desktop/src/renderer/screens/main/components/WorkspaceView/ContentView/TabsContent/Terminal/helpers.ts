@@ -49,6 +49,7 @@ import {
 	isScrolledToBottom,
 	redrawTerminal,
 } from "./engine";
+import { isLinkModifierHeld } from "./link-modifier";
 import { FilePathLinkProvider, UrlLinkProvider } from "./link-providers";
 import { GhosttySearchController } from "./search/GhosttySearchController";
 import { suppressQueryResponses } from "./suppressQueryResponses";
@@ -270,13 +271,32 @@ function toGhosttyLinkProvider(
 	};
 }
 
+/**
+ * Only surface links while ⌘ is held (iTerm2-style). Without this, hovering
+ * any path/URL-shaped text — including what's being typed in an agent's input
+ * box — paints the engine's blue underline, and a plain click activates it.
+ */
+function gateOnLinkModifier(
+	provider: TerminalLinkProvider,
+): TerminalLinkProvider {
+	return {
+		provideLinks(bufferLineNumber, callback) {
+			if (!isLinkModifierHeld()) {
+				callback(undefined);
+				return;
+			}
+			provider.provideLinks(bufferLineNumber, callback);
+		},
+	};
+}
+
 /** Shared registration of our custom link providers for either engine. */
 function createLinkProviders(
 	terminal: TerminalInstance,
 	options: CreateTerminalOptions,
 ): {
-	urlLinkProvider: UrlLinkProvider;
-	filePathLinkProvider: FilePathLinkProvider;
+	urlLinkProvider: TerminalLinkProvider;
+	filePathLinkProvider: TerminalLinkProvider;
 } {
 	const { cwd, onFileLinkClick, onUrlClickRef: urlClickRef } = options;
 
@@ -322,7 +342,10 @@ function createLinkProviders(
 		},
 	);
 
-	return { urlLinkProvider, filePathLinkProvider };
+	return {
+		urlLinkProvider: gateOnLinkModifier(urlLinkProvider),
+		filePathLinkProvider: gateOnLinkModifier(filePathLinkProvider),
+	};
 }
 
 function createGhosttyTerminalInstance(
@@ -370,6 +393,47 @@ function createGhosttyTerminalInstance(
 	);
 	ghosttyTerm.registerLinkProvider(toGhosttyLinkProvider(urlLinkProvider));
 	ghosttyTerm.registerLinkProvider(toGhosttyLinkProvider(filePathLinkProvider));
+
+	// ghostty-web never reports mouse events to the PTY; in the alternate screen
+	// it downgrades the wheel to arrow keys ("\x1b[A"/"\x1b[B"). TUIs that enable
+	// mouse tracking (Claude Code, etc.) expect real wheel events so they can
+	// scroll their own transcript — synthesize SGR wheel reports for them here.
+	// Returning false keeps ghostty's default behavior (scrollback scrolling on
+	// the normal screen, arrow fallback for tracking-less alt-screen apps).
+	ghosttyTerm.attachCustomWheelEventHandler((event: WheelEvent) => {
+		if (!ghosttyTerm.hasMouseTracking()) return false;
+		if (event.deltaY === 0) return false;
+
+		const rect = container.getBoundingClientRect();
+		const cols = Math.max(1, ghosttyTerm.cols);
+		const rows = Math.max(1, ghosttyTerm.rows);
+		const col = Math.min(
+			cols,
+			Math.max(
+				1,
+				Math.floor((event.clientX - rect.left) / (rect.width / cols)) + 1,
+			),
+		);
+		const row = Math.min(
+			rows,
+			Math.max(
+				1,
+				Math.floor((event.clientY - rect.top) / (rect.height / rows)) + 1,
+			),
+		);
+
+		// SGR (mode 1006) wheel buttons: 64 = up, 65 = down. Same tick scaling
+		// ghostty uses for its arrow-key fallback (~33px per line, max 5).
+		const button = event.deltaY < 0 ? 64 : 65;
+		const ticks = Math.min(
+			5,
+			Math.max(1, Math.round(Math.abs(event.deltaY) / 33)),
+		);
+		for (let i = 0; i < ticks; i++) {
+			ghosttyTerm.input(`\x1b[<${button};${col};${row}M`, true);
+		}
+		return true;
+	});
 
 	fitAddon.fit();
 

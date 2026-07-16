@@ -39,7 +39,9 @@ export const TERMINAL_OPTIONS: XtermTerminalOptions = {
 	fontFamily: DEFAULT_TERMINAL_FONT_FAMILY,
 	theme: TERMINAL_THEME,
 	allowProposedApi: true,
-	scrollback: 2000,
+	// Agents stream a lot; keep enough history to scroll back through a full
+	// run (matches ghostty-web's own default of 10k).
+	scrollback: 10000,
 	// Allow Option+key to type special characters on international keyboards (e.g., Option+2 = @)
 	macOptionIsMeta: false,
 	cursorStyle: "block",

@@ -92,9 +92,16 @@ function sendError(message: string): void {
 	send(PtySubprocessIpcType.Error, Buffer.from(message, "utf8"));
 }
 
+let lastOutputFlushAt = 0;
+
 /**
  * Queue PTY output for batched sending.
  * Flushes immediately if batch exceeds MAX_OUTPUT_BATCH_SIZE_BYTES.
+ *
+ * Leading-edge flush: after an idle period (≥ OUTPUT_FLUSH_INTERVAL_MS since
+ * the last flush) the first chunk goes out on the next tick, so the echo of a
+ * single keystroke isn't held for the full batch interval. Sustained output
+ * still coalesces at OUTPUT_FLUSH_INTERVAL_MS.
  */
 function queueOutput(data: string): void {
 	outputChunks.push(data);
@@ -108,13 +115,19 @@ function queueOutput(data: string): void {
 
 	if (!outputFlushScheduled) {
 		outputFlushScheduled = true;
-		setTimeout(flushOutput, OUTPUT_FLUSH_INTERVAL_MS);
+		const elapsedSinceFlush = Date.now() - lastOutputFlushAt;
+		if (elapsedSinceFlush >= OUTPUT_FLUSH_INTERVAL_MS) {
+			setImmediate(flushOutput);
+		} else {
+			setTimeout(flushOutput, OUTPUT_FLUSH_INTERVAL_MS - elapsedSinceFlush);
+		}
 	}
 }
 
 function flushOutput(): void {
 	outputFlushScheduled = false;
 	if (outputChunks.length === 0) return;
+	lastOutputFlushAt = Date.now();
 
 	const data = outputChunks.join("");
 	const chunkCount = outputChunks.length;

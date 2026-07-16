@@ -21,6 +21,7 @@ export class DataBatcher {
 	private decoder: StringDecoder;
 	private buffer: string = "";
 	private timeout: ReturnType<typeof setTimeout> | null = null;
+	private lastFlushAt = 0;
 	private onFlush: (data: string) => void;
 
 	constructor(onFlush: (data: string) => void) {
@@ -32,6 +33,10 @@ export class DataBatcher {
 	 * Add data to the batch. Data will be flushed either when:
 	 * - BATCH_DURATION_MS has elapsed since the first write
 	 * - Buffer size exceeds BATCH_MAX_SIZE
+	 *
+	 * Leading-edge flush: after an idle period (≥ BATCH_DURATION_MS since the
+	 * last flush) the first chunk goes out on the next tick, so a keystroke echo
+	 * isn't held for the full batch window. Sustained output still coalesces.
 	 */
 	write(data: Buffer | string): void {
 		// Decode buffer data to handle multi-byte UTF-8 characters correctly
@@ -46,7 +51,10 @@ export class DataBatcher {
 
 		// Schedule flush if not already scheduled
 		if (this.timeout === null) {
-			this.timeout = setTimeout(() => this.flush(), BATCH_DURATION_MS);
+			const elapsed = Date.now() - this.lastFlushAt;
+			const delay =
+				elapsed >= BATCH_DURATION_MS ? 0 : BATCH_DURATION_MS - elapsed;
+			this.timeout = setTimeout(() => this.flush(), delay);
 			// Don't keep Electron alive just for terminal data batching
 			this.timeout.unref();
 		}
@@ -65,6 +73,7 @@ export class DataBatcher {
 		}
 
 		if (this.buffer.length > 0) {
+			this.lastFlushAt = Date.now();
 			this.onFlush(this.buffer);
 			this.buffer = "";
 		}

@@ -9,9 +9,49 @@ import friendlyWords = require("friendly-words");
 import type { BranchPrefixMode } from "@roster/local-db";
 import simpleGit, { type StatusResult } from "simple-git";
 import { runWithPostCheckoutHookTolerance } from "../../utils/git-hook-tolerance";
+import { getForgeKindForPath } from "./forge/detection";
 import { execWithShellEnv, getProcessEnvWithShellPath } from "./shell-env";
 
 const execFileAsync = promisify(execFile);
+
+/**
+ * Post-creation push defaults for agent worktrees:
+ * - push.autoSetupRemote so the first `git push` creates the remote branch and
+ *   sets upstream without -u.
+ * - On GitLab remotes, push.pushOption=ci.skip so work-in-progress pushes from
+ *   agent terminals don't trigger CI pipelines (and their failure emails).
+ *   The "Open PR" flow clears this option for its push so real MRs still get CI.
+ */
+async function configureWorktreePushDefaults({
+	worktreePath,
+	env,
+}: {
+	worktreePath: string;
+	env: Record<string, string>;
+}): Promise<void> {
+	await execFileAsync(
+		"git",
+		["-C", worktreePath, "config", "--local", "push.autoSetupRemote", "true"],
+		{ env, timeout: 10_000 },
+	);
+
+	try {
+		const forgeKind = await getForgeKindForPath(worktreePath);
+		if (forgeKind === "gitlab") {
+			await execFileAsync(
+				"git",
+				["-C", worktreePath, "config", "--local", "push.pushOption", "ci.skip"],
+				{ env, timeout: 10_000 },
+			);
+		}
+	} catch (error) {
+		// Non-fatal: worktree works without it, pushes just trigger CI.
+		console.warn(
+			`Failed to configure ci.skip push option for ${worktreePath}:`,
+			error,
+		);
+	}
+}
 
 export class NotGitRepoError extends Error {
 	constructor(repoPath: string) {
@@ -480,13 +520,7 @@ export async function createWorktree(
 			worktreePath,
 		});
 
-		// Enable autoSetupRemote so the first `git push` automatically creates
-		// the remote branch and sets upstream (like `git push -u origin <branch>`).
-		await execFileAsync(
-			"git",
-			["-C", worktreePath, "config", "--local", "push.autoSetupRemote", "true"],
-			{ env, timeout: 10_000 },
-		);
+		await configureWorktreePushDefaults({ worktreePath, env });
 
 		console.log(
 			`Created worktree at ${worktreePath} with branch ${branch} from ${startPoint}`,
@@ -574,13 +608,7 @@ export async function createWorktreeFromExistingBranch({
 			}
 		}
 
-		// Enable autoSetupRemote so the first `git push` automatically creates
-		// the remote branch and sets upstream (like `git push -u origin <branch>`).
-		await execFileAsync(
-			"git",
-			["-C", worktreePath, "config", "--local", "push.autoSetupRemote", "true"],
-			{ env, timeout: 10_000 },
-		);
+		await configureWorktreePushDefaults({ worktreePath, env });
 
 		console.log(
 			`Created worktree at ${worktreePath} using existing branch ${branch}`,
@@ -1677,12 +1705,7 @@ export async function createWorktreeFromPr({
 			{ cwd: worktreePath, timeout: 120_000 },
 		);
 
-		// Enable autoSetupRemote so `git push` just works without -u flag.
-		await execFileAsync(
-			"git",
-			["-C", worktreePath, "config", "--local", "push.autoSetupRemote", "true"],
-			{ env, timeout: 10_000 },
-		);
+		await configureWorktreePushDefaults({ worktreePath, env });
 
 		console.log(
 			`[git] Created worktree at ${worktreePath} for PR #${prInfo.number}`,

@@ -93,8 +93,17 @@ function shouldRetryPushWithUpstream(message: string): boolean {
 	);
 }
 
-async function getGitWithShellPath(worktreePath: string) {
-	const git = simpleGit(worktreePath);
+async function getGitWithShellPath(
+	worktreePath: string,
+	options?: { clearPushOptions?: boolean },
+) {
+	// Agent worktrees on GitLab carry push.pushOption=ci.skip (set at worktree
+	// creation) so WIP pushes don't trigger CI. An empty -c push.pushOption=
+	// clears that list for flows that SHOULD run CI (opening a PR/MR).
+	const git = simpleGit({
+		baseDir: worktreePath,
+		config: options?.clearPushOptions ? ["push.pushOption="] : [],
+	});
 	git.env(await getProcessEnvWithShellPath());
 	return git;
 }
@@ -247,7 +256,9 @@ export const createGitOperationsRouter = () => {
 
 					const forge = await requireForge(input.worktreePath);
 
-					const git = await getGitWithShellPath(input.worktreePath);
+					const git = await getGitWithShellPath(input.worktreePath, {
+						clearPushOptions: true,
+					});
 					const branch = (await git.revparse(["--abbrev-ref", "HEAD"])).trim();
 					const hasUpstream = await hasUpstreamBranch(git);
 

@@ -716,9 +716,17 @@ export function useTerminalLifecycle({
 		const handleWindowFocus = () => {
 			scheduleReattachRecovery(isFocusedRef.current);
 		};
+		// Ghostty's canvas doesn't self-repaint on focus loss (inactive-cursor
+		// style, chrome transitions), leaving stale pixels until refocus — repaint
+		// on blur too. runReattachRecovery already skips xterm.focus() when the
+		// document doesn't have focus, so this never steals focus back.
+		const handleWindowBlur = () => {
+			scheduleReattachRecovery(false);
+		};
 
 		document.addEventListener("visibilitychange", handleVisibilityChange);
 		window.addEventListener("focus", handleWindowFocus);
+		window.addEventListener("blur", handleWindowBlur);
 
 		const isPaneDestroyedInStore = () =>
 			isPaneDestroyed(useTabsStore.getState().panes, paneId);
@@ -741,6 +749,7 @@ export function useTerminalLifecycle({
 			cancelReattachRecovery();
 			document.removeEventListener("visibilitychange", handleVisibilityChange);
 			window.removeEventListener("focus", handleWindowFocus);
+			window.removeEventListener("blur", handleWindowBlur);
 			inputDisposable.dispose();
 			keyDisposable.dispose();
 			titleDisposable.dispose();
