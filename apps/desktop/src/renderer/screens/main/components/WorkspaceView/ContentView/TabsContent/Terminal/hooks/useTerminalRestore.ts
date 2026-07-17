@@ -131,16 +131,43 @@ export function useTerminalRestore({
 		const restoreSequence = restoreSequenceRef.current;
 		try {
 			const scheduleFitAndScroll = () => {
-				requestAnimationFrame(() => {
+				// A tab-switch remount can run this frame before the pane has its
+				// final layout size. Fitting + redrawing a 0×0 container paints
+				// nothing, and if the tab returns at an unchanged size the
+				// ResizeObserver never fires again — so the restored buffer sits
+				// blank until an unrelated repaint (window resize/blur/focus). Wait
+				// for a real container size before the forced repaint below.
+				const MAX_FIT_FRAMES = 30; // ~0.5s @60fps; layout settles well before
+				let framesWaited = 0;
+				const attempt = () => {
 					if (xtermRef.current !== xterm) return;
 					if (restoreSequenceRef.current !== restoreSequence) return;
+
+					const rect = xterm.element?.getBoundingClientRect();
+					const sized = !!rect && rect.width > 1 && rect.height > 1;
+					if (!sized && framesWaited < MAX_FIT_FRAMES) {
+						framesWaited++;
+						requestAnimationFrame(attempt);
+						return;
+					}
+
 					fitAddon.fit();
 					// ghostty won't repaint restored content on its own; force it so
 					// the terminal isn't left blank after a re-mount / tab switch.
 					redrawTerminal(xterm);
 					scrollToBottom(xterm);
 					onRestoreAppliedRef.current?.();
-				});
+
+					// fit() can resize ghostty's canvas backing store this frame; that
+					// first paint may land before the resized canvas is composited, so
+					// force one more redraw next frame to guarantee visible content.
+					requestAnimationFrame(() => {
+						if (xtermRef.current !== xterm) return;
+						if (restoreSequenceRef.current !== restoreSequence) return;
+						redrawTerminal(xterm);
+					});
+				};
+				requestAnimationFrame(attempt);
 			};
 
 			// Canonical initial content: prefer snapshot (daemon mode) over scrollback
